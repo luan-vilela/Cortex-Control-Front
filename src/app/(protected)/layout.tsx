@@ -32,5 +32,5 @@ export default function ProtectedLayout({
     return null;
   }
 
-  return <>{children}</>;
+  return <div className="min-h-screen bg-gray-50">{children}</div>;
 }
