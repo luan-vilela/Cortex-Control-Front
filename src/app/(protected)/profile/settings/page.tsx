@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/modules/auth/store/auth.store";
 import { NotificationBell } from "@/components/NotificationBell";
+import { WalletDisplay } from "@/components/WalletDisplay";
 import { UserMenu } from "@/components/UserMenu";
 import api from "@/lib/api";
 import { ArrowLeft, Save } from "lucide-react";
@@ -58,6 +59,7 @@ export default function ProfileSettingsPage() {
             </div>
             <div className="flex items-center gap-2">
               <NotificationBell />
+              <WalletDisplay />
               <UserMenu />
             </div>
           </div>

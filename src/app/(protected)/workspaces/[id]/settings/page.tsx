@@ -8,6 +8,7 @@ import {
   useDeleteWorkspace,
 } from "@/modules/workspace/hooks";
 import { NotificationBell } from "@/components/NotificationBell";
+import { WalletDisplay } from "@/components/WalletDisplay";
 import { UserMenu } from "@/components/UserMenu";
 import { Modal } from "@/components/ui/Modal";
 import {
@@ -124,6 +125,7 @@ export default function WorkspaceSettingsPage() {
             </div>
             <div className="flex items-center gap-2">
               <NotificationBell />
+              <WalletDisplay />
               <UserMenu />
             </div>
           </div>

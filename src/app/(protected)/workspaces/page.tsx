@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useWorkspaces } from "@/modules/workspace/hooks";
 import { WorkspaceSwitcher } from "@/modules/workspace/components/WorkspaceSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
+import { WalletDisplay } from "@/components/WalletDisplay";
 import { UserMenu } from "@/components/UserMenu";
 import { Building2, Plus, Settings, Users, Crown } from "lucide-react";
 
@@ -22,6 +23,7 @@ export default function WorkspacesPage() {
           </div>
           <div className="flex items-center gap-2">
             <NotificationBell />
+            <WalletDisplay />
             <UserMenu />
           </div>
         </div>

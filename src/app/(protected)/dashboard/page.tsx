@@ -5,6 +5,7 @@ import { useAuthStore } from "@/modules/auth/store/auth.store";
 import { useWorkspaces, useWorkspaceInvites } from "@/modules/workspace/hooks";
 import { WorkspaceSwitcher } from "@/modules/workspace/components/WorkspaceSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
+import { WalletDisplay } from "@/components/WalletDisplay";
 import { UserMenu } from "@/components/UserMenu";
 
 export default function DashboardPage() {
@@ -25,6 +26,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-2">
             <NotificationBell />
+            <WalletDisplay />
             <UserMenu />
           </div>
         </div>

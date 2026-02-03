@@ -12,6 +12,7 @@ import {
   useUpdateInvite,
 } from "@/modules/workspace/hooks";
 import { NotificationBell } from "@/components/NotificationBell";
+import { WalletDisplay } from "@/components/WalletDisplay";
 import { UserMenu } from "@/components/UserMenu";
 import {
   ArrowLeft,
@@ -266,6 +267,7 @@ export default function WorkspaceMembersPage() {
             </div>
             <div className="flex items-center gap-2">
               <NotificationBell />
+              <WalletDisplay />
               <UserMenu />
             </div>
           </div>
