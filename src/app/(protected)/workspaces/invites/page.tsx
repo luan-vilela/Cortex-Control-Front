@@ -1,62 +1,51 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/modules/auth/store/auth.store";
-import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
-import { workspaceService } from "@/modules/workspace/services/workspace.service";
+import {
+  useWorkspaceInvites,
+  useAcceptInvite,
+  useRejectInvite,
+} from "@/modules/workspace/hooks";
 import { WorkspaceSwitcher } from "@/modules/workspace/components/WorkspaceSwitcher";
-import { LogOut, Mail, Check, X, Clock } from "lucide-react";
+import { NotificationBell } from "@/components/NotificationBell";
+import { UserMenu } from "@/components/UserMenu";
+import { Mail, Check, X, Clock } from "lucide-react";
 
 export default function InvitesPage() {
   const router = useRouter();
-  const { isAuthenticated, _hasHydrated, clearAuth } = useAuthStore();
-  const { invites, fetchInvites, clear: clearWorkspace } = useWorkspaceStore();
-  const [loading, setLoading] = useState(true);
+  const { data: invites = [], isLoading } = useWorkspaceInvites();
+  const acceptInviteMutation = useAcceptInvite();
+  const rejectInviteMutation = useRejectInvite();
   const [processing, setProcessing] = useState<string | null>(null);
 
-  const handleLogout = () => {
-    clearAuth();
-    clearWorkspace();
-    router.push("/auth/login");
+  const handleAcceptInvite = (token: string) => {
+    setProcessing(token);
+    acceptInviteMutation.mutate(token, {
+      onSuccess: () => {
+        router.push("/workspaces");
+      },
+      onError: (error) => {
+        console.error("Erro ao aceitar convite:", error);
+        alert("Erro ao aceitar convite. Tente novamente.");
+      },
+      onSettled: () => {
+        setProcessing(null);
+      },
+    });
   };
 
-  useEffect(() => {
-    if (_hasHydrated && !isAuthenticated) {
-      router.push("/auth/login");
-      return;
-    }
-
-    if (_hasHydrated && isAuthenticated) {
-      fetchInvites().finally(() => setLoading(false));
-    }
-  }, [isAuthenticated, _hasHydrated, router]);
-
-  const handleAcceptInvite = async (token: string) => {
+  const handleRejectInvite = (token: string) => {
     setProcessing(token);
-    try {
-      await workspaceService.acceptInvite(token);
-      await fetchInvites();
-      router.push("/workspaces");
-    } catch (error) {
-      console.error("Erro ao aceitar convite:", error);
-      alert("Erro ao aceitar convite. Tente novamente.");
-    } finally {
-      setProcessing(null);
-    }
-  };
-
-  const handleRejectInvite = async (token: string) => {
-    setProcessing(token);
-    try {
-      await workspaceService.rejectInvite(token);
-      await fetchInvites();
-    } catch (error) {
-      console.error("Erro ao rejeitar convite:", error);
-      alert("Erro ao rejeitar convite. Tente novamente.");
-    } finally {
-      setProcessing(null);
-    }
+    rejectInviteMutation.mutate(token, {
+      onError: (error) => {
+        console.error("Erro ao rejeitar convite:", error);
+        alert("Erro ao rejeitar convite. Tente novamente.");
+      },
+      onSettled: () => {
+        setProcessing(null);
+      },
+    });
   };
 
   if (!_hasHydrated || !isAuthenticated) {
@@ -76,13 +65,10 @@ export default function InvitesPage() {
             <h1 className="text-2xl font-bold text-gray-900">Cortex Control</h1>
             <WorkspaceSwitcher />
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            Sair
-          </button>
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <UserMenu />
+          </div>
         </div>
       </header>
 
@@ -92,7 +78,7 @@ export default function InvitesPage() {
           Convites Pendentes
         </h2>
 
-        {loading ? (
+        {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>

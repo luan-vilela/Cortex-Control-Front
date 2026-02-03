@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/modules/auth/store/auth.store";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -9,21 +8,7 @@ import { ArrowLeft, User, Mail, Calendar, Shield } from "lucide-react";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, isAuthenticated, _hasHydrated } = useAuthStore();
-
-  useEffect(() => {
-    if (_hasHydrated && !isAuthenticated) {
-      router.push("/auth/login");
-    }
-  }, [isAuthenticated, _hasHydrated, router]);
-
-  if (!_hasHydrated || !isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  const { user } = useAuthStore();
 
   const getUserInitials = () => {
     if (!user?.name) return "U";

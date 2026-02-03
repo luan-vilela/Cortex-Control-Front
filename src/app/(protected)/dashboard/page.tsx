@@ -1,50 +1,18 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/modules/auth/store/auth.store";
-import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
+import { useWorkspaces, useWorkspaceInvites } from "@/modules/workspace/hooks";
 import { WorkspaceSwitcher } from "@/modules/workspace/components/WorkspaceSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
 import { UserMenu } from "@/components/UserMenu";
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const { user, isAuthenticated, _hasHydrated, clearAuth } = useAuthStore();
-  const {
-    fetchWorkspaces,
-    fetchInvites,
-    invites,
-    clear: clearWorkspace,
-  } = useWorkspaceStore();
+  const { user } = useAuthStore();
 
-  const handleLogout = () => {
-    clearAuth();
-    clearWorkspace();
-    router.push("/auth/login");
-  };
-
-  useEffect(() => {
-    // Aguarda a hidratação do estado antes de verificar autenticação
-    if (_hasHydrated && !isAuthenticated) {
-      router.push("/auth/login");
-    }
-
-    // Carregar workspaces quando autenticado
-    if (_hasHydrated && isAuthenticated) {
-      fetchWorkspaces();
-      fetchInvites();
-    }
-  }, [isAuthenticated, _hasHydrated, router]);
-
-  // Mostra loading enquanto hidrata ou não está autenticado
-  if (!_hasHydrated || !isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  // Pré-carregar workspaces e convites
+  useWorkspaces();
+  useWorkspaceInvites();
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -10,21 +10,16 @@ import { ArrowLeft, Save } from "lucide-react";
 
 export default function ProfileSettingsPage() {
   const router = useRouter();
-  const { user, isAuthenticated, _hasHydrated, setUser } = useAuthStore();
+  const { user, setUser } = useAuthStore();
 
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (_hasHydrated && !isAuthenticated) {
-      router.push("/auth/login");
-      return;
-    }
-
     if (user) {
       setName(user.name || "");
     }
-  }, [isAuthenticated, _hasHydrated, router, user]);
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,14 +36,6 @@ export default function ProfileSettingsPage() {
       setLoading(false);
     }
   };
-
-  if (!_hasHydrated || !isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -88,7 +75,7 @@ export default function ProfileSettingsPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Seu nome completo"
               />
             </div>

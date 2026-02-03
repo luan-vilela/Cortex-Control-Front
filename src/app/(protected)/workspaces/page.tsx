@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/modules/auth/store/auth.store";
-import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
+import { useWorkspaces } from "@/modules/workspace/hooks";
 import { WorkspaceSwitcher } from "@/modules/workspace/components/WorkspaceSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
 import { UserMenu } from "@/components/UserMenu";
@@ -11,38 +9,7 @@ import { Building2, Plus, Settings, Users, Crown } from "lucide-react";
 
 export default function WorkspacesPage() {
   const router = useRouter();
-  const { isAuthenticated, _hasHydrated, clearAuth } = useAuthStore();
-  const {
-    workspaces,
-    fetchWorkspaces,
-    clear: clearWorkspace,
-  } = useWorkspaceStore();
-  const [loading, setLoading] = useState(true);
-
-  const handleLogout = () => {
-    clearAuth();
-    clearWorkspace();
-    router.push("/auth/login");
-  };
-
-  useEffect(() => {
-    if (_hasHydrated && !isAuthenticated) {
-      router.push("/auth/login");
-      return;
-    }
-
-    if (_hasHydrated && isAuthenticated) {
-      fetchWorkspaces().finally(() => setLoading(false));
-    }
-  }, [isAuthenticated, _hasHydrated, router]);
-
-  if (!_hasHydrated || !isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  const { data: workspaces = [], isLoading } = useWorkspaces();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -73,7 +40,7 @@ export default function WorkspacesPage() {
           </a>
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
@@ -133,7 +100,7 @@ export default function WorkspacesPage() {
           </div>
         )}
 
-        {!loading && workspaces.length === 0 && (
+        {!isLoading && workspaces.length === 0 && (
           <div className="text-center py-12">
             <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">

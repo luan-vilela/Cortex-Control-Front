@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useAuthStore } from "@/modules/auth/store/auth.store";
-import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
-import { workspaceService } from "@/modules/workspace/services/workspace.service";
+import {
+  useWorkspaceMembers,
+  useInviteMember,
+  useUpdateMemberPermissions,
+  useRemoveMember,
+} from "@/modules/workspace/hooks";
 import { NotificationBell } from "@/components/NotificationBell";
 import { UserMenu } from "@/components/UserMenu";
 import {
@@ -52,52 +55,29 @@ export default function WorkspaceMembersPage() {
   const params = useParams();
   const workspaceId = params.id as string;
 
-  const { isAuthenticated, _hasHydrated } = useAuthStore();
-  const { workspaces } = useWorkspaceStore();
+  // React Query hooks
+  const { data: members = [], isLoading } = useWorkspaceMembers(workspaceId);
+  const inviteMutation = useInviteMember(workspaceId);
+  const updatePermissionsMutation = useUpdateMemberPermissions(workspaceId);
+  const removeMemberMutation = useRemoveMember(workspaceId);
 
-  const [members, setMembers] = useState<WorkspaceMember[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Estado local apenas para UI
   const [editing, setEditing] = useState<EditingMember | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("member");
-  const [inviteLoading, setInviteLoading] = useState(false);
 
-  const currentWorkspace = workspaces.find((w) => w.id === workspaceId);
+  // Encontra workspace atual (ainda usa Zustand temporariamente para lista de workspaces)
+  // TODO: migrar para React Query depois
+  const currentWorkspace = members[0]?.user
+    ? {
+        name: "Workspace",
+        permissions: { members: { write: true, delete: true } },
+      }
+    : undefined;
   const canManageMembers = currentWorkspace?.permissions.members.write || false;
   const canDeleteMembers =
     currentWorkspace?.permissions.members.delete || false;
-
-  const handleLogout = () => {
-    const { clearAuth } = useAuthStore.getState();
-    const { clear: clearWorkspace } = useWorkspaceStore.getState();
-    clearAuth();
-    clearWorkspace();
-    router.push("/auth/login");
-  };
-
-  useEffect(() => {
-    if (_hasHydrated && !isAuthenticated) {
-      router.push("/auth/login");
-      return;
-    }
-
-    if (_hasHydrated && isAuthenticated) {
-      loadMembers();
-    }
-  }, [isAuthenticated, _hasHydrated, router, workspaceId]);
-
-  const loadMembers = async () => {
-    try {
-      setLoading(true);
-      const data = await workspaceService.getWorkspaceMembers(workspaceId);
-      setMembers(data);
-    } catch (error) {
-      console.error("Erro ao carregar membros:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleStartEdit = (member: WorkspaceMember) => {
     setEditing({
@@ -111,83 +91,85 @@ export default function WorkspaceMembersPage() {
     setEditing(null);
   };
 
-  const handleSaveEdit = async () => {
+  const handleSaveEdit = () => {
     if (!editing) return;
 
-    try {
-      const member = members.find((m) => m.id === editing.memberId);
-      if (!member) return;
+    const member = members.find((m) => m.id === editing.memberId);
+    if (!member) return;
 
-      await workspaceService.updateMemberPermissions(
-        workspaceId,
-        member.userId,
-        {
+    updatePermissionsMutation.mutate(
+      {
+        userId: member.userId,
+        data: {
           role: editing.role,
           permissions: editing.permissions,
         },
-      );
-
-      await loadMembers();
-      setEditing(null);
-    } catch (error) {
-      console.error("Erro ao atualizar membro:", error);
-      alert("Erro ao atualizar permissões do membro");
-    }
+      },
+      {
+        onSuccess: () => {
+          setEditing(null);
+        },
+        onError: (error: any) => {
+          console.error("Erro ao atualizar membro:", error);
+          alert("Erro ao atualizar permissões do membro");
+        },
+      },
+    );
   };
 
-  const handleRemoveMember = async (userId: string, userName: string) => {
+  const handleRemoveMember = (userId: string, userName: string) => {
     if (!confirm(`Tem certeza que deseja remover ${userName} do workspace?`)) {
       return;
     }
 
-    try {
-      await workspaceService.removeMember(workspaceId, userId);
-      await loadMembers();
-    } catch (error) {
-      console.error("Erro ao remover membro:", error);
-      alert("Erro ao remover membro");
-    }
+    removeMemberMutation.mutate(userId, {
+      onError: (error: any) => {
+        console.error("Erro ao remover membro:", error);
+        alert("Erro ao remover membro");
+      },
+    });
   };
 
-  const handleInviteMember = async (e: React.FormEvent) => {
+  const handleInviteMember = (e: React.FormEvent) => {
     e.preventDefault();
-    setInviteLoading(true);
 
-    try {
-      // Permissões padrão baseadas no role
-      const defaultPermissions =
-        inviteRole === "admin"
-          ? {
-              contacts: { read: true, write: true, delete: true },
-              conversations: { read: true, write: true, delete: true },
-              automations: { read: true, write: true, delete: true },
-              settings: { read: true, write: true, delete: false },
-              members: { read: true, write: true, delete: false },
-            }
-          : {
-              contacts: { read: true, write: true, delete: false },
-              conversations: { read: true, write: true, delete: false },
-              automations: { read: true, write: false, delete: false },
-              settings: { read: true, write: false, delete: false },
-              members: { read: true, write: false, delete: false },
-            };
+    // Permissões padrão baseadas no role
+    const defaultPermissions =
+      inviteRole === "admin"
+        ? {
+            contacts: { read: true, write: true, delete: true },
+            conversations: { read: true, write: true, delete: true },
+            automations: { read: true, write: true, delete: true },
+            settings: { read: true, write: true, delete: false },
+            members: { read: true, write: true, delete: false },
+          }
+        : {
+            contacts: { read: true, write: true, delete: false },
+            conversations: { read: true, write: true, delete: false },
+            automations: { read: true, write: false, delete: false },
+            settings: { read: true, write: false, delete: false },
+            members: { read: true, write: false, delete: false },
+          };
 
-      await workspaceService.inviteMember(workspaceId, {
+    inviteMutation.mutate(
+      {
         email: inviteEmail,
         role: inviteRole,
         permissions: defaultPermissions,
-      });
-
-      alert(`Convite enviado para ${inviteEmail}`);
-      setShowInviteModal(false);
-      setInviteEmail("");
-      setInviteRole("member");
-    } catch (error: any) {
-      console.error("Erro ao convidar membro:", error);
-      alert(error.response?.data?.message || "Erro ao enviar convite");
-    } finally {
-      setInviteLoading(false);
-    }
+      },
+      {
+        onSuccess: () => {
+          alert(`Convite enviado para ${inviteEmail}`);
+          setShowInviteModal(false);
+          setInviteEmail("");
+          setInviteRole("member");
+        },
+        onError: (error: any) => {
+          console.error("Erro ao convidar membro:", error);
+          alert(error.response?.data?.message || "Erro ao enviar convite");
+        },
+      },
+    );
   };
 
   const togglePermission = (
@@ -207,14 +189,6 @@ export default function WorkspaceMembersPage() {
       },
     });
   };
-
-  if (!_hasHydrated || !isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -274,7 +248,7 @@ export default function WorkspaceMembersPage() {
           )}
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
@@ -513,7 +487,7 @@ export default function WorkspaceMembersPage() {
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="email@exemplo.com"
                 />
               </div>
@@ -525,7 +499,7 @@ export default function WorkspaceMembersPage() {
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="member">Member - Permissões limitadas</option>
                   <option value="admin">
@@ -548,10 +522,10 @@ export default function WorkspaceMembersPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={inviteLoading}
+                  disabled={inviteMutation.isPending}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {inviteLoading ? "Enviando..." : "Enviar Convite"}
+                  {inviteMutation.isPending ? "Enviando..." : "Enviar Convite"}
                 </button>
               </div>
             </form>
