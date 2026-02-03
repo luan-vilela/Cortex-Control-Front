@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import {
+  useWorkspace,
   useWorkspaceMembers,
   useWorkspacePendingInvites,
   useInviteMember,
@@ -25,38 +26,21 @@ import {
   UserPlus,
   Clock,
 } from "lucide-react";
-
-interface WorkspaceMember {
-  id: string;
-  userId: string;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-    avatar?: string;
-  };
-  role: string;
-  isOwner: boolean;
-  permissions: {
-    contacts: { read: boolean; write: boolean; delete: boolean };
-    conversations: { read: boolean; write: boolean; delete: boolean };
-    automations: { read: boolean; write: boolean; delete: boolean };
-    settings: { read: boolean; write: boolean; delete: boolean };
-    members: { read: boolean; write: boolean; delete: boolean };
-  };
-  joinedAt: string;
-}
+import type {
+  WorkspaceMember,
+  WorkspacePermissions,
+} from "@/modules/workspace/types/workspace.types";
 
 interface EditingMember {
   memberId: string;
   role: string;
-  permissions: WorkspaceMember["permissions"];
+  permissions: WorkspacePermissions;
 }
 
 interface EditingInvite {
   inviteId: string;
   role: string;
-  permissions: WorkspaceMember["permissions"];
+  permissions: WorkspacePermissions;
 }
 
 export default function WorkspaceMembersPage() {
@@ -65,6 +49,7 @@ export default function WorkspaceMembersPage() {
   const workspaceId = params.id as string;
 
   // React Query hooks
+  const { data: workspace } = useWorkspace(workspaceId);
   const { data: members = [], isLoading } = useWorkspaceMembers(workspaceId);
   const { data: pendingInvites = [] } = useWorkspacePendingInvites(workspaceId);
   const inviteMutation = useInviteMember(workspaceId);
@@ -81,17 +66,8 @@ export default function WorkspaceMembersPage() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("member");
 
-  // Encontra workspace atual (ainda usa Zustand temporariamente para lista de workspaces)
-  // TODO: migrar para React Query depois
-  const currentWorkspace = members[0]?.user
-    ? {
-        name: "Workspace",
-        permissions: { members: { write: true, delete: true } },
-      }
-    : undefined;
-  const canManageMembers = currentWorkspace?.permissions.members.write || false;
-  const canDeleteMembers =
-    currentWorkspace?.permissions.members.delete || false;
+  const canManageMembers = workspace?.permissions?.members?.write || false;
+  const canDeleteMembers = workspace?.permissions?.members?.delete || false;
 
   const handleStartEdit = (member: WorkspaceMember) => {
     setEditing({
@@ -113,7 +89,7 @@ export default function WorkspaceMembersPage() {
 
     updatePermissionsMutation.mutate(
       {
-        userId: member.userId,
+        userId: member.id,
         data: {
           role: editing.role,
           permissions: editing.permissions,
@@ -131,12 +107,12 @@ export default function WorkspaceMembersPage() {
     );
   };
 
-  const handleRemoveMember = (userId: string, userName: string) => {
+  const handleRemoveMember = (memberId: string, userName: string) => {
     if (!confirm(`Tem certeza que deseja remover ${userName} do workspace?`)) {
       return;
     }
 
-    removeMemberMutation.mutate(userId, {
+    removeMemberMutation.mutate(memberId, {
       onError: (error: any) => {
         console.error("Erro ao remover membro:", error);
         alert("Erro ao remover membro");
@@ -282,10 +258,8 @@ export default function WorkspaceMembersPage() {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">Membros</h1>
-                  {currentWorkspace && (
-                    <p className="text-sm text-gray-600">
-                      {currentWorkspace.name}
-                    </p>
+                  {workspace && (
+                    <p className="text-sm text-gray-600">{workspace.name}</p>
                   )}
                 </div>
               </div>
@@ -351,11 +325,11 @@ export default function WorkspaceMembersPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {members.map((member) => {
                     const isEditing = editing?.memberId === member.id;
-                    const userName = member.user?.name || "Usuário";
-                    const userEmail = member.user?.email || "email@example.com";
+                    const userName = member.name || "Usuário";
+                    const userEmail = member.email || "email@example.com";
                     const userInitials = userName
                       .split(" ")
-                      .map((n) => n[0])
+                      .map((n: string) => n[0])
                       .join("")
                       .toUpperCase()
                       .slice(0, 2);
@@ -364,7 +338,7 @@ export default function WorkspaceMembersPage() {
                       <tr key={member.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10">
+                            <div className="shrink-0 h-10 w-10">
                               <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                                 <span className="text-blue-600 font-medium">
                                   {userInitials}
@@ -455,7 +429,7 @@ export default function WorkspaceMembersPage() {
                           ) : (
                             <div className="flex flex-wrap gap-1">
                               {Object.entries(member.permissions)
-                                .filter(([_, perms]) => perms.read)
+                                .filter(([, perms]) => perms.read)
                                 .map(([module]) => (
                                   <span
                                     key={module}
@@ -507,8 +481,8 @@ export default function WorkspaceMembersPage() {
                                 <button
                                   onClick={() =>
                                     handleRemoveMember(
-                                      member.userId,
-                                      member.user?.name || "este membro",
+                                      member.id,
+                                      member.name || "este membro",
                                     )
                                   }
                                   className="p-1 text-red-600 hover:text-red-900"
@@ -536,7 +510,7 @@ export default function WorkspaceMembersPage() {
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10">
+                            <div className="shrink-0 h-10 w-10">
                               <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
                                 <Mail className="w-5 h-5 text-yellow-600" />
                               </div>
@@ -548,7 +522,7 @@ export default function WorkspaceMembersPage() {
                               </div>
                               <div className="text-sm text-gray-500 flex items-center gap-1">
                                 <Mail className="w-3 h-3" />
-                                {invite.email}
+                                {invite.invitedBy?.email || "Convite pendente"}
                               </div>
                             </div>
                           </div>
@@ -669,7 +643,7 @@ export default function WorkspaceMembersPage() {
                                 onClick={() => {
                                   if (
                                     confirm(
-                                      `Cancelar convite para ${invite.email}?`,
+                                      `Cancelar convite para ${invite.invitedBy?.email || "este usuário"}?`,
                                     )
                                   ) {
                                     // TODO: implementar cancelar convite

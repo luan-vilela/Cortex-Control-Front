@@ -60,6 +60,7 @@ export interface InviteMemberDto {
 }
 
 export interface UpdatePermissionsDto {
+  role?: string;
   permissions: WorkspacePermissions;
 }
 
