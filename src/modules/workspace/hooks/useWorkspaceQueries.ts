@@ -47,3 +47,15 @@ export function useWorkspaceInvites() {
     staleTime: 30 * 1000, // 30 segundos - dados bem voláteis
   });
 }
+
+/**
+ * Hook para buscar convites pendentes de um workspace específico
+ */
+export function useWorkspacePendingInvites(workspaceId: string) {
+  return useQuery({
+    queryKey: [...workspaceKeys.detail(workspaceId), "invites"],
+    queryFn: () => workspaceService.getWorkspaceInvites(workspaceId),
+    enabled: !!workspaceId,
+    staleTime: 30 * 1000, // 30 segundos - dados bem voláteis
+  });
+}

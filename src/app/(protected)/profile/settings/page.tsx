@@ -10,7 +10,7 @@ import { ArrowLeft, Save } from "lucide-react";
 
 export default function ProfileSettingsPage() {
   const router = useRouter();
-  const { user, setUser } = useAuthStore();
+  const { user, setAuth, token } = useAuthStore();
 
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -27,7 +27,9 @@ export default function ProfileSettingsPage() {
 
     try {
       const response = await api.patch("/auth/profile", { name });
-      setUser(response.data.user);
+      if (token) {
+        setAuth(response.data.user, token);
+      }
       alert("Perfil atualizado com sucesso!");
     } catch (error: any) {
       console.error("Erro ao atualizar perfil:", error);

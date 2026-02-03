@@ -73,6 +73,10 @@ export function useInviteMember(workspaceId: string) {
         queryKey: workspaceKeys.members(workspaceId),
       });
       queryClient.invalidateQueries({ queryKey: workspaceKeys.invites() });
+      // Invalida convites pendentes específicos do workspace
+      queryClient.invalidateQueries({
+        queryKey: [...workspaceKeys.detail(workspaceId), "invites"],
+      });
     },
   });
 }
@@ -147,6 +151,29 @@ export function useRejectInvite() {
     onSuccess: () => {
       // Invalida apenas os convites
       queryClient.invalidateQueries({ queryKey: workspaceKeys.invites() });
+    },
+  });
+}
+
+/**
+ * Hook para atualizar um convite pendente
+ */
+export function useUpdateInvite(workspaceId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      inviteId,
+      data,
+    }: {
+      inviteId: string;
+      data: { role: string; permissions: any };
+    }) => workspaceService.updateInvite(workspaceId, inviteId, data),
+    onSuccess: () => {
+      // Invalida convites pendentes do workspace
+      queryClient.invalidateQueries({
+        queryKey: [...workspaceKeys.detail(workspaceId), "invites"],
+      });
     },
   });
 }

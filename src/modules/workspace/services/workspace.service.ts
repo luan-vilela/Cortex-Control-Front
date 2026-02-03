@@ -62,6 +62,12 @@ export const workspaceService = {
     return response.data.invites;
   },
 
+  // Listar convites pendentes de um workspace específico
+  async getWorkspaceInvites(workspaceId: string): Promise<WorkspaceInvite[]> {
+    const response = await api.get(`/workspaces/${workspaceId}/invites`);
+    return response.data.invites;
+  },
+
   // Aceitar convite
   async acceptInvite(token: string): Promise<void> {
     await api.post(`/workspaces/invites/${token}/accept`);
@@ -90,6 +96,15 @@ export const workspaceService = {
   // Remover membro
   async removeMember(workspaceId: string, userId: string): Promise<void> {
     await api.delete(`/workspaces/${workspaceId}/members/${userId}`);
+  },
+
+  // Atualizar convite pendente
+  async updateInvite(
+    workspaceId: string,
+    inviteId: string,
+    data: { role: string; permissions: any },
+  ): Promise<void> {
+    await api.patch(`/workspaces/${workspaceId}/invites/${inviteId}`, data);
   },
 
   // Trocar workspace ativo

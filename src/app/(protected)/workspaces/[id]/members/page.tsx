@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import {
   useWorkspaceMembers,
+  useWorkspacePendingInvites,
   useInviteMember,
   useUpdateMemberPermissions,
   useRemoveMember,
+  useUpdateInvite,
 } from "@/modules/workspace/hooks";
 import { NotificationBell } from "@/components/NotificationBell";
 import { UserMenu } from "@/components/UserMenu";
@@ -21,6 +23,7 @@ import {
   Check,
   X,
   UserPlus,
+  Clock,
 } from "lucide-react";
 
 interface WorkspaceMember {
@@ -50,6 +53,12 @@ interface EditingMember {
   permissions: WorkspaceMember["permissions"];
 }
 
+interface EditingInvite {
+  inviteId: string;
+  role: string;
+  permissions: WorkspaceMember["permissions"];
+}
+
 export default function WorkspaceMembersPage() {
   const router = useRouter();
   const params = useParams();
@@ -57,12 +66,17 @@ export default function WorkspaceMembersPage() {
 
   // React Query hooks
   const { data: members = [], isLoading } = useWorkspaceMembers(workspaceId);
+  const { data: pendingInvites = [] } = useWorkspacePendingInvites(workspaceId);
   const inviteMutation = useInviteMember(workspaceId);
   const updatePermissionsMutation = useUpdateMemberPermissions(workspaceId);
   const removeMemberMutation = useRemoveMember(workspaceId);
+  const updateInviteMutation = useUpdateInvite(workspaceId);
 
   // Estado local apenas para UI
   const [editing, setEditing] = useState<EditingMember | null>(null);
+  const [editingInvite, setEditingInvite] = useState<EditingInvite | null>(
+    null,
+  );
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("member");
@@ -126,6 +140,65 @@ export default function WorkspaceMembersPage() {
       onError: (error: any) => {
         console.error("Erro ao remover membro:", error);
         alert("Erro ao remover membro");
+      },
+    });
+  };
+
+  const handleStartEditInvite = (invite: any) => {
+    setEditingInvite({
+      inviteId: invite.id,
+      role: invite.role,
+      permissions: invite.permissions || {
+        contacts: { read: true, write: false, delete: false },
+        conversations: { read: true, write: false, delete: false },
+        automations: { read: false, write: false, delete: false },
+        settings: { read: false, write: false, delete: false },
+        members: { read: false, write: false, delete: false },
+      },
+    });
+  };
+
+  const handleCancelEditInvite = () => {
+    setEditingInvite(null);
+  };
+
+  const handleSaveEditInvite = () => {
+    if (!editingInvite) return;
+
+    updateInviteMutation.mutate(
+      {
+        inviteId: editingInvite.inviteId,
+        data: {
+          role: editingInvite.role,
+          permissions: editingInvite.permissions,
+        },
+      },
+      {
+        onSuccess: () => {
+          setEditingInvite(null);
+        },
+        onError: (error: any) => {
+          console.error("Erro ao atualizar convite:", error);
+          alert("Erro ao atualizar permissões do convite");
+        },
+      },
+    );
+  };
+
+  const toggleInvitePermission = (
+    module: keyof EditingInvite["permissions"],
+    permission: "read" | "write" | "delete",
+  ) => {
+    if (!editingInvite) return;
+
+    setEditingInvite({
+      ...editingInvite,
+      permissions: {
+        ...editingInvite.permissions,
+        [module]: {
+          ...editingInvite.permissions[module],
+          [permission]: !editingInvite.permissions[module][permission],
+        },
       },
     });
   };
@@ -343,7 +416,7 @@ export default function WorkspaceMembersPage() {
                               {Object.entries(editing.permissions).map(
                                 ([module, perms]) => (
                                   <div key={module} className="text-xs">
-                                    <span className="font-medium capitalize">
+                                    <span className="font-semibold capitalize text-gray-900">
                                       {module}:
                                     </span>
                                     <div className="flex gap-2 mt-1">
@@ -368,7 +441,7 @@ export default function WorkspaceMembersPage() {
                                               }
                                               className="rounded border-gray-300"
                                             />
-                                            <span className="capitalize text-gray-600">
+                                            <span className="capitalize text-gray-900 font-medium">
                                               {perm}
                                             </span>
                                           </label>
@@ -450,11 +523,175 @@ export default function WorkspaceMembersPage() {
                       </tr>
                     );
                   })}
+
+                  {/* Convites Pendentes */}
+                  {pendingInvites.map((invite) => {
+                    const isEditingInvite =
+                      editingInvite?.inviteId === invite.id;
+
+                    return (
+                      <tr
+                        key={invite.id}
+                        className="hover:bg-gray-50 bg-yellow-50"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10">
+                              <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                                <Mail className="w-5 h-5 text-yellow-600" />
+                              </div>
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
+                                Convite Pendente
+                                <Clock className="w-4 h-4 text-yellow-500" />
+                              </div>
+                              <div className="text-sm text-gray-500 flex items-center gap-1">
+                                <Mail className="w-3 h-3" />
+                                {invite.email}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {isEditingInvite ? (
+                            <select
+                              value={editingInvite.role}
+                              onChange={(e) =>
+                                setEditingInvite({
+                                  ...editingInvite,
+                                  role: e.target.value,
+                                })
+                              }
+                              className="px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
+                            >
+                              <option value="owner">Owner</option>
+                              <option value="admin">Admin</option>
+                              <option value="member">Member</option>
+                            </select>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <Shield className="w-4 h-4 text-gray-400" />
+                              <span className="text-sm text-gray-900 capitalize">
+                                {invite.role}
+                              </span>
+                            </div>
+                          )}
+                        </td>
+
+                        <td className="px-6 py-4">
+                          {isEditingInvite ? (
+                            <div className="space-y-2">
+                              {Object.entries(editingInvite.permissions).map(
+                                ([module, perms]) => (
+                                  <div key={module} className="text-xs">
+                                    <span className="font-semibold capitalize text-gray-900">
+                                      {module}:
+                                    </span>
+                                    <div className="flex gap-2 mt-1">
+                                      {["read", "write", "delete"].map(
+                                        (perm) => (
+                                          <label
+                                            key={perm}
+                                            className="flex items-center gap-1 cursor-pointer"
+                                          >
+                                            <input
+                                              type="checkbox"
+                                              checked={
+                                                perms[
+                                                  perm as keyof typeof perms
+                                                ]
+                                              }
+                                              onChange={() =>
+                                                toggleInvitePermission(
+                                                  module as any,
+                                                  perm as any,
+                                                )
+                                              }
+                                              className="rounded border-gray-300"
+                                            />
+                                            <span className="capitalize text-gray-900 font-medium">
+                                              {perm}
+                                            </span>
+                                          </label>
+                                        ),
+                                      )}
+                                    </div>
+                                  </div>
+                                ),
+                              )}
+                            </div>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              Aguardando aceitação
+                            </span>
+                          )}
+                        </td>
+
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          Expira em{" "}
+                          {new Date(invite.expiresAt).toLocaleDateString(
+                            "pt-BR",
+                          )}
+                        </td>
+
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          {isEditingInvite ? (
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={handleSaveEditInvite}
+                                className="p-1 text-green-600 hover:text-green-900"
+                                title="Salvar"
+                              >
+                                <Check className="w-5 h-5" />
+                              </button>
+                              <button
+                                onClick={handleCancelEditInvite}
+                                className="p-1 text-red-600 hover:text-red-900"
+                                title="Cancelar"
+                              >
+                                <X className="w-5 h-5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-end gap-2">
+                              {canManageMembers && (
+                                <button
+                                  onClick={() => handleStartEditInvite(invite)}
+                                  className="p-1 text-blue-600 hover:text-blue-900"
+                                  title="Editar convite"
+                                >
+                                  <Edit className="w-5 h-5" />
+                                </button>
+                              )}
+                              <button
+                                onClick={() => {
+                                  if (
+                                    confirm(
+                                      `Cancelar convite para ${invite.email}?`,
+                                    )
+                                  ) {
+                                    // TODO: implementar cancelar convite
+                                    alert("Funcionalidade em desenvolvimento");
+                                  }
+                                }}
+                                className="p-1 text-red-600 hover:text-red-900"
+                                title="Cancelar convite"
+                              >
+                                <X className="w-5 h-5" />
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
 
-            {members.length === 0 && (
+            {members.length === 0 && pendingInvites.length === 0 && (
               <div className="text-center py-12">
                 <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
