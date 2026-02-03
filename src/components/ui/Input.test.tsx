@@ -35,7 +35,7 @@ describe("Input", () => {
     render(<Input />);
 
     const input = screen.getByRole("textbox");
-    expect(input).toHaveClass("border-gray-300");
+    expect(input).toHaveClass("border-gh-border");
   });
 
   it("deve permitir digitação", async () => {

@@ -1,26 +1,46 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* GitHub Light Theme */
+  --gh-bg: #f6f8fa;
+  --gh-card: #ffffff;
+  --gh-border: #d0d7de;
+  --gh-text: #24292f;
+  --gh-text-secondary: #57606a;
+  --gh-hover: #0969da;
+  --gh-badge-bg: #ddf4ff;
+  --gh-badge-text: #0969da;
+  --gh-badge-border: #54aeff;
+}
+
+.dark {
+  /* GitHub Dark Theme */
+  --gh-bg: #0d1117;
+  --gh-card: #161b22;
+  --gh-border: #30363d;
+  --gh-text: #f0f6fc;
+  --gh-text-secondary: #8b949e;
+  --gh-hover: #58a6ff;
+  --gh-badge-bg: #1f6feb;
+  --gh-badge-text: #58a6ff;
+  --gh-badge-border: #1f6feb;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  
+  --color-gh-bg: var(--gh-bg);
+  --color-gh-card: var(--gh-card);
+  --color-gh-border: var(--gh-border);
+  --color-gh-text: var(--gh-text);
+  --color-gh-text-secondary: var(--gh-text-secondary);
+  --color-gh-hover: var(--gh-hover);
+  --color-gh-badge-bg: var(--gh-badge-bg);
+  --color-gh-badge-text: var(--gh-badge-text);
+  --color-gh-badge-border: var(--gh-badge-border);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }

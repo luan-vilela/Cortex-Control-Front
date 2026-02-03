@@ -2,14 +2,24 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { User, Settings, Key, LogOut, ChevronDown } from "lucide-react";
+import {
+  User,
+  Settings,
+  Key,
+  LogOut,
+  ChevronDown,
+  Sun,
+  Moon,
+} from "lucide-react";
 import { useAuthStore } from "@/modules/auth/store/auth.store";
 import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
+import { useThemeStore } from "@/store/theme.store";
 
 export function UserMenu() {
   const router = useRouter();
   const { user, clearAuth } = useAuthStore();
   const { clear: clearWorkspace } = useWorkspaceStore();
+  const { theme, toggleTheme } = useThemeStore();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -47,7 +57,7 @@ export function UserMenu() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 p-1.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+        className="flex items-center gap-2 p-1.5 text-gh-text hover:bg-gh-bg rounded-lg transition-colors"
         aria-label="Menu do usuário"
       >
         <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
@@ -56,16 +66,16 @@ export function UserMenu() {
           </span>
         </div>
         <ChevronDown
-          className={`w-4 h-4 text-gray-500 transition-transform ${
+          className={`w-4 h-4 text-gh-text-secondary transition-transform ${
             isOpen ? "rotate-180" : ""
           }`}
         />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+        <div className="absolute right-0 mt-2 w-64 bg-gh-card rounded-lg shadow-lg border border-gh-border z-50">
           {/* User Info */}
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-gh-border">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-lg font-medium">
@@ -73,10 +83,10 @@ export function UserMenu() {
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">
+                <p className="text-sm font-semibold text-gh-text truncate">
                   {user?.name || "Usuário"}
                 </p>
-                <p className="text-xs text-gray-600 truncate">
+                <p className="text-xs text-gh-text-secondary truncate">
                   {user?.email || "email@example.com"}
                 </p>
               </div>
@@ -90,9 +100,9 @@ export function UserMenu() {
                 setIsOpen(false);
                 router.push("/profile");
               }}
-              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gh-text hover:bg-gh-bg transition-colors"
             >
-              <User className="w-4 h-4 text-gray-500" />
+              <User className="w-4 h-4 text-gh-text-secondary" />
               <span>Meu Perfil</span>
             </button>
 
@@ -101,9 +111,9 @@ export function UserMenu() {
                 setIsOpen(false);
                 router.push("/profile/settings");
               }}
-              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gh-text hover:bg-gh-bg transition-colors"
             >
-              <Settings className="w-4 h-4 text-gray-500" />
+              <Settings className="w-4 h-4 text-gh-text-secondary" />
               <span>Configurações</span>
             </button>
 
@@ -112,15 +122,37 @@ export function UserMenu() {
                 setIsOpen(false);
                 router.push("/profile/change-password");
               }}
-              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gh-text hover:bg-gh-bg transition-colors"
             >
-              <Key className="w-4 h-4 text-gray-500" />
+              <Key className="w-4 h-4 text-gh-text-secondary" />
               <span>Alterar Senha</span>
+            </button>
+
+            <div className="border-t border-gh-border my-2" />
+
+            {/* Theme Toggle */}
+            <button
+              onClick={() => {
+                toggleTheme();
+              }}
+              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gh-text hover:bg-gh-bg transition-colors"
+            >
+              {theme === "light" ? (
+                <>
+                  <Moon className="w-4 h-4 text-gh-text-secondary" />
+                  <span>Modo Escuro</span>
+                </>
+              ) : (
+                <>
+                  <Sun className="w-4 h-4 text-gh-text-secondary" />
+                  <span>Modo Claro</span>
+                </>
+              )}
             </button>
           </div>
 
           {/* Logout */}
-          <div className="border-t border-gray-200 py-2">
+          <div className="border-t border-gh-border py-2">
             <button
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"

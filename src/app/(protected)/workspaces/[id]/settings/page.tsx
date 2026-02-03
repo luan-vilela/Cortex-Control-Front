@@ -147,7 +147,7 @@ export default function WorkspaceSettingsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-gh-hover"></div>
       </div>
     );
   }
@@ -175,7 +175,7 @@ export default function WorkspaceSettingsPage() {
   const canChangeStatus = isOwner || workspace.role === "admin";
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gh-bg">
       {/* Header */}
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -357,7 +357,7 @@ export default function WorkspaceSettingsPage() {
                     isUpdatingStatus ||
                     currentStatus === WorkspaceStatus.SUSPENDED
                   }
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gh-bg rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
                 >
                   <AlertTriangle className="w-4 h-4" />
                   {currentStatus === WorkspaceStatus.ARCHIVED
@@ -480,7 +480,7 @@ export default function WorkspaceSettingsPage() {
             <button
               onClick={() => setShowDeleteModal(false)}
               disabled={deleteWorkspaceMutation.isPending}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gh-bg transition-colors"
             >
               Cancelar
             </button>

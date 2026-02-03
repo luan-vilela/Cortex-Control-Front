@@ -39,7 +39,7 @@ export default function WorkspacesPage() {
   }, [workspaces, searchTerm, statusFilter]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gh-bg">
       {/* Header */}
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
@@ -91,7 +91,7 @@ export default function WorkspacesPage() {
               className={`px-3 py-1 text-sm rounded-full transition-colors ${
                 statusFilter === "all"
                   ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-100 text-gray-700 hover:bg-gh-bg"
               }`}
             >
               Todos ({workspaces.length})
@@ -101,7 +101,7 @@ export default function WorkspacesPage() {
               className={`px-3 py-1 text-sm rounded-full transition-colors ${
                 statusFilter === WorkspaceStatus.ACTIVE
                   ? "bg-green-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-100 text-gray-700 hover:bg-gh-bg"
               }`}
             >
               Ativos (
@@ -116,7 +116,7 @@ export default function WorkspacesPage() {
               className={`px-3 py-1 text-sm rounded-full transition-colors ${
                 statusFilter === WorkspaceStatus.INACTIVE
                   ? "bg-gray-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-100 text-gray-700 hover:bg-gh-bg"
               }`}
             >
               Inativos (
@@ -131,7 +131,7 @@ export default function WorkspacesPage() {
               className={`px-3 py-1 text-sm rounded-full transition-colors ${
                 statusFilter === WorkspaceStatus.SUSPENDED
                   ? "bg-red-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-100 text-gray-700 hover:bg-gh-bg"
               }`}
             >
               Suspensos (
@@ -146,7 +146,7 @@ export default function WorkspacesPage() {
               className={`px-3 py-1 text-sm rounded-full transition-colors ${
                 statusFilter === WorkspaceStatus.ARCHIVED
                   ? "bg-yellow-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-100 text-gray-700 hover:bg-gh-bg"
               }`}
             >
               Arquivados (
@@ -161,7 +161,7 @@ export default function WorkspacesPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gh-hover"></div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -235,7 +235,7 @@ export default function WorkspacesPage() {
                     {workspace.permissions.settings.read && (
                       <a
                         href={`/workspaces/${workspace.id}/settings`}
-                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gh-bg transition-colors"
                       >
                         <Settings className="w-4 h-4" />
                         Configurações
@@ -244,7 +244,7 @@ export default function WorkspacesPage() {
                     {workspace.permissions.members.read && (
                       <a
                         href={`/workspaces/${workspace.id}/members`}
-                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gh-bg transition-colors"
                       >
                         <Users className="w-4 h-4" />
                         Membros

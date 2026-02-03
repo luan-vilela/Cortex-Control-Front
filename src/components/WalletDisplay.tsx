@@ -63,7 +63,7 @@ export function WalletDisplay() {
   if (isLoading) {
     return (
       <div className="p-2">
-        <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+        <div className="w-5 h-5 border-2 border-gh-border border-t-blue-600 rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -72,7 +72,7 @@ export function WalletDisplay() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+        className="flex items-center gap-2 px-3 py-2 text-gh-text hover:bg-gh-bg rounded-lg transition-colors"
         aria-label="Carteira"
       >
         <Coins className="w-5 h-5 text-yellow-600" />
@@ -82,21 +82,21 @@ export function WalletDisplay() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+        <div className="absolute right-0 mt-2 w-80 bg-gh-card rounded-lg shadow-lg border border-gh-border z-50">
           {!showTransactions ? (
             <>
               {/* Cabeçalho */}
-              <div className="p-4 border-b border-gray-200">
+              <div className="p-4 border-b border-gh-border">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-gh-text">
                     Minha Carteira
                   </h3>
                   <Coins className="w-6 h-6 text-yellow-600" />
                 </div>
-                <div className="text-3xl font-bold text-gray-900">
+                <div className="text-3xl font-bold text-gh-text">
                   {wallet ? formatCurrency(wallet.balance) : "0,00"}
                 </div>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-gh-text-secondary mt-1">
                   créditos disponíveis
                 </p>
               </div>
@@ -118,7 +118,7 @@ export function WalletDisplay() {
 
                 <button
                   onClick={() => setShowTransactions(true)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gh-bg text-gh-text rounded-lg hover:bg-gray-200 transition-colors font-medium"
                 >
                   <Clock className="w-5 h-5" />
                   Ver Histórico
@@ -126,7 +126,7 @@ export function WalletDisplay() {
               </div>
 
               {/* Informações */}
-              <div className="p-4 bg-blue-50 border-t border-gray-200">
+              <div className="p-4 bg-blue-50 border-t border-gh-border">
                 <p className="text-xs text-blue-900">
                   💡 <strong>Dica:</strong> Os créditos são usados para manter
                   workspaces ativos e executar ações.
@@ -136,8 +136,8 @@ export function WalletDisplay() {
           ) : (
             <>
               {/* Histórico de Transações */}
-              <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">
+              <div className="p-4 border-b border-gh-border flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gh-text">
                   Histórico
                 </h3>
                 <button
@@ -155,7 +155,7 @@ export function WalletDisplay() {
                     {transactionsData.transactions.map((transaction) => (
                       <div
                         key={transaction.id}
-                        className="p-4 hover:bg-gray-50"
+                        className="p-4 hover:bg-gh-bg"
                       >
                         <div className="flex items-start gap-3">
                           <div
@@ -173,15 +173,15 @@ export function WalletDisplay() {
                           </div>
 
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900">
+                            <p className="text-sm font-medium text-gh-text">
                               {getCategoryLabel(transaction.category)}
                             </p>
                             {transaction.description && (
-                              <p className="text-xs text-gray-600 mt-1">
+                              <p className="text-xs text-gh-text-secondary mt-1">
                                 {transaction.description}
                               </p>
                             )}
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-gh-text-secondary mt-1">
                               {formatDate(transaction.createdAt)}
                             </p>
                           </div>
@@ -199,7 +199,7 @@ export function WalletDisplay() {
                                 : "-"}
                               {formatCurrency(transaction.amount)}
                             </p>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-gh-text-secondary mt-1">
                               Saldo: {formatCurrency(transaction.balanceAfter)}
                             </p>
                           </div>
@@ -209,8 +209,8 @@ export function WalletDisplay() {
                   </div>
                 ) : (
                   <div className="p-8 text-center">
-                    <Clock className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-gray-600">
+                    <Clock className="w-12 h-12 text-gh-text-secondary mx-auto mb-3" />
+                    <p className="text-gh-text-secondary">
                       Nenhuma transação encontrada
                     </p>
                   </div>
@@ -218,15 +218,15 @@ export function WalletDisplay() {
 
                 {/* Paginação */}
                 {transactionsData && transactionsData.totalPages > 1 && (
-                  <div className="p-4 border-t border-gray-200 flex items-center justify-between">
+                  <div className="p-4 border-t border-gh-border flex items-center justify-between">
                     <button
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page === 1}
-                      className="px-3 py-1 text-sm text-gray-700 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 py-1 text-sm text-gh-text bg-gh-bg rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Anterior
                     </button>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gh-text-secondary">
                       Página {page} de {transactionsData.totalPages}
                     </span>
                     <button
@@ -236,7 +236,7 @@ export function WalletDisplay() {
                         )
                       }
                       disabled={page === transactionsData.totalPages}
-                      className="px-3 py-1 text-sm text-gray-700 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 py-1 text-sm text-gh-text bg-gh-bg rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Próxima
                     </button>

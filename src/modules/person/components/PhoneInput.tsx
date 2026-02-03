@@ -62,7 +62,7 @@ export function PhoneInput({ phones, onChange }: PhoneInputProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gh-text">
           Telefones
         </label>
         <button
@@ -75,7 +75,7 @@ export function PhoneInput({ phones, onChange }: PhoneInputProps) {
       </div>
 
       {phones.length === 0 ? (
-        <p className="text-sm text-gray-500 italic">
+        <p className="text-sm text-gh-text-secondary italic">
           Nenhum telefone adicionado
         </p>
       ) : (
@@ -83,7 +83,7 @@ export function PhoneInput({ phones, onChange }: PhoneInputProps) {
           {phones.map((phone, index) => (
             <div
               key={index}
-              className="flex gap-2 items-start p-3 bg-gray-50 rounded-lg"
+              className="flex gap-2 items-start p-3 bg-gh-bg rounded-lg"
             >
               <div className="flex-1 space-y-2">
                 <input
@@ -91,7 +91,7 @@ export function PhoneInput({ phones, onChange }: PhoneInputProps) {
                   value={phone.number}
                   onChange={(e) => updatePhone(index, "number", e.target.value)}
                   placeholder="(00) 00000-0000"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gh-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
 
                 <div className="flex gap-2 items-center">
@@ -100,7 +100,7 @@ export function PhoneInput({ phones, onChange }: PhoneInputProps) {
                     onChange={(e) =>
                       updatePhone(index, "type", e.target.value as PhoneType)
                     }
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-gh-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     {Object.entries(phoneTypeLabels).map(([value, label]) => (
                       <option key={value} value={value}>
@@ -116,7 +116,7 @@ export function PhoneInput({ phones, onChange }: PhoneInputProps) {
                       onChange={(e) =>
                         updatePhone(index, "isPrimary", e.target.checked)
                       }
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-gh-border text-blue-600 focus:ring-blue-500"
                     />
                     Principal
                   </label>

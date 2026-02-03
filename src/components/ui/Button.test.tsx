@@ -36,7 +36,7 @@ describe("Button", () => {
     render(<Button variant="ghost">Ghost</Button>);
 
     const button = screen.getByRole("button");
-    expect(button).toHaveClass("text-gray-700");
+    expect(button).toHaveClass("text-gh-text");
   });
 
   it("deve aplicar tamanho small", () => {

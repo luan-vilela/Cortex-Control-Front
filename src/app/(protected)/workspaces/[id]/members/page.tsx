@@ -241,7 +241,7 @@ export default function WorkspaceMembersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gh-bg">
       {/* Header */}
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -299,13 +299,13 @@ export default function WorkspaceMembersPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gh-hover"></div>
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-gh-border">
+                <thead className="bg-gh-bg">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Membro
@@ -324,7 +324,7 @@ export default function WorkspaceMembersPage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white divide-y divide-gh-border">
                   {members.map((member) => {
                     const isEditing = editing?.memberId === member.id;
                     const userName = member.name || "Usuário";
@@ -337,7 +337,7 @@ export default function WorkspaceMembersPage() {
                       .slice(0, 2);
 
                     return (
-                      <tr key={member.id} className="hover:bg-gray-50">
+                      <tr key={member.id} className="hover:bg-gh-bg">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="shrink-0 h-10 w-10">
@@ -508,7 +508,7 @@ export default function WorkspaceMembersPage() {
                     return (
                       <tr
                         key={invite.id}
-                        className="hover:bg-gray-50 bg-yellow-50"
+                        className="hover:bg-gh-bg bg-yellow-50"
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
@@ -729,7 +729,7 @@ export default function WorkspaceMembersPage() {
                     setInviteEmail("");
                     setInviteRole("member");
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gh-bg transition-colors"
                 >
                   Cancelar
                 </button>

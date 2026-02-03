@@ -37,12 +37,12 @@ export default function NewWorkspacePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gh-bg">
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-gh-card border border-gh-border">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold text-gray-900">Cortex Control</h1>
+            <h1 className="text-2xl font-bold text-gh-text">Cortex Control</h1>
             <WorkspaceSwitcher />
           </div>
           <div className="flex items-center gap-2">
@@ -57,14 +57,14 @@ export default function NewWorkspacePage() {
       <div className="max-w-2xl mx-auto px-4 py-8">
         <a
           href="/workspaces"
-          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
+          className="inline-flex items-center gap-2 text-gh-hover hover:text-blue-700 mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
           Voltar para workspaces
         </a>
 
-        <div className="bg-white rounded-lg shadow p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+        <div className="bg-gh-card border border-gh-border rounded-lg shadow p-8">
+          <h2 className="text-2xl font-bold text-gh-text mb-6">
             Criar Novo Workspace
           </h2>
 
@@ -72,7 +72,7 @@ export default function NewWorkspacePage() {
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-sm font-medium text-gh-text mb-2"
               >
                 Nome do Workspace
               </label>
@@ -81,12 +81,12 @@ export default function NewWorkspacePage() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gh-border rounded-lg text-gh-text placeholder:text-gh-text-secondary focus:outline-none focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
                 placeholder="Minha Empresa"
                 required
                 minLength={2}
               />
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm text-gh-text-secondary">
                 Escolha um nome descritivo para seu workspace
               </p>
             </div>
@@ -94,7 +94,7 @@ export default function NewWorkspacePage() {
             <div>
               <label
                 htmlFor="description"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-sm font-medium text-gh-text mb-2"
               >
                 Descrição (opcional)
               </label>
@@ -102,11 +102,11 @@ export default function NewWorkspacePage() {
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gh-border rounded-lg text-gh-text placeholder:text-gh-text-secondary focus:outline-none focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
                 placeholder="Descreva o propósito deste workspace..."
                 rows={3}
               />
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm text-gh-text-secondary">
                 Ajuda a equipe a entender o objetivo do workspace
               </p>
             </div>
@@ -115,14 +115,14 @@ export default function NewWorkspacePage() {
               <button
                 type="button"
                 onClick={() => router.push("/workspaces")}
-                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 px-6 py-3 border border-gh-border text-gh-text rounded-lg hover:bg-gh-bg transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={createWorkspaceMutation.isPending}
-                className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 px-6 py-3 bg-gh-hover text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {createWorkspaceMutation.isPending
                   ? "Criando..."

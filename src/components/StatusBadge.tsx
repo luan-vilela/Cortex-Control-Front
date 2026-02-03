@@ -21,9 +21,9 @@ const statusConfig = {
   [WorkspaceStatus.INACTIVE]: {
     label: "Inativo",
     icon: PauseCircle,
-    bgColor: "bg-gray-100",
-    textColor: "text-gray-800",
-    borderColor: "border-gray-300",
+    bgColor: "bg-gh-bg",
+    textColor: "text-gh-text",
+    borderColor: "border-gh-border",
   },
   [WorkspaceStatus.SUSPENDED]: {
     label: "Suspenso",

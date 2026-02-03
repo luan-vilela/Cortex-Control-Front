@@ -277,7 +277,7 @@ export default function NewPersonPage() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gh-bg transition-colors"
           >
             Cancelar
           </button>

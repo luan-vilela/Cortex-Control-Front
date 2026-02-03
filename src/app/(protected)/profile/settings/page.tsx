@@ -41,19 +41,19 @@ export default function ProfileSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gh-bg">
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-gh-card border border-gh-border">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.push("/profile")}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gh-bg rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-gh-text">
                 Editar Perfil
               </h1>
             </div>
@@ -68,10 +68,10 @@ export default function ProfileSettingsPage() {
 
       {/* Content */}
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-gh-card border border-gh-border rounded-lg shadow-md p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gh-text mb-2">
                 Nome Completo
               </label>
               <input
@@ -79,22 +79,22 @@ export default function ProfileSettingsPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gh-border rounded-lg text-gh-text placeholder:text-gh-text-secondary focus:outline-none focus:ring-2 focus:ring-gh-hover"
                 placeholder="Seu nome completo"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gh-text mb-2">
                 Email
               </label>
               <input
                 type="email"
                 value={user?.email || ""}
                 disabled
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                className="w-full px-4 py-2 border border-gh-border rounded-lg bg-gh-bg text-gh-text-secondary cursor-not-allowed"
               />
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-gh-text-secondary">
                 O email não pode ser alterado
               </p>
             </div>
@@ -103,14 +103,14 @@ export default function ProfileSettingsPage() {
               <button
                 type="button"
                 onClick={() => router.push("/profile")}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-2 border border-gh-border rounded-lg text-gh-text hover:bg-gh-bg transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gh-hover text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Save className="w-4 h-4" />
                 {loading ? "Salvando..." : "Salvar Alterações"}

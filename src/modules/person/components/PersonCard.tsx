@@ -47,7 +47,7 @@ export function PersonCard({
   return (
     <div
       onClick={onClick}
-      className={`bg-white rounded-lg shadow p-6 transition-shadow border-l-4 ${
+      className={`bg-gh-card rounded-lg shadow p-6 transition-shadow border-l-4 ${
         personTypeColors[person.type]
       } ${onClick ? "cursor-pointer hover:shadow-lg" : ""} ${
         !person.active ? "opacity-60" : ""
@@ -56,11 +56,11 @@ export function PersonCard({
       {/* Header com nome e badge */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">
+          <h3 className="text-lg font-semibold text-gh-text mb-1">
             {person.name}
           </h3>
           {person.document && (
-            <p className="text-sm text-gray-500">{person.document}</p>
+            <p className="text-sm text-gh-text-secondary">{person.document}</p>
           )}
         </div>
         <span
@@ -73,20 +73,20 @@ export function PersonCard({
       {/* Informações de contato */}
       <div className="space-y-2">
         {person.email && (
-          <div className="flex items-center gap-2 text-sm text-gray-700">
-            <Mail className="w-4 h-4 text-gray-400" />
+          <div className="flex items-center gap-2 text-sm text-gh-text">
+            <Mail className="w-4 h-4 text-gh-text-secondary" />
             <span className="truncate">{person.email}</span>
           </div>
         )}
         {primaryPhone && (
-          <div className="flex items-center gap-2 text-sm text-gray-700">
-            <Phone className="w-4 h-4 text-gray-400" />
+          <div className="flex items-center gap-2 text-sm text-gh-text">
+            <Phone className="w-4 h-4 text-gh-text-secondary" />
             <span>{primaryPhone.number}</span>
           </div>
         )}
         {(person.city || person.state) && (
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <MapPin className="w-4 h-4 text-gray-400" />
+          <div className="flex items-center gap-2 text-sm text-gh-text-secondary">
+            <MapPin className="w-4 h-4 text-gh-text-secondary" />
             <span>
               {person.city}
               {person.city && person.state && ", "}
@@ -98,7 +98,7 @@ export function PersonCard({
 
       {/* Status inativo */}
       {!person.active && (
-        <div className="mt-3 pt-3 border-t border-gray-200">
+        <div className="mt-3 pt-3 border-t border-gh-border">
           <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full">
             Inativo
           </span>
@@ -107,15 +107,15 @@ export function PersonCard({
 
       {/* Detalhes completos */}
       {showFullDetails && (
-        <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
+        <div className="mt-4 pt-4 border-t border-gh-border space-y-3">
           {person.address && (
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-1">
+              <p className="text-sm font-medium text-gh-text mb-1">
                 Endereço completo:
               </p>
-              <p className="text-sm text-gray-600">{person.address}</p>
+              <p className="text-sm text-gh-text-secondary">{person.address}</p>
               {person.zipCode && (
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gh-text-secondary mt-1">
                   CEP: {person.zipCode}
                 </p>
               )}
@@ -124,16 +124,16 @@ export function PersonCard({
 
           {person.phones && person.phones.length > 1 && (
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">
+              <p className="text-sm font-medium text-gh-text mb-2">
                 Todos os telefones:
               </p>
               <div className="space-y-1">
                 {person.phones.map((phone) => (
                   <div
                     key={phone.id}
-                    className="flex items-center gap-2 text-sm text-gray-600"
+                    className="flex items-center gap-2 text-sm text-gh-text-secondary"
                   >
-                    <Phone className="w-3 h-3 text-gray-400" />
+                    <Phone className="w-3 h-3 text-gh-text-secondary" />
                     <span>
                       {phoneTypeLabels[phone.type]}: {phone.number}
                     </span>
@@ -151,12 +151,12 @@ export function PersonCard({
           {person.notes && (
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <FileText className="w-4 h-4 text-gray-400" />
-                <p className="text-sm font-medium text-gray-700">
+                <FileText className="w-4 h-4 text-gh-text-secondary" />
+                <p className="text-sm font-medium text-gh-text">
                   Observações:
                 </p>
               </div>
-              <p className="text-sm text-gray-600 whitespace-pre-wrap pl-6">
+              <p className="text-sm text-gh-text-secondary whitespace-pre-wrap pl-6">
                 {person.notes}
               </p>
             </div>

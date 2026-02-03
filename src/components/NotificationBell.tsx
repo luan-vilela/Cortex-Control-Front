@@ -69,7 +69,7 @@ export function NotificationBell() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        className="relative p-2 text-gh-text-secondary hover:text-gh-text hover:bg-gh-bg rounded-lg transition-colors"
         aria-label="Notificações"
       >
         <Bell className="w-5 h-5" />
@@ -81,13 +81,13 @@ export function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-          <div className="p-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">
+        <div className="absolute right-0 mt-2 w-96 bg-gh-card rounded-lg shadow-lg border border-gh-border z-50">
+          <div className="p-4 border-b border-gh-border">
+            <h3 className="text-lg font-semibold text-gh-text">
               Notificações
             </h3>
             {unreadCount > 0 && (
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-gh-text-secondary mt-1">
                 Você tem {unreadCount} convite{unreadCount > 1 ? "s" : ""}{" "}
                 pendente{unreadCount > 1 ? "s" : ""}
               </p>
@@ -97,15 +97,15 @@ export function NotificationBell() {
           <div className="max-h-96 overflow-y-auto">
             {invites.length === 0 ? (
               <div className="p-8 text-center">
-                <Bell className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600">Nenhuma notificação</p>
+                <Bell className="w-12 h-12 text-gh-text-secondary mx-auto mb-3" />
+                <p className="text-gh-text-secondary">Nenhuma notificação</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-200">
                 {invites.map((invite) => (
                   <div
                     key={invite.id}
-                    className="p-4 hover:bg-gray-50 transition-colors"
+                    className="p-4 hover:bg-gh-bg transition-colors"
                   >
                     <div className="flex items-start gap-3">
                       <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
@@ -113,10 +113,10 @@ export function NotificationBell() {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-gh-text">
                           Convite para workspace
                         </p>
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-sm text-gh-text-secondary mt-1">
                           {invite.invitedBy ? (
                             <>
                               <strong>{invite.invitedBy.name}</strong> convidou
@@ -130,8 +130,8 @@ export function NotificationBell() {
                           )}
                         </p>
 
-                        <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-                          <span className="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-700 capitalize">
+                        <div className="flex items-center gap-2 mt-2 text-xs text-gh-text-secondary">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full bg-gh-bg text-gh-text capitalize">
                             {invite.role}
                           </span>
                           <span className="flex items-center gap-1">
@@ -159,7 +159,7 @@ export function NotificationBell() {
                             {Object.entries(invite.permissions).filter(
                               ([_, perms]) => perms.read,
                             ).length > 3 && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gh-bg text-gh-text-secondary">
                                 +
                                 {Object.entries(invite.permissions).filter(
                                   ([_, perms]) => perms.read,
@@ -181,7 +181,7 @@ export function NotificationBell() {
                           <button
                             onClick={() => handleReject(invite.token)}
                             disabled={processing === invite.token}
-                            className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm font-medium text-gh-text bg-gh-bg rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <X className="w-4 h-4" />
                             Recusar
