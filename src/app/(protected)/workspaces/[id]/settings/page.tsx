@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import {
   useWorkspace,
@@ -31,12 +31,6 @@ export default function WorkspaceSettingsPage() {
   const [name, setName] = useState("");
   const [hasOtherOwner, setHasOtherOwner] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-
-  useEffect(() => {
-    if (workspace) {
-      setName(workspace.name || "");
-    }
-  }, [workspace]);
 
   const handleUpdateWorkspace = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,7 +146,11 @@ export default function WorkspaceSettingsPage() {
             Informações Gerais
           </h2>
 
-          <form onSubmit={handleUpdateWorkspace} className="space-y-4">
+          <form
+            key={workspace.id}
+            onSubmit={handleUpdateWorkspace}
+            className="space-y-4"
+          >
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Nome do Workspace
@@ -188,7 +186,9 @@ export default function WorkspaceSettingsPage() {
 
         {/* Zona de Perigo */}
         <div className="bg-white rounded-lg shadow-md p-6 border-2 border-red-200">
-          <h2 className="text-xl font-bold text-red-600 mb-4">Zona de Perigo</h2>
+          <h2 className="text-xl font-bold text-red-600 mb-4">
+            Zona de Perigo
+          </h2>
 
           <div className="space-y-4">
             {/* Sair do Workspace */}
@@ -243,7 +243,10 @@ export default function WorkspaceSettingsPage() {
         </div>
 
         {/* Modal de Confirmação de Exclusão */}
-        <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
+        <Modal
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+        >
           <Modal.Header onClose={() => setShowDeleteModal(false)}>
             <div className="flex items-center gap-3">
               <div className="p-2 bg-red-100 rounded-full">
@@ -258,7 +261,7 @@ export default function WorkspaceSettingsPage() {
               <p className="text-gray-700">
                 Tem certeza que deseja deletar o workspace{" "}
                 <span className="font-semibold text-gray-900">
-                  "{workspace?.name}"
+                  &quot;{workspace?.name}&quot;
                 </span>
                 ?
               </p>
