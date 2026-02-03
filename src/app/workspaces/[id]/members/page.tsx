@@ -5,6 +5,8 @@ import { useRouter, useParams } from "next/navigation";
 import { useAuthStore } from "@/modules/auth/store/auth.store";
 import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
 import { workspaceService } from "@/modules/workspace/services/workspace.service";
+import { NotificationBell } from "@/components/NotificationBell";
+import { UserMenu } from "@/components/UserMenu";
 import {
   ArrowLeft,
   Users,
@@ -65,6 +67,14 @@ export default function WorkspaceMembersPage() {
   const canManageMembers = currentWorkspace?.permissions.members.write || false;
   const canDeleteMembers =
     currentWorkspace?.permissions.members.delete || false;
+
+  const handleLogout = () => {
+    const { clearAuth } = useAuthStore.getState();
+    const { clear: clearWorkspace } = useWorkspaceStore.getState();
+    clearAuth();
+    clearWorkspace();
+    router.push("/auth/login");
+  };
 
   useEffect(() => {
     if (_hasHydrated && !isAuthenticated) {
@@ -211,25 +221,31 @@ export default function WorkspaceMembersPage() {
       {/* Header */}
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push("/workspaces")}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Users className="w-6 h-6 text-blue-600" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.push("/workspaces")}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Users className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Membros</h1>
+                  {currentWorkspace && (
+                    <p className="text-sm text-gray-600">
+                      {currentWorkspace.name}
+                    </p>
+                  )}
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Membros</h1>
-                {currentWorkspace && (
-                  <p className="text-sm text-gray-600">
-                    {currentWorkspace.name}
-                  </p>
-                )}
-              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <NotificationBell />
+              <UserMenu />
             </div>
           </div>
         </div>

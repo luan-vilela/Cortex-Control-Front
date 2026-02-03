@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/modules/auth/store/auth.store";
 import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
 import { WorkspaceSwitcher } from "@/modules/workspace/components/WorkspaceSwitcher";
-import { Building2, Plus, Settings, Users, LogOut, Crown } from "lucide-react";
+import { NotificationBell } from "@/components/NotificationBell";
+import { UserMenu } from "@/components/UserMenu";
+import { Building2, Plus, Settings, Users, Crown } from "lucide-react";
 
 export default function WorkspacesPage() {
   const router = useRouter();
@@ -51,13 +53,10 @@ export default function WorkspacesPage() {
             <h1 className="text-2xl font-bold text-gray-900">Cortex Control</h1>
             <WorkspaceSwitcher />
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            Sair
-          </button>
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <UserMenu />
+          </div>
         </div>
       </header>
 

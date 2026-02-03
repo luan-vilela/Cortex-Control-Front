@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/modules/auth/store/auth.store";
 import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
 import { WorkspaceSwitcher } from "@/modules/workspace/components/WorkspaceSwitcher";
-import { LogOut, Bell } from "lucide-react";
+import { NotificationBell } from "@/components/NotificationBell";
+import { UserMenu } from "@/components/UserMenu";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -54,26 +55,9 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-bold text-gray-900">Cortex Control</h1>
             <WorkspaceSwitcher />
           </div>
-          <div className="flex items-center gap-4">
-            {/* Badge de convites pendentes */}
-            {invites.length > 0 && (
-              <a
-                href="/workspaces/invites"
-                className="relative flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-              >
-                <Bell className="w-4 h-4" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  {invites.length}
-                </span>
-              </a>
-            )}
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              Sair
-            </button>
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <UserMenu />
           </div>
         </div>
       </header>
