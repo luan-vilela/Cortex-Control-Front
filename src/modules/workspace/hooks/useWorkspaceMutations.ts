@@ -30,7 +30,7 @@ export function useUpdateWorkspace(workspaceId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { name: string }) =>
+    mutationFn: (data: { name: string; description?: string }) =>
       workspaceService.updateWorkspace(workspaceId, data),
     onSuccess: () => {
       // Invalida a lista e o detalhe específico

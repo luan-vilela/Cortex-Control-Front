@@ -77,5 +77,6 @@ export interface UpdatePermissionsDto {
 
 export interface UpdateWorkspaceDto {
   name?: string;
+  description?: string;
   settings?: any;
 }

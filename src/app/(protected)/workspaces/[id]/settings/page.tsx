@@ -36,6 +36,7 @@ export default function WorkspaceSettingsPage() {
   const deleteWorkspaceMutation = useDeleteWorkspace();
 
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [hasOtherOwner, setHasOtherOwner] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<WorkspaceStatus>(
@@ -47,6 +48,7 @@ export default function WorkspaceSettingsPage() {
   useEffect(() => {
     if (workspace) {
       setName(workspace.name || "");
+      setDescription(workspace.description || "");
       setCurrentStatus(workspace.status || WorkspaceStatus.ACTIVE);
     }
   }, [workspace]);
@@ -65,7 +67,7 @@ export default function WorkspaceSettingsPage() {
     e.preventDefault();
 
     updateWorkspaceMutation.mutate(
-      { name },
+      { name, description },
       {
         onSuccess: () => {
           alerts.success("Workspace atualizado com sucesso!");
@@ -240,6 +242,20 @@ export default function WorkspaceSettingsPage() {
                 minLength={2}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder="Nome do workspace"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Descrição (opcional)
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                disabled={!canEditSettings}
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                placeholder="Descreva o propósito deste workspace..."
               />
             </div>
 
