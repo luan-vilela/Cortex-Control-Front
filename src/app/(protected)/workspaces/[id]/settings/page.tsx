@@ -7,6 +7,9 @@ import {
   useUpdateWorkspace,
   useDeleteWorkspace,
 } from "@/modules/workspace/hooks";
+import { workspaceService } from "@/modules/workspace/services/workspace.service";
+import { WorkspaceStatus } from "@/modules/workspace/types/workspace.types";
+import { StatusBadge } from "@/components/StatusBadge";
 import { NotificationBell } from "@/components/NotificationBell";
 import { WalletDisplay } from "@/components/WalletDisplay";
 import { UserMenu } from "@/components/UserMenu";
@@ -18,6 +21,7 @@ import {
   Trash2,
   LogOut,
   AlertTriangle,
+  Power,
 } from "lucide-react";
 
 export default function WorkspaceSettingsPage() {
@@ -32,6 +36,28 @@ export default function WorkspaceSettingsPage() {
   const [name, setName] = useState("");
   const [hasOtherOwner, setHasOtherOwner] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState<WorkspaceStatus>(
+    WorkspaceStatus.ACTIVE,
+  );
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+  // Inicializar valores do formulário
+  useEffect(() => {
+    if (workspace) {
+      setName(workspace.name || "");
+      setCurrentStatus(workspace.status || WorkspaceStatus.ACTIVE);
+    }
+  }, [workspace]);
+
+  const getStatusLabel = (status: WorkspaceStatus) => {
+    const labels = {
+      [WorkspaceStatus.ACTIVE]: "Ativo",
+      [WorkspaceStatus.INACTIVE]: "Inativo",
+      [WorkspaceStatus.SUSPENDED]: "Suspenso",
+      [WorkspaceStatus.ARCHIVED]: "Arquivado",
+    };
+    return labels[status];
+  };
 
   const handleUpdateWorkspace = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +95,43 @@ export default function WorkspaceSettingsPage() {
     alert("Funcionalidade em desenvolvimento");
   };
 
+  const handleStatusChange = async (newStatus: WorkspaceStatus) => {
+    const canChangeStatusNow =
+      workspace?.isOwner || workspace?.role === "admin";
+
+    if (!canChangeStatusNow) {
+      alert("Você não tem permissão para alterar o status do workspace");
+      return;
+    }
+
+    if (currentStatus === WorkspaceStatus.SUSPENDED) {
+      alert(
+        "Workspaces suspensos por falta de créditos só podem ser reativados com recarga de saldo",
+      );
+      return;
+    }
+
+    if (
+      confirm(
+        `Tem certeza que deseja alterar o status para "${getStatusLabel(newStatus)}"?`,
+      )
+    ) {
+      setIsUpdatingStatus(true);
+      try {
+        await workspaceService.updateWorkspaceStatus(workspaceId, newStatus);
+        setCurrentStatus(newStatus);
+        alert("Status atualizado com sucesso!");
+        // Recarregar dados do workspace
+        window.location.reload();
+      } catch (error: any) {
+        console.error("Erro ao atualizar status:", error);
+        alert(error.response?.data?.message || "Erro ao atualizar status");
+      } finally {
+        setIsUpdatingStatus(false);
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -97,6 +160,7 @@ export default function WorkspaceSettingsPage() {
 
   const canEditSettings = workspace.permissions?.settings?.write || false;
   const isOwner = workspace.isOwner || false;
+  const canChangeStatus = isOwner || workspace.role === "admin";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -185,6 +249,99 @@ export default function WorkspaceSettingsPage() {
             )}
           </form>
         </div>
+
+        {/* Status do Workspace */}
+        {canChangeStatus && (
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              Status do Workspace
+            </h2>
+
+            <div className="space-y-6">
+              {/* Switch Ativo/Inativo */}
+              <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">
+                    Workspace Ativo
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {currentStatus === WorkspaceStatus.ACTIVE
+                      ? "Funcionando normalmente"
+                      : currentStatus === WorkspaceStatus.INACTIVE
+                        ? "Workspace pausado"
+                        : currentStatus === WorkspaceStatus.SUSPENDED
+                          ? "Suspenso por falta de créditos"
+                          : "Workspace arquivado"}
+                  </p>
+                </div>
+                <button
+                  onClick={() =>
+                    handleStatusChange(
+                      currentStatus === WorkspaceStatus.ACTIVE
+                        ? WorkspaceStatus.INACTIVE
+                        : WorkspaceStatus.ACTIVE,
+                    )
+                  }
+                  disabled={
+                    isUpdatingStatus ||
+                    currentStatus === WorkspaceStatus.SUSPENDED ||
+                    currentStatus === WorkspaceStatus.ARCHIVED
+                  }
+                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    currentStatus === WorkspaceStatus.ACTIVE
+                      ? "bg-green-600"
+                      : "bg-gray-300"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                      currentStatus === WorkspaceStatus.ACTIVE
+                        ? "translate-x-7"
+                        : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {currentStatus === WorkspaceStatus.SUSPENDED && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-sm text-red-800">
+                    ⚠️ <strong>Suspenso por falta de créditos.</strong>{" "}
+                    Recarregue seu saldo para reativar automaticamente.
+                  </p>
+                </div>
+              )}
+
+              {/* Botão Arquivar */}
+              <div className="pt-4 border-t border-gray-200 flex items-center justify-end gap-3">
+                <p className="text-xs text-gray-500">
+                  {currentStatus === WorkspaceStatus.ARCHIVED
+                    ? "Reativa o workspace para uso normal"
+                    : "Preserva para consulta, mas impede novas operações"}
+                </p>
+                <button
+                  onClick={() =>
+                    handleStatusChange(
+                      currentStatus === WorkspaceStatus.ARCHIVED
+                        ? WorkspaceStatus.ACTIVE
+                        : WorkspaceStatus.ARCHIVED,
+                    )
+                  }
+                  disabled={
+                    isUpdatingStatus ||
+                    currentStatus === WorkspaceStatus.SUSPENDED
+                  }
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+                >
+                  <AlertTriangle className="w-4 h-4" />
+                  {currentStatus === WorkspaceStatus.ARCHIVED
+                    ? "Desarquivar"
+                    : "Arquivar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Zona de Perigo */}
         <div className="bg-white rounded-lg shadow-md p-6 border-2 border-red-200">

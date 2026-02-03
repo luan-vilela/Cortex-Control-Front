@@ -3,6 +3,7 @@ import {
   Workspace,
   WorkspaceMember,
   WorkspaceInvite,
+  WorkspaceStatus,
   CreateWorkspaceDto,
   InviteMemberDto,
   UpdatePermissionsDto,
@@ -40,6 +41,17 @@ export const workspaceService = {
   // Deletar workspace
   async deleteWorkspace(workspaceId: string): Promise<void> {
     await api.delete(`/workspaces/${workspaceId}`);
+  },
+
+  // Atualizar status do workspace
+  async updateWorkspaceStatus(
+    workspaceId: string,
+    status: WorkspaceStatus,
+  ): Promise<Workspace> {
+    const response = await api.patch(`/workspaces/${workspaceId}/status`, {
+      status,
+    });
+    return response.data.workspace;
   },
 
   // Convidar membro

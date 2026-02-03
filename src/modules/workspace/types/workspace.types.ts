@@ -12,9 +12,17 @@ export interface WorkspacePermissions {
   members: ModulePermissions;
 }
 
+export enum WorkspaceStatus {
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+  SUSPENDED = "SUSPENDED",
+  ARCHIVED = "ARCHIVED",
+}
+
 export interface Workspace {
   id: string;
   name: string;
+  status: WorkspaceStatus;
   role: string;
   isOwner: boolean;
   permissions: WorkspacePermissions;
