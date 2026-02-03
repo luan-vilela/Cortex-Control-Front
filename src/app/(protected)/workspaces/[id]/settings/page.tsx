@@ -7,6 +7,7 @@ import {
   useUpdateWorkspace,
   useDeleteWorkspace,
 } from "@/modules/workspace/hooks";
+import { useAlerts } from "@/contexts/AlertContext";
 import { workspaceService } from "@/modules/workspace/services/workspace.service";
 import { WorkspaceStatus } from "@/modules/workspace/types/workspace.types";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -28,6 +29,7 @@ export default function WorkspaceSettingsPage() {
   const router = useRouter();
   const params = useParams();
   const workspaceId = params.id as string;
+  const alerts = useAlerts();
 
   const { data: workspace, isLoading } = useWorkspace(workspaceId);
   const updateWorkspaceMutation = useUpdateWorkspace(workspaceId);
@@ -66,11 +68,13 @@ export default function WorkspaceSettingsPage() {
       { name },
       {
         onSuccess: () => {
-          alert("Workspace atualizado com sucesso!");
+          alerts.success("Workspace atualizado com sucesso!");
         },
         onError: (error: any) => {
           console.error("Erro ao atualizar workspace:", error);
-          alert(error.response?.data?.message || "Erro ao atualizar workspace");
+          alerts.error(
+            error.response?.data?.message || "Erro ao atualizar workspace",
+          );
         },
       },
     );
@@ -80,19 +84,21 @@ export default function WorkspaceSettingsPage() {
     deleteWorkspaceMutation.mutate(workspaceId, {
       onSuccess: () => {
         setShowDeleteModal(false);
-        alert("Workspace deletado com sucesso!");
+        alerts.success("Workspace deletado com sucesso!");
         router.push("/workspaces");
       },
       onError: (error: any) => {
         console.error("Erro ao deletar workspace:", error);
-        alert(error.response?.data?.message || "Erro ao deletar workspace");
+        alerts.error(
+          error.response?.data?.message || "Erro ao deletar workspace",
+        );
       },
     });
   };
 
   const handleLeaveWorkspace = () => {
     // TODO: implementar sair do workspace quando backend tiver o endpoint
-    alert("Funcionalidade em desenvolvimento");
+    alerts.info("Funcionalidade em desenvolvimento");
   };
 
   const handleStatusChange = async (newStatus: WorkspaceStatus) => {
@@ -100,12 +106,14 @@ export default function WorkspaceSettingsPage() {
       workspace?.isOwner || workspace?.role === "admin";
 
     if (!canChangeStatusNow) {
-      alert("Você não tem permissão para alterar o status do workspace");
+      alerts.warning(
+        "Você não tem permissão para alterar o status do workspace",
+      );
       return;
     }
 
     if (currentStatus === WorkspaceStatus.SUSPENDED) {
-      alert(
+      alerts.warning(
         "Workspaces suspensos por falta de créditos só podem ser reativados com recarga de saldo",
       );
       return;
@@ -120,12 +128,14 @@ export default function WorkspaceSettingsPage() {
       try {
         await workspaceService.updateWorkspaceStatus(workspaceId, newStatus);
         setCurrentStatus(newStatus);
-        alert("Status atualizado com sucesso!");
+        alerts.success("Status atualizado com sucesso!");
         // Recarregar dados do workspace
         window.location.reload();
       } catch (error: any) {
         console.error("Erro ao atualizar status:", error);
-        alert(error.response?.data?.message || "Erro ao atualizar status");
+        alerts.error(
+          error.response?.data?.message || "Erro ao atualizar status",
+        );
       } finally {
         setIsUpdatingStatus(false);
       }

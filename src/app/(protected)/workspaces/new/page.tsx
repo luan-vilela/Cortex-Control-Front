@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCreateWorkspace } from "@/modules/workspace/hooks";
+import { useAlerts } from "@/contexts/AlertContext";
 import { WorkspaceSwitcher } from "@/modules/workspace/components/WorkspaceSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
 import { WalletDisplay } from "@/components/WalletDisplay";
@@ -12,21 +13,24 @@ import { ArrowLeft } from "lucide-react";
 export default function NewWorkspacePage() {
   const router = useRouter();
   const createWorkspaceMutation = useCreateWorkspace();
+  const alerts = useAlerts();
   const [name, setName] = useState("");
-  const [error, setError] = useState("");
+  const [description, setDescription] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
 
     createWorkspaceMutation.mutate(
-      { name },
+      { name, description },
       {
         onSuccess: () => {
+          alerts.success("Workspace criado com sucesso!");
           router.push("/workspaces");
         },
         onError: (err: any) => {
-          setError(err.response?.data?.message || "Erro ao criar workspace");
+          alerts.error(
+            err.response?.data?.message || "Erro ao criar workspace",
+          );
         },
       },
     );
@@ -87,11 +91,25 @@ export default function NewWorkspacePage() {
               </p>
             </div>
 
-            {error && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-800">{error}</p>
-              </div>
-            )}
+            <div>
+              <label
+                htmlFor="description"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Descrição (opcional)
+              </label>
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Descreva o propósito deste workspace..."
+                rows={3}
+              />
+              <p className="mt-2 text-sm text-gray-500">
+                Ajuda a equipe a entender o objetivo do workspace
+              </p>
+            </div>
 
             <div className="flex gap-4">
               <button

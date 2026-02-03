@@ -210,9 +210,25 @@ export default function WorkspacesPage() {
                     />
                   </div>
 
-                  <div className="text-sm text-gray-600 mb-4">
-                    Membro desde{" "}
-                    {new Date(workspace.joinedAt).toLocaleDateString("pt-BR")}
+                  <div className="min-h-[2.5rem] mb-3">
+                    {workspace.description && (
+                      <p className="text-sm text-gray-600 line-clamp-2">
+                        {workspace.description}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1 text-sm text-gray-600 mb-4">
+                    <div>
+                      Membro desde{" "}
+                      {new Date(workspace.joinedAt).toLocaleDateString("pt-BR")}
+                    </div>
+                    {workspace.memberCount !== undefined && (
+                      <div>
+                        {workspace.memberCount}{" "}
+                        {workspace.memberCount === 1 ? "membro" : "membros"}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex gap-2">

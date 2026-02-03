@@ -22,11 +22,13 @@ export enum WorkspaceStatus {
 export interface Workspace {
   id: string;
   name: string;
+  description?: string;
   status: WorkspaceStatus;
   role: string;
   isOwner: boolean;
   permissions: WorkspacePermissions;
   joinedAt: string;
+  memberCount?: number;
 }
 
 export interface WorkspaceMember {
@@ -59,6 +61,7 @@ export interface WorkspaceInvite {
 
 export interface CreateWorkspaceDto {
   name: string;
+  description?: string;
 }
 
 export interface InviteMemberDto {

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { QueryProvider } from "@/lib/QueryProvider";
+import { AlertProvider } from "@/contexts/AlertContext";
+import { AlertContainer } from "@/components/AlertContainer";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,7 +31,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <QueryProvider>{children}</QueryProvider>
+        <AlertProvider>
+          <QueryProvider>{children}</QueryProvider>
+          <AlertContainer />
+        </AlertProvider>
       </body>
     </html>
   );
