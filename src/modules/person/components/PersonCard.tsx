@@ -1,26 +1,21 @@
 import React from "react";
-import { Person, PersonType, PhoneType } from "../types/person.types";
+import {
+  AllContacts,
+  EntityType,
+  PhoneType,
+  Lead,
+  Cliente,
+  Fornecedor,
+  Parceiro,
+} from "../types/person.types";
 import { Mail, Phone, MapPin, FileText } from "lucide-react";
 
-const personTypeLabels: Record<PersonType, string> = {
-  [PersonType.LEAD]: "Lead",
-  [PersonType.CUSTOMER]: "Cliente",
-  [PersonType.COMPANY]: "Empresa",
-  [PersonType.SUPPLIER]: "Fornecedor",
-};
-
-const personTypeColors: Record<PersonType, string> = {
-  [PersonType.LEAD]: "border-yellow-500",
-  [PersonType.CUSTOMER]: "border-green-500",
-  [PersonType.COMPANY]: "border-blue-500",
-  [PersonType.SUPPLIER]: "border-purple-500",
-};
-
-const personTypeBadges: Record<PersonType, string> = {
-  [PersonType.LEAD]: "bg-yellow-100 text-yellow-800",
-  [PersonType.CUSTOMER]: "bg-green-100 text-green-800",
-  [PersonType.COMPANY]: "bg-blue-100 text-blue-800",
-  [PersonType.SUPPLIER]: "bg-purple-100 text-purple-800",
+const entityTypeLabels: Record<EntityType, string> = {
+  [EntityType.PERSON]: "Contato",
+  [EntityType.LEAD]: "Lead",
+  [EntityType.CLIENTE]: "Cliente",
+  [EntityType.FORNECEDOR]: "Fornecedor",
+  [EntityType.PARCEIRO]: "Parceiro",
 };
 
 const phoneTypeLabels: Record<PhoneType, string> = {
@@ -31,8 +26,25 @@ const phoneTypeLabels: Record<PhoneType, string> = {
   [PhoneType.COMMERCIAL]: "Comercial",
 };
 
+// Função helper para detectar o tipo de entidade
+function getEntityTypeName(person: AllContacts): string {
+  if ("status" in person && "source" in person && "score" in person) {
+    return entityTypeLabels[EntityType.LEAD];
+  }
+  if ("categoria" in person && "clienteStatus" in person) {
+    return entityTypeLabels[EntityType.CLIENTE];
+  }
+  if ("fornecedorStatus" in person && "prazoPagamento" in person) {
+    return entityTypeLabels[EntityType.FORNECEDOR];
+  }
+  if ("parceiroStatus" in person && "comissaoPercentual" in person) {
+    return entityTypeLabels[EntityType.PARCEIRO];
+  }
+  return entityTypeLabels[EntityType.PERSON];
+}
+
 interface PersonCardProps {
-  person: Person;
+  person: AllContacts;
   onClick?: () => void;
   showFullDetails?: boolean;
 }
@@ -47,11 +59,9 @@ export function PersonCard({
   return (
     <div
       onClick={onClick}
-      className={`bg-gh-card rounded-lg shadow p-6 transition-shadow border-l-4 ${
-        personTypeColors[person.type]
-      } ${onClick ? "cursor-pointer hover:shadow-lg" : ""} ${
-        !person.active ? "opacity-60" : ""
-      }`}
+      className={`bg-gh-card rounded-lg shadow p-6 transition-shadow border-l-4 border-gray-300 ${
+        onClick ? "cursor-pointer hover:shadow-lg" : ""
+      } ${!person.active ? "opacity-60" : ""}`}
     >
       {/* Header com nome e badge */}
       <div className="flex items-start justify-between mb-4">
@@ -59,15 +69,15 @@ export function PersonCard({
           <h3 className="text-lg font-semibold text-gh-text mb-1">
             {person.name}
           </h3>
-          {person.document && (
-            <p className="text-sm text-gh-text-secondary">{person.document}</p>
-          )}
+          <div className="flex gap-2 text-sm text-gh-text-secondary">
+            <span>{person.document && `${person.document}`}</span>
+          </div>
         </div>
-        <span
-          className={`px-3 py-1 text-xs font-medium rounded-full ${personTypeBadges[person.type]}`}
-        >
-          {personTypeLabels[person.type]}
-        </span>
+        <div className="flex flex-col gap-1 items-end">
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-gh-badge-bg text-gh-text">
+            {getEntityTypeName(person)}
+          </span>
+        </div>
       </div>
 
       {/* Informações de contato */}
@@ -108,15 +118,29 @@ export function PersonCard({
       {/* Detalhes completos */}
       {showFullDetails && (
         <div className="mt-4 pt-4 border-t border-gh-border space-y-3">
-          {person.address && (
+          {(person.address || person.city || person.state) && (
             <div>
-              <p className="text-sm font-medium text-gh-text mb-1">
-                Endereço completo:
-              </p>
-              <p className="text-sm text-gh-text-secondary">{person.address}</p>
-              {person.zipCode && (
+              <p className="text-sm font-medium text-gh-text mb-1">Endereço:</p>
+              {person.address && (
+                <p className="text-sm text-gh-text-secondary">
+                  {person.address}
+                </p>
+              )}
+              {(person.city || person.state) && (
+                <p className="text-sm text-gh-text-secondary">
+                  {person.city && `${person.city}`}
+                  {person.city && person.state && ", "}
+                  {person.state && `${person.state}`}
+                </p>
+              )}
+              {person.postalCode && (
                 <p className="text-sm text-gh-text-secondary mt-1">
-                  CEP: {person.zipCode}
+                  CEP: {person.postalCode}
+                </p>
+              )}
+              {person.country && (
+                <p className="text-sm text-gh-text-secondary">
+                  {person.country}
                 </p>
               )}
             </div>
@@ -152,9 +176,7 @@ export function PersonCard({
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <FileText className="w-4 h-4 text-gh-text-secondary" />
-                <p className="text-sm font-medium text-gh-text">
-                  Observações:
-                </p>
+                <p className="text-sm font-medium text-gh-text">Observações:</p>
               </div>
               <p className="text-sm text-gh-text-secondary whitespace-pre-wrap pl-6">
                 {person.notes}

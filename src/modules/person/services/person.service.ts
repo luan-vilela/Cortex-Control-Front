@@ -1,6 +1,6 @@
 import api from "@/lib/api";
 import {
-  Person,
+  AllContacts,
   CreatePersonDto,
   UpdatePersonDto,
   PersonStats,
@@ -12,19 +12,19 @@ export const personService = {
   async createPerson(
     workspaceId: string,
     data: CreatePersonDto,
-  ): Promise<Person> {
+  ): Promise<AllContacts> {
     const response = await api.post(`/workspaces/${workspaceId}/persons`, data);
-    return response.data.person;
+    return response.data;
   },
 
   // Listar pessoas
   async getPersons(
     workspaceId: string,
     filters?: PersonFilters,
-  ): Promise<{ persons: Person[]; total: number }> {
+  ): Promise<AllContacts[]> {
     const params = new URLSearchParams();
 
-    if (filters?.type) params.append("type", filters.type);
+    if (filters?.entityType) params.append("entityType", filters.entityType);
     if (filters?.active !== undefined)
       params.append("active", String(filters.active));
     if (filters?.search) params.append("search", filters.search);
@@ -36,11 +36,11 @@ export const personService = {
   },
 
   // Obter pessoa por ID
-  async getPerson(workspaceId: string, personId: string): Promise<Person> {
+  async getPerson(workspaceId: string, personId: string): Promise<AllContacts> {
     const response = await api.get(
       `/workspaces/${workspaceId}/persons/${personId}`,
     );
-    return response.data.person;
+    return response.data;
   },
 
   // Atualizar pessoa
@@ -48,12 +48,12 @@ export const personService = {
     workspaceId: string,
     personId: string,
     data: UpdatePersonDto,
-  ): Promise<Person> {
+  ): Promise<AllContacts> {
     const response = await api.patch(
       `/workspaces/${workspaceId}/persons/${personId}`,
       data,
     );
-    return response.data.person;
+    return response.data;
   },
 
   // Remover pessoa (soft delete)
@@ -67,16 +67,19 @@ export const personService = {
   },
 
   // Reativar pessoa
-  async restorePerson(workspaceId: string, personId: string): Promise<Person> {
+  async restorePerson(
+    workspaceId: string,
+    personId: string,
+  ): Promise<AllContacts> {
     const response = await api.patch(
       `/workspaces/${workspaceId}/persons/${personId}/restore`,
     );
-    return response.data.person;
+    return response.data;
   },
 
   // Obter estatísticas
   async getStats(workspaceId: string): Promise<PersonStats> {
     const response = await api.get(`/workspaces/${workspaceId}/persons/stats`);
-    return response.data.stats;
+    return response.data;
   },
 };

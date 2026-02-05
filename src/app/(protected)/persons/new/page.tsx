@@ -5,18 +5,8 @@ import { useRouter } from "next/navigation";
 import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
 import { useCreatePerson } from "@/modules/person/hooks/usePersonMutations";
 import { PhoneInput } from "@/modules/person/components/PhoneInput";
-import {
-  CreatePersonDto,
-  PersonType,
-} from "@/modules/person/types/person.types";
+import { CreatePersonDto } from "@/modules/person/types/person.types";
 import { useAlerts } from "@/contexts/AlertContext";
-
-const personTypeLabels: Record<PersonType, string> = {
-  [PersonType.LEAD]: "Lead",
-  [PersonType.CUSTOMER]: "Cliente",
-  [PersonType.COMPANY]: "Empresa",
-  [PersonType.SUPPLIER]: "Fornecedor",
-};
 
 export default function NewPersonPage() {
   const router = useRouter();
@@ -27,13 +17,14 @@ export default function NewPersonPage() {
     name: "",
     email: "",
     document: "",
-    type: PersonType.LEAD,
     address: "",
     city: "",
     state: "",
-    zipCode: "",
+    country: "Brasil",
+    postalCode: "",
     notes: "",
     phones: [],
+    active: true,
   });
 
   const createMutation = useCreatePerson(activeWorkspace?.id || "");
@@ -49,15 +40,17 @@ export default function NewPersonPage() {
     // Remover campos vazios
     const cleanData: CreatePersonDto = {
       name: formData.name,
-      type: formData.type,
+      active: formData.active !== false,
     };
 
     if (formData.email?.trim()) cleanData.email = formData.email;
     if (formData.document?.trim()) cleanData.document = formData.document;
+    if (formData.website?.trim()) cleanData.website = formData.website;
     if (formData.address?.trim()) cleanData.address = formData.address;
     if (formData.city?.trim()) cleanData.city = formData.city;
     if (formData.state?.trim()) cleanData.state = formData.state;
-    if (formData.zipCode?.trim()) cleanData.zipCode = formData.zipCode;
+    if (formData.country?.trim()) cleanData.country = formData.country;
+    if (formData.postalCode?.trim()) cleanData.postalCode = formData.postalCode;
     if (formData.notes?.trim()) cleanData.notes = formData.notes;
     if (formData.phones && formData.phones.length > 0) {
       cleanData.phones = formData.phones.filter((p) => p.number.trim());
@@ -76,37 +69,34 @@ export default function NewPersonPage() {
 
   if (!activeWorkspace) {
     return (
-      <div className="p-6">
-        <p className="text-gray-600">Selecione um workspace</p>
+      <div className="flex items-center justify-center py-12">
+        <p className="text-gh-text-secondary">Selecione um workspace</p>
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <button
-          onClick={() => router.back()}
-          className="text-blue-600 hover:text-blue-800 mb-2"
-        >
-          ← Voltar
-        </button>
-        <h1 className="text-2xl font-bold text-gray-900">Nova Pessoa</h1>
-        <p className="text-gray-600">Cadastre uma nova pessoa no sistema</p>
+      <div>
+        <h2 className="text-2xl font-bold text-gh-text mb-1">Nova Pessoa</h2>
+        <p className="text-sm text-gh-text-secondary">
+          Cadastre uma nova pessoa. Após o cadastro, você poderá adicionar
+          papéis como Lead, Cliente, Fornecedor ou Parceiro.
+        </p>
       </div>
 
       {/* Formulário */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Informações Básicas */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-gh-card p-6 rounded-md border border-gh-border">
+          <h3 className="text-base font-semibold text-gh-text mb-4">
             Informações Básicas
-          </h2>
+          </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gh-text mb-1">
                 Nome completo *
               </label>
               <input
@@ -116,50 +106,28 @@ export default function NewPersonPage() {
                   setFormData({ ...formData, name: e.target.value })
                 }
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
                 placeholder="Ex: João da Silva"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tipo
-              </label>
-              <select
-                value={formData.type}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    type: e.target.value as PersonType,
-                  })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                {Object.entries(personTypeLabels).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gh-text mb-1">
                 Documento (CPF/CNPJ)
               </label>
               <input
                 type="text"
-                value={formData.document}
+                value={formData.document || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, document: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
                 placeholder="000.000.000-00"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gh-text mb-1">
                 Email
               </label>
               <input
@@ -168,7 +136,7 @@ export default function NewPersonPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
                 placeholder="email@exemplo.com"
               />
             </div>
@@ -176,10 +144,10 @@ export default function NewPersonPage() {
         </div>
 
         {/* Telefones */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-gh-card p-6 rounded-md border border-gh-border">
+          <h3 className="text-base font-semibold text-gh-text mb-4">
             Telefones
-          </h2>
+          </h3>
           <PhoneInput
             phones={formData.phones || []}
             onChange={(phones) => setFormData({ ...formData, phones })}
@@ -187,106 +155,137 @@ export default function NewPersonPage() {
         </div>
 
         {/* Endereço */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Endereço</h2>
+        <div className="bg-gh-card p-6 rounded-md border border-gh-border">
+          <h3 className="text-base font-semibold text-gh-text mb-4">
+            Endereço
+          </h3>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Endereço completo
+              <label className="block text-sm font-medium text-gh-text mb-1">
+                Endereço
               </label>
               <input
                 type="text"
-                value={formData.address}
+                value={formData.address || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, address: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Rua, número, complemento"
+                className="w-full px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
+                placeholder="Rua, Avenida, Travessa..."
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gh-text mb-1">
                   Cidade
                 </label>
                 <input
                   type="text"
-                  value={formData.city}
+                  value={formData.city || ""}
                   onChange={(e) =>
                     setFormData({ ...formData, city: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
                   placeholder="São Paulo"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gh-text mb-1">
                   Estado (UF)
                 </label>
                 <input
                   type="text"
-                  value={formData.state}
+                  value={formData.state || ""}
                   onChange={(e) =>
                     setFormData({ ...formData, state: e.target.value })
                   }
                   maxLength={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
                   placeholder="SP"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gh-text mb-1">
                   CEP
                 </label>
                 <input
                   type="text"
-                  value={formData.zipCode}
+                  value={formData.postalCode || ""}
                   onChange={(e) =>
-                    setFormData({ ...formData, zipCode: e.target.value })
+                    setFormData({ ...formData, postalCode: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
                   placeholder="00000-000"
                 />
               </div>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gh-text mb-1">
+                País
+              </label>
+              <input
+                type="text"
+                value={formData.country || "Brasil"}
+                onChange={(e) =>
+                  setFormData({ ...formData, country: e.target.value })
+                }
+                className="w-full px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
+                placeholder="Brasil"
+              />
+            </div>
           </div>
         </div>
 
+        {/* Website */}
+        <div className="bg-gh-card p-6 rounded-md border border-gh-border">
+          <h3 className="text-base font-semibold text-gh-text mb-4">Website</h3>
+          <input
+            type="url"
+            value={formData.website || ""}
+            onChange={(e) =>
+              setFormData({ ...formData, website: e.target.value })
+            }
+            className="w-full px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
+            placeholder="https://exemplo.com"
+          />
+        </div>
+
         {/* Observações */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-gh-card p-6 rounded-md border border-gh-border">
+          <h3 className="text-base font-semibold text-gh-text mb-4">
             Observações
-          </h2>
+          </h3>
           <textarea
-            value={formData.notes}
+            value={formData.notes || ""}
             onChange={(e) =>
               setFormData({ ...formData, notes: e.target.value })
             }
             rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
             placeholder="Notas, comentários ou informações adicionais..."
           />
         </div>
 
         {/* Botões */}
-        <div className="flex gap-4 justify-end">
+        <div className="flex gap-3 justify-end">
           <button
             type="button"
-            onClick={() => router.back()}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gh-bg transition-colors"
+            onClick={() => router.push("/persons")}
+            className="px-4 py-2 border border-gh-border text-gh-text rounded-md hover:bg-gh-hover transition-colors text-sm font-medium"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={createMutation.isPending}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-gh-hover text-white rounded-md hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
           >
-            {createMutation.isPending ? "Salvando..." : "Salvar"}
+            {createMutation.isPending ? "Salvando..." : "Criar Pessoa"}
           </button>
         </div>
       </form>

@@ -84,25 +84,25 @@ export default function DashboardPage() {
                 <div className="flex justify-between py-1 border-t border-gh-border">
                   <span>Leads</span>
                   <span className="text-gh-text font-medium">
-                    {personStats.byType.lead || 0}
+                    {personStats.byType?.LEAD || 0}
                   </span>
                 </div>
                 <div className="flex justify-between py-1">
                   <span>Clientes</span>
                   <span className="text-gh-text font-medium">
-                    {personStats.byType.customer || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span>Empresas</span>
-                  <span className="text-gh-text font-medium">
-                    {personStats.byType.company || 0}
+                    {personStats.byType?.CLIENTE || 0}
                   </span>
                 </div>
                 <div className="flex justify-between py-1">
                   <span>Fornecedores</span>
                   <span className="text-gh-text font-medium">
-                    {personStats.byType.supplier || 0}
+                    {personStats.byType?.FORNECEDOR || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between py-1">
+                  <span>Parceiros</span>
+                  <span className="text-gh-text font-medium">
+                    {personStats.byType?.PARCEIRO || 0}
                   </span>
                 </div>
               </div>
