@@ -37,6 +37,14 @@ export default function ProtectedLayout({
     }
   }, [isAuthenticated, _hasHydrated, router]);
 
+  // Carregar workspaces ao fazer login
+  useEffect(() => {
+    if (_hasHydrated && isAuthenticated && !activeWorkspace) {
+      const { fetchWorkspaces } = useWorkspaceStore.getState();
+      fetchWorkspaces();
+    }
+  }, [_hasHydrated, isAuthenticated, activeWorkspace]);
+
   // Mostra loading enquanto verifica autenticação
   if (!_hasHydrated) {
     return (

@@ -14,13 +14,15 @@ export function WorkspaceSwitcher() {
     _hasHydrated,
   } = useWorkspaceStore();
 
+  // Carregar workspaces na montagem do componente
   useEffect(() => {
     if (_hasHydrated) {
       fetchWorkspaces();
     }
-  }, [_hasHydrated]);
+  }, [_hasHydrated, fetchWorkspaces]);
 
-  if (!_hasHydrated || !activeWorkspace) {
+  // Se ainda está carregando ou sem workspace, não renderiza o botão
+  if (!_hasHydrated || !activeWorkspace || workspaces.length === 0) {
     return null;
   }
 
