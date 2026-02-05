@@ -60,7 +60,7 @@ export default function NewPersonPage() {
     createMutation.mutate(cleanData, {
       onSuccess: () => {
         alerts.success("Pessoa criada com sucesso!");
-        router.push("/persons");
+        router.push("/contatos");
       },
       onError: (error: any) => {
         alerts.error(error.response?.data?.message || "Erro ao criar pessoa");
@@ -279,7 +279,7 @@ export default function NewPersonPage() {
           <div className="flex gap-3 justify-end">
             <button
               type="button"
-              onClick={() => router.push("/persons")}
+              onClick={() => router.push("/contatos")}
               className="px-4 py-2 border border-gh-border text-gh-text rounded-md hover:bg-gh-hover transition-colors text-sm font-medium"
             >
               Cancelar

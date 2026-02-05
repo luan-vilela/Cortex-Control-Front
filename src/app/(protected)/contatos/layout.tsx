@@ -15,13 +15,13 @@ import {
 const menuItems = [
   {
     label: "Todas os Contatos",
-    href: "/persons",
+    href: "/contatos",
     icon: Users,
     count: "total",
   },
   {
     label: "Novo Contato",
-    href: "/persons/new",
+    href: "/contatos/new",
     icon: UserPlus,
   },
   {
@@ -29,17 +29,17 @@ const menuItems = [
     items: [
       {
         label: "Clientes",
-        href: "/clientes/new",
+        href: "/contatos/clientes",
         icon: ShoppingCart,
       },
       {
         label: "Fornecedores",
-        href: "/fornecedores/new",
+        href: "/contatos/fornecedores",
         icon: Briefcase,
       },
       {
         label: "Parceiros",
-        href: "/parceiros/new",
+        href: "/contatos/parceiros",
         icon: Handshake,
       },
     ],
@@ -63,10 +63,10 @@ export default function PersonsLayout({
   };
 
   const isActive = (href: string) => {
-    if (href === "/persons" && pathname === "/persons") {
+    if (href === "/contatos" && pathname === "/contatos") {
       return true;
     }
-    if (href !== "/persons" && pathname?.startsWith(href.split("?")[0])) {
+    if (href !== "/contatos" && pathname?.startsWith(href.split("?")[0])) {
       return true;
     }
     return false;

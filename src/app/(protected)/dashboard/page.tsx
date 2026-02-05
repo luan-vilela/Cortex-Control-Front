@@ -55,7 +55,7 @@ export default function DashboardPage() {
 
   const handleModuleClick = (moduleId: string) => {
     const routes: Record<string, string> = {
-      contacts: "/persons",
+      contacts: "/contatos",
       conversations: "/conversations",
       automations: "/automations",
       sales: "/sales",
