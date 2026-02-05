@@ -2,30 +2,30 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
-import { usePersonStats } from "@/modules/person/hooks/usePersonQueries";
 import { WorkspaceSwitcher } from "@/modules/workspace/components/WorkspaceSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
 import { WalletDisplay } from "@/components/WalletDisplay";
 import { UserMenu } from "@/components/UserMenu";
 import {
+  TrendingUp,
   Users,
   UserPlus,
-  TrendingUp,
   ShoppingCart,
   Briefcase,
   Handshake,
 } from "lucide-react";
+import { usePersonStats } from "@/modules/person/hooks/usePersonQueries";
 
 const menuItems = [
   {
-    label: "Todas os Contatos",
-    href: "/persons",
-    icon: Users,
+    label: "Todos os Leads",
+    href: "/leads",
+    icon: TrendingUp,
     count: "total",
   },
   {
-    label: "Novo Contato",
-    href: "/persons/new",
+    label: "Novo Lead",
+    href: "/leads/new",
     icon: UserPlus,
   },
   {
@@ -60,7 +60,7 @@ const menuItems = [
   },
 ];
 
-export default function PersonsLayout({
+export default function LeadsLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -72,15 +72,15 @@ export default function PersonsLayout({
 
   const getCount = (countKey: string) => {
     if (!stats) return null;
-    if (countKey === "total") return stats.byType.PERSON || 0;
+    if (countKey === "total") return stats.byType.LEAD || 0;
     return null;
   };
 
   const isActive = (href: string) => {
-    if (href === "/persons" && pathname === "/persons") {
+    if (href === "/leads" && pathname === "/leads") {
       return true;
     }
-    if (href !== "/persons" && pathname?.startsWith(href.split("?")[0])) {
+    if (href !== "/leads" && pathname?.startsWith(href.split("?")[0])) {
       return true;
     }
     return false;
@@ -203,7 +203,9 @@ export default function PersonsLayout({
                     </div>
                     {count !== null && (
                       <span
-                        className={`text-xs px-2 py-0.5 rounded-full bg-gh-badge-bg text-gh-text`}
+                        className={`
+                        text-xs px-2 py-0.5 rounded-full bg-gh-badge-bg text-gh-text
+                      `}
                       >
                         {count}
                       </span>

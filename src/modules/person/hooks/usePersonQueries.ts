@@ -33,5 +33,7 @@ export function usePersonStats(workspaceId: string) {
     queryKey: personKeys.stats(workspaceId),
     queryFn: () => personService.getStats(workspaceId),
     enabled: !!workspaceId,
+    refetchInterval: 10000, // Atualizar a cada 10 segundos
+    staleTime: 5000, // Considerar dados como obsoletos após 5 segundos
   });
 }
