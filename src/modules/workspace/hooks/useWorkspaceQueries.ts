@@ -59,3 +59,25 @@ export function useWorkspacePendingInvites(workspaceId: string) {
     staleTime: 30 * 1000, // 30 segundos - dados bem voláteis
   });
 }
+/**
+ * Hook para buscar módulos habilitados do workspace
+ */
+export function useEnabledModules(workspaceId: string) {
+  return useQuery({
+    queryKey: [...workspaceKeys.detail(workspaceId), "modules"],
+    queryFn: () => workspaceService.getEnabledModules(workspaceId),
+    enabled: !!workspaceId,
+    staleTime: 5 * 60 * 1000, // 5 minutos - não muda frequentemente
+  });
+}
+
+/**
+ * Hook para buscar todos os módulos disponíveis com suas configurações
+ */
+export function useAvailableModules() {
+  return useQuery({
+    queryKey: workspaceKeys.availableModules(),
+    queryFn: () => workspaceService.getAvailableModules(),
+    staleTime: 60 * 60 * 1000, // 1 hora - configuração estática
+  });
+}

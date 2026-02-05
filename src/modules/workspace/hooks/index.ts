@@ -6,3 +6,6 @@ export * from "./useWorkspaceQueries";
 
 // Mutations
 export * from "./useWorkspaceMutations";
+
+// Module Access
+export * from "./useModuleAccess";

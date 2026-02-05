@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import {
   useWorkspace,
@@ -10,7 +10,9 @@ import {
   useUpdateMemberPermissions,
   useRemoveMember,
   useUpdateInvite,
+  useEnabledModules,
 } from "@/modules/workspace/hooks";
+import { InviteModal } from "@/modules/workspace/components/InviteModal";
 import { NotificationBell } from "@/components/NotificationBell";
 import { WalletDisplay } from "@/components/WalletDisplay";
 import { UserMenu } from "@/components/UserMenu";
@@ -30,6 +32,7 @@ import {
 import type {
   WorkspaceMember,
   WorkspacePermissions,
+  ModulePermissions,
 } from "@/modules/workspace/types/workspace.types";
 
 interface EditingMember {
@@ -53,6 +56,7 @@ export default function WorkspaceMembersPage() {
   const { data: workspace } = useWorkspace(workspaceId);
   const { data: members = [], isLoading } = useWorkspaceMembers(workspaceId);
   const { data: pendingInvites = [] } = useWorkspacePendingInvites(workspaceId);
+  const { data: enabledModules = [] } = useEnabledModules(workspaceId);
   const inviteMutation = useInviteMember(workspaceId);
   const updatePermissionsMutation = useUpdateMemberPermissions(workspaceId);
   const removeMemberMutation = useRemoveMember(workspaceId);
@@ -66,9 +70,70 @@ export default function WorkspaceMembersPage() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("member");
+  const [invitePermissions, setInvitePermissions] =
+    useState<WorkspacePermissions>({
+      members: { read: false, write: false, delete: false },
+    } as WorkspacePermissions);
 
   const canManageMembers = workspace?.permissions?.members?.write || false;
   const canDeleteMembers = workspace?.permissions?.members?.delete || false;
+
+  // Mapear nomes de módulos para labels em português
+  const moduleLabels: Record<string, string> = {
+    contacts: "Contatos",
+    conversations: "Conversas",
+    automations: "Automações",
+    settings: "Configurações",
+    members: "Membros",
+    customers: "Clientes",
+  };
+
+  // Gerar permissões padrão dinâmicas baseado nos módulos habilitados
+  const getDefaultPermissionsByRole = (role: string): WorkspacePermissions => {
+    const permissions: any = {};
+
+    // Iterar pelos módulos habilitados e atribuir permissões padrão
+    enabledModules.forEach((module) => {
+      if (role === "admin") {
+        permissions[module] = { read: true, write: true, delete: true };
+      } else {
+        // Member: read+write em modules principais, read-only em settings/members
+        if (["settings", "members"].includes(module)) {
+          permissions[module] = { read: true, write: false, delete: false };
+        } else {
+          permissions[module] = { read: true, write: true, delete: false };
+        }
+      }
+    });
+
+    return permissions as WorkspacePermissions;
+  };
+
+  // Sincronizar permissões quando os módulos mudam
+  useEffect(() => {
+    if (enabledModules.length > 0) {
+      setInvitePermissions(getDefaultPermissionsByRole(inviteRole));
+    }
+  }, [enabledModules]);
+
+  const handleRoleChange = (role: string) => {
+    setInviteRole(role);
+    setInvitePermissions(getDefaultPermissionsByRole(role));
+  };
+
+  const handlePermissionChange = (
+    module: keyof WorkspacePermissions,
+    permission: keyof ModulePermissions,
+    value: boolean,
+  ) => {
+    setInvitePermissions((prev) => ({
+      ...prev,
+      [module]: {
+        ...prev[module],
+        [permission]: value,
+      },
+    }));
+  };
 
   const handleStartEdit = (member: WorkspaceMember) => {
     setEditing({
@@ -183,29 +248,11 @@ export default function WorkspaceMembersPage() {
   const handleInviteMember = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Permissões padrão baseadas no role
-    const defaultPermissions =
-      inviteRole === "admin"
-        ? {
-            contacts: { read: true, write: true, delete: true },
-            conversations: { read: true, write: true, delete: true },
-            automations: { read: true, write: true, delete: true },
-            settings: { read: true, write: true, delete: false },
-            members: { read: true, write: true, delete: false },
-          }
-        : {
-            contacts: { read: true, write: true, delete: false },
-            conversations: { read: true, write: true, delete: false },
-            automations: { read: true, write: false, delete: false },
-            settings: { read: true, write: false, delete: false },
-            members: { read: true, write: false, delete: false },
-          };
-
     inviteMutation.mutate(
       {
         email: inviteEmail,
         role: inviteRole,
-        permissions: defaultPermissions,
+        permissions: invitePermissions,
       },
       {
         onSuccess: () => {
@@ -213,6 +260,7 @@ export default function WorkspaceMembersPage() {
           setShowInviteModal(false);
           setInviteEmail("");
           setInviteRole("member");
+          setInvitePermissions(getDefaultPermissionsByRole("member"));
         },
         onError: (error: any) => {
           console.error("Erro ao convidar membro:", error);
@@ -242,40 +290,8 @@ export default function WorkspaceMembersPage() {
 
   return (
     <div className="min-h-screen bg-gh-bg">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push("/workspaces")}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Users className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Membros</h1>
-                  {workspace && (
-                    <p className="text-sm text-gray-600">{workspace.name}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <NotificationBell />
-              <WalletDisplay />
-              <UserMenu />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">
@@ -327,8 +343,8 @@ export default function WorkspaceMembersPage() {
                 <tbody className="bg-white divide-y divide-gh-border">
                   {members.map((member) => {
                     const isEditing = editing?.memberId === member.id;
-                    const userName = member.name || "Usuário";
-                    const userEmail = member.email || "email@example.com";
+                    const userName = member.user?.name || "Usuário";
+                    const userEmail = member.user?.email || "email@example.com";
                     const userInitials = userName
                       .split(" ")
                       .map((n: string) => n[0])
@@ -429,17 +445,37 @@ export default function WorkspaceMembersPage() {
                               )}
                             </div>
                           ) : (
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-wrap gap-1 max-h-[48px] overflow-hidden">
                               {Object.entries(member.permissions)
                                 .filter(([, perms]) => perms.read)
-                                .map(([module]) => (
-                                  <span
-                                    key={module}
-                                    className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize"
-                                  >
-                                    {module}
-                                  </span>
-                                ))}
+                                .map(([module], index) => {
+                                  const totalPermissions = Object.entries(
+                                    member.permissions,
+                                  ).filter(([, perms]) => perms.read).length;
+                                  const showMore = index >= 2;
+
+                                  if (showMore && index === 2) {
+                                    return (
+                                      <span
+                                        key="more"
+                                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700"
+                                      >
+                                        +{totalPermissions - 2}
+                                      </span>
+                                    );
+                                  }
+
+                                  if (showMore) return null;
+
+                                  return (
+                                    <span
+                                      key={module}
+                                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize"
+                                    >
+                                      {module}
+                                    </span>
+                                  );
+                                })}
                             </div>
                           )}
                         </td>
@@ -484,7 +520,7 @@ export default function WorkspaceMembersPage() {
                                   onClick={() =>
                                     handleRemoveMember(
                                       member.id,
-                                      member.name || "este membro",
+                                      member.user?.name || "Desconhecido",
                                     )
                                   }
                                   className="p-1 text-red-600 hover:text-red-900"
@@ -683,68 +719,24 @@ export default function WorkspaceMembersPage() {
       </div>
 
       {/* Modal de Convite */}
-      {showInviteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">
-              Convidar Membro
-            </h3>
-
-            <form onSubmit={handleInviteMember}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="email@exemplo.com"
-                />
-              </div>
-
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Função
-                </label>
-                <select
-                  value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="member">Member - Permissões limitadas</option>
-                  <option value="admin">
-                    Admin - Permissões administrativas
-                  </option>
-                </select>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowInviteModal(false);
-                    setInviteEmail("");
-                    setInviteRole("member");
-                  }}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gh-bg transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={inviteMutation.isPending}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {inviteMutation.isPending ? "Enviando..." : "Enviar Convite"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <InviteModal
+        isOpen={showInviteModal}
+        onClose={() => {
+          setShowInviteModal(false);
+          setInviteEmail("");
+          setInviteRole("member");
+          setInvitePermissions(getDefaultPermissionsByRole("member"));
+        }}
+        onSubmit={handleInviteMember}
+        inviteEmail={inviteEmail}
+        onEmailChange={setInviteEmail}
+        inviteRole={inviteRole}
+        onRoleChange={handleRoleChange}
+        invitePermissions={invitePermissions}
+        onPermissionChange={handlePermissionChange}
+        moduleLabels={moduleLabels}
+        isPending={inviteMutation.isPending}
+      />
     </div>
   );
 }

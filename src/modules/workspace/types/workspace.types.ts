@@ -4,10 +4,21 @@ export interface ModulePermissions {
   delete: boolean;
 }
 
+export interface ModuleConfig {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: "core" | "communication" | "automation" | "integration";
+  required?: boolean;
+  dependencies?: string[];
+}
+
 export interface WorkspacePermissions {
   contacts: ModulePermissions;
   conversations: ModulePermissions;
   automations: ModulePermissions;
+  sales: ModulePermissions;
   settings: ModulePermissions;
   members: ModulePermissions;
 }
@@ -33,9 +44,13 @@ export interface Workspace {
 
 export interface WorkspaceMember {
   id: string;
-  name: string;
-  email: string;
-  avatar?: string;
+  userId: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  };
   role: string;
   isOwner: boolean;
   permissions: WorkspacePermissions;

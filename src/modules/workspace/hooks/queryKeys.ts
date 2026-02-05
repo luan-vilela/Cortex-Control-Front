@@ -7,4 +7,5 @@ export const workspaceKeys = {
   detail: (id: string) => [...workspaceKeys.details(), id] as const,
   members: (id: string) => [...workspaceKeys.detail(id), "members"] as const,
   invites: () => [...workspaceKeys.all, "invites"] as const,
+  availableModules: () => [...workspaceKeys.all, "available-modules"] as const,
 };

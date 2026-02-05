@@ -210,14 +210,6 @@ export default function WorkspaceSettingsPage() {
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <a
-          href="/workspaces"
-          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Voltar para workspaces
-        </a>
-
         {/* Informações Gerais */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">
