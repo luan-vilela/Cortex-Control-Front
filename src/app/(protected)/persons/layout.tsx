@@ -28,27 +28,17 @@ const menuItems = [
     section: "criar",
     items: [
       {
-        label: "Novo Contato",
-        href: "/persons/new",
-        icon: Users,
-      },
-      {
-        label: "Novo Lead",
-        href: "/leads/new",
-        icon: TrendingUp,
-      },
-      {
-        label: "Novo Cliente",
+        label: "Clientes",
         href: "/clientes/new",
         icon: ShoppingCart,
       },
       {
-        label: "Novo Fornecedor",
+        label: "Fornecedores",
         href: "/fornecedores/new",
         icon: Briefcase,
       },
       {
-        label: "Novo Parceiro",
+        label: "Parceiros",
         href: "/parceiros/new",
         icon: Handshake,
       },

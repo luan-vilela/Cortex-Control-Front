@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useWorkspaceStore } from "../store/workspace.store";
 import { ChevronDown, Building2, Plus, Check, Package } from "lucide-react";
+import Link from "next/link";
 
 export function WorkspaceSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
@@ -93,23 +94,23 @@ export function WorkspaceSwitcher() {
 
               <div className="my-2 border-t border-gh-border" />
 
-              <a
+              <Link
                 href="/workspaces/new"
                 className="w-full flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gh-bg transition-colors text-blue-600"
               >
                 <Plus className="w-4 h-4" />
                 <span className="text-sm font-medium">Criar Workspace</span>
-              </a>
+              </Link>
 
-              <a
+              <Link
                 href={`/workspaces/${activeWorkspace.id}/modules`}
                 className="w-full flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gh-bg transition-colors text-gh-text"
               >
                 <Package className="w-4 h-4" />
                 <span className="text-sm font-medium">Instalar Módulos</span>
-              </a>
+              </Link>
 
-              <a
+              <Link
                 href="/workspaces"
                 className="w-full flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gh-bg transition-colors text-gh-text"
               >
@@ -117,7 +118,7 @@ export function WorkspaceSwitcher() {
                 <span className="text-sm font-medium">
                   Gerenciar Workspaces
                 </span>
-              </a>
+              </Link>
             </div>
           </div>
         </>
