@@ -51,19 +51,20 @@ const menuGroups = [
     label: "Gerencia do Workspace",
     items: [
       {
-        label: "Módulos",
-        href: "/modules",
-        icon: Package,
+        label: "Configurações",
+        href: "/settings",
+        icon: Settings,
       },
+
       {
         label: "Membros",
         href: "/members",
         icon: Users,
       },
       {
-        label: "Configurações",
-        href: "/settings",
-        icon: Settings,
+        label: "Módulos",
+        href: "/modules",
+        icon: Package,
       },
     ],
   },
@@ -102,31 +103,6 @@ export default function WorkspaceLayout({
 
   return (
     <div className="min-h-screen bg-gh-bg">
-      {/* Header */}
-      <header className="bg-gh-card border-b border-gh-border sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push("/workspaces")}
-                className="p-2 hover:bg-gh-hover rounded transition-colors"
-                title="Voltar para workspaces"
-              >
-                <ArrowLeft className="w-5 h-5 text-gh-text-secondary" />
-              </button>
-              <h1 className="text-xl font-semibold text-gh-text">
-                {workspace?.name || "Workspace"}
-              </h1>
-            </div>
-            <div className="flex items-center gap-3">
-              <NotificationBell />
-              <WalletDisplay />
-              <UserMenu />
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Layout com sidebar estilo GitHub */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex gap-6">

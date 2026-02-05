@@ -24,23 +24,6 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gh-bg">
-      {/* Header estilo GitHub */}
-      <header className="bg-gh-card border-b border-gh-border">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <h1 className="text-xl font-semibold text-gh-text">
-              Cortex Control
-            </h1>
-            <WorkspaceSwitcher />
-          </div>
-          <div className="flex items-center gap-3">
-            <NotificationBell />
-            <WalletDisplay />
-            <UserMenu />
-          </div>
-        </div>
-      </header>
-
       {/* Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Page Header */}

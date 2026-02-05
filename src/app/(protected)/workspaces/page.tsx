@@ -40,21 +40,6 @@ export default function WorkspacesPage() {
 
   return (
     <div className="min-h-screen bg-gh-bg">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold text-gray-900">Cortex Control</h1>
-            <WorkspaceSwitcher />
-          </div>
-          <div className="flex items-center gap-2">
-            <NotificationBell />
-            <WalletDisplay />
-            <UserMenu />
-          </div>
-        </div>
-      </header>
-
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">

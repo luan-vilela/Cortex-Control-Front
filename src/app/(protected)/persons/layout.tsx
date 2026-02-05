@@ -3,10 +3,6 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
 import { usePersonStats } from "@/modules/person/hooks/usePersonQueries";
-import { WorkspaceSwitcher } from "@/modules/workspace/components/WorkspaceSwitcher";
-import { NotificationBell } from "@/components/NotificationBell";
-import { WalletDisplay } from "@/components/WalletDisplay";
-import { UserMenu } from "@/components/UserMenu";
 import {
   Users,
   UserPlus,
@@ -88,54 +84,16 @@ export default function PersonsLayout({
 
   if (!activeWorkspace) {
     return (
-      <div className="min-h-screen bg-gh-bg">
-        <header className="bg-gh-card border-b border-gh-border">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-xl font-semibold text-gh-text">
-                Cortex Control
-              </h1>
-              <div className="flex items-center gap-3">
-                <NotificationBell />
-                <WalletDisplay />
-                <UserMenu />
-              </div>
-            </div>
-          </div>
-        </header>
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <p className="text-gh-text-secondary">
-            Selecione um workspace para continuar
-          </p>
-        </div>
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <p className="text-gh-text-secondary">
+          Selecione um workspace para continuar
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gh-bg">
-      {/* Header */}
-      <header className="bg-gh-card border-b border-gh-border sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h1
-                onClick={() => router.push("/dashboard")}
-                className="text-xl font-semibold text-gh-text cursor-pointer hover:text-gh-accent"
-              >
-                Cortex Control
-              </h1>
-              <WorkspaceSwitcher />
-            </div>
-            <div className="flex items-center gap-3">
-              <NotificationBell />
-              <WalletDisplay />
-              <UserMenu />
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <div>
       {/* Layout com sidebar estilo GitHub */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex gap-6">
