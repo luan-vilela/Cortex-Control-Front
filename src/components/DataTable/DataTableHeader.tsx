@@ -2,6 +2,7 @@ interface DataTableHeaderProps {
   headers: {
     key: string;
     label: string;
+    align?: "left" | "right";
   }[];
   selectable?: boolean;
   selectAll?: boolean;
@@ -15,10 +16,10 @@ export function DataTableHeader({
   onSelectAll,
 }: DataTableHeaderProps) {
   return (
-    <thead className="border-b border-gh-border bg-gh-bg">
+    <thead className="bg-gh-bg">
       <tr>
         {selectable && (
-          <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase w-12">
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
             <input
               type="checkbox"
               checked={selectAll}
@@ -30,7 +31,9 @@ export function DataTableHeader({
         {headers.map((header) => (
           <th
             key={header.key}
-            className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase"
+            className={`px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${
+              header.align === "right" ? "text-right" : "text-left"
+            }`}
           >
             {header.label}
           </th>

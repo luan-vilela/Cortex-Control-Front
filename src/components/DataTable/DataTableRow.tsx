@@ -4,6 +4,7 @@ interface DataTableRowProps {
   row: any;
   columns: {
     key: string;
+    align?: "left" | "right";
     render?: (value: any, row: any) => React.ReactNode;
   }[];
   onHover?: boolean;
@@ -25,10 +26,10 @@ export function DataTableRow({
   return (
     <tr
       onClick={onRowClick}
-      className={`${onHover ? "hover:bg-gh-hover transition-colors cursor-pointer" : ""} ${isSelected ? "bg-blue-50" : ""}`}
+      className={`${onHover ? "hover:bg-gh-bg transition-colors cursor-pointer" : ""} ${isSelected ? "bg-blue-50" : ""}`}
     >
       {selectable && (
-        <td className="px-6 py-3 w-12">
+        <td className="px-6 py-4 whitespace-nowrap w-12">
           <input
             type="checkbox"
             checked={isSelected}
@@ -38,7 +39,12 @@ export function DataTableRow({
         </td>
       )}
       {columns.map((column) => (
-        <td key={column.key} className="px-6 py-3">
+        <td
+          key={column.key}
+          className={`px-6 py-4 whitespace-nowrap text-sm ${
+            column.align === "right" ? "text-right" : "text-left"
+          }`}
+        >
           {column.render
             ? column.render(row[column.key], row)
             : String(row[column.key] || "-")}

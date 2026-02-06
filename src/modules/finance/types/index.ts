@@ -17,13 +17,57 @@ export enum TransactionActorType {
   EXPENSE = "EXPENSE",
 }
 
-export interface TransactionActor {
+export enum PaymentMode {
+  CASH = "CASH",
+  INSTALLMENT = "INSTALLMENT",
+  DEFERRED = "DEFERRED",
+}
+
+export enum RecurrenceType {
+  ONCE = "ONCE",
+  DAILY = "DAILY",
+  WEEKLY = "WEEKLY",
+  BIWEEKLY = "BIWEEKLY",
+  MONTHLY = "MONTHLY",
+  QUARTERLY = "QUARTERLY",
+  SEMIANNUAL = "SEMIANNUAL",
+  ANNUAL = "ANNUAL",
+}
+
+export enum FinancialChargeType {
+  INTEREST = "INTEREST",
+  FINE = "FINE",
+  DISCOUNT = "DISCOUNT",
+  SURCHARGE = "SURCHARGE",
+}
+
+export interface FinancialCharge {
+  type: FinancialChargeType;
+  description: string;
+  percentage: number;
+  flatAmount?: number;
+}
+
+export interface RecurrenceConfig {
+  type: RecurrenceType;
+  occurrences?: number;
+  endDate?: Date;
+}
+
+export interface PaymentConfig {
+  mode: PaymentMode;
+  installments?: number;
+  installmentAmount?: number;
+  deferralDays?: number;
+}
+
+export interface TransactionParty {
   id: number;
   transactionId: number;
   workspaceId: string;
-  actorType: TransactionActorType;
-  actorStatus?: string;
-  actorMetadata?: Record<string, any>;
+  partyType: TransactionActorType;
+  partyStatus?: string;
+  partyMetadata?: Record<string, any>;
 }
 
 export interface FinanceiroTransaction {
@@ -38,17 +82,20 @@ export interface FinanceiroTransaction {
   paidDate?: string | Date;
   status: TransactionStatus;
   notes?: string;
+  paymentConfig?: PaymentConfig;
+  recurrenceConfig?: RecurrenceConfig;
+  financialCharges?: FinancialCharge[];
   createdBy?: string;
   createdAt: string | Date;
   updatedAt: string | Date;
   deletedAt?: string | Date;
-  actors: TransactionActor[];
+  parties: TransactionParty[];
 }
 
-export interface CreateTransactionActorPayload {
+export interface CreateTransactionPartyPayload {
   workspaceId: string;
-  actorType: TransactionActorType;
-  actorMetadata?: Record<string, any>;
+  partyType: TransactionActorType;
+  partyMetadata?: Record<string, any>;
 }
 
 export interface CreateTransactionPayload {
@@ -60,7 +107,10 @@ export interface CreateTransactionPayload {
   dueDate: Date;
   paidDate?: Date;
   notes?: string;
-  actors: CreateTransactionActorPayload[];
+  paymentConfig?: PaymentConfig;
+  recurrenceConfig?: RecurrenceConfig;
+  financialCharges?: FinancialCharge[];
+  parties: CreateTransactionPartyPayload[];
 }
 
 export interface UpdateTransactionPayload {
@@ -72,6 +122,7 @@ export interface UpdateTransactionPayload {
 export interface GetTransactionsFilters {
   sourceType?: TransactionSourceType;
   status?: TransactionStatus;
+  partyType?: TransactionActorType;
   fromDate?: Date;
   toDate?: Date;
   page?: number;

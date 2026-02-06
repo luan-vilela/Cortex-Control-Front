@@ -1,13 +1,13 @@
 "use client";
 
-import React, { forwardRef, ReactNode, InputHTMLAttributes } from "react";
+import React, { forwardRef, ReactNode, TextareaHTMLAttributes } from "react";
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   message?: string | ReactNode;
   messageType?: "error" | "success" | "warning" | "info";
   helperText?: string;
-  icon?: ReactNode;
+  maxCharacters?: number;
   containerClassName?: string;
   labelClassName?: string;
   error?: string;
@@ -35,26 +35,31 @@ const getInputBorderStyles = (hasError: boolean) => {
   return "border-gray-300 dark:border-gray-700 focus:border-blue-300 focus:ring-blue-300 dark:focus:ring-blue-700";
 };
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   (
     {
       label,
       message,
       messageType = "error",
       helperText,
-      icon,
+      maxCharacters,
       containerClassName = "",
       labelClassName = "",
       className = "",
       disabled = false,
       error,
+      value = "",
+      onChange,
       ...rest
     },
     ref,
   ) => {
     const hasError = (message && messageType === "error") || !!error;
+    const charCount = String(value).length;
+    const isNearLimit = maxCharacters && charCount > maxCharacters * 0.8;
+    const isOverLimit = maxCharacters && charCount > maxCharacters;
 
-    const inputClasses = `
+    const textareaClasses = `
       w-full
       px-4 py-2.5
       bg-white
@@ -63,36 +68,46 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       text-gh-text placeholder:text-gray-400 dark:placeholder:text-gray-500
       transition-all duration-200
       focus:outline-none focus:ring-2 focus:ring-offset-0
-      ${getInputBorderStyles(!!hasError)}
+      resize-none
+      ${getInputBorderStyles(!!hasError || !!isOverLimit)}
       ${disabled ? "text-gray-400 cursor-not-allowed opacity-60" : ""}
-      ${icon ? "pl-11" : ""}
+      ${isOverLimit ? "border-red-200 dark:border-red-800 focus:ring-red-300" : ""}
       ${className}
     `.trim();
 
     return (
       <div className={`flex flex-col gap-2 w-full ${containerClassName}`}>
-        {label && (
-          <label
-            className={`block text-sm font-medium text-gh-text ${labelClassName}`}
-          >
-            {label}
-          </label>
-        )}
-
-        <div className="relative">
-          {icon && (
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 flex items-center justify-center pointer-events-none">
-              {icon}
-            </div>
+        <div className="flex items-center justify-between">
+          {label && (
+            <label
+              className={`block text-sm font-medium text-gh-text ${labelClassName}`}
+            >
+              {label}
+            </label>
           )}
-
-          <input
-            ref={ref}
-            className={inputClasses}
-            disabled={disabled}
-            {...rest}
-          />
+          {maxCharacters && (
+            <span
+              className={`text-xs ${
+                isOverLimit
+                  ? "text-red-500 dark:text-red-400 font-medium"
+                  : isNearLimit
+                    ? "text-yellow-600 dark:text-yellow-400"
+                    : "text-gray-500 dark:text-gray-400"
+              }`}
+            >
+              {charCount}/{maxCharacters}
+            </span>
+          )}
         </div>
+
+        <textarea
+          ref={ref}
+          className={textareaClasses}
+          disabled={disabled}
+          value={value}
+          onChange={onChange}
+          {...rest}
+        />
 
         {(message || helperText || error) && (
           <div
@@ -106,4 +121,4 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   },
 );
 
-Input.displayName = "Input";
+Textarea.displayName = "Textarea";

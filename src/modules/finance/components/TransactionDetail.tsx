@@ -5,9 +5,9 @@ import { SourceBadge } from "./SourceBadge";
 import { StatusBadge } from "./StatusBadge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
-const actorTypeLabels: Record<TransactionActorType, string> = {
-  [TransactionActorType.INCOME]: "Receita",
-  [TransactionActorType.EXPENSE]: "Despesa",
+const partyTypeLabels: Record<TransactionActorType, string> = {
+  [TransactionActorType.INCOME]: "Entrada",
+  [TransactionActorType.EXPENSE]: "Saída",
 };
 
 export function TransactionDetail({
@@ -79,28 +79,28 @@ export function TransactionDetail({
         </div>
       </div>
 
-      {/* Atores */}
+      {/* Parties */}
       <div className="p-4 border border-gh-border rounded-lg bg-gh-card">
         <p className="text-xs font-medium text-gh-text-secondary uppercase mb-4">
-          Atores ({transaction.actors.length})
+          Parties ({transaction.parties.length})
         </p>
         <div className="space-y-3">
-          {transaction.actors.map((actor) => (
+          {transaction.parties.map((party) => (
             <div
-              key={actor.id}
+              key={party.id}
               className="flex items-center justify-between p-3 border border-gh-border rounded bg-white dark:bg-gh-card"
             >
               <div>
                 <p className="text-sm font-medium text-gh-text">
-                  {actor.workspaceId}
+                  {party.workspaceId}
                 </p>
                 <p className="text-xs text-gh-text-secondary mt-1">
-                  {actorTypeLabels[actor.actorType]}
+                  {partyTypeLabels[party.partyType]}
                 </p>
               </div>
-              {actor.actorStatus && (
+              {party.partyStatus && (
                 <div className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700">
-                  {actor.actorStatus}
+                  {party.partyStatus}
                 </div>
               )}
             </div>

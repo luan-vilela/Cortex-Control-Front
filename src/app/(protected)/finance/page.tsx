@@ -7,30 +7,38 @@ import {
   useTransactions,
   useDeleteTransaction,
 } from "@/modules/finance/hooks/useFinance";
-import {
-  TransactionList,
-  TransactionForm,
-  SourceBadge,
-  StatusBadge,
-} from "@/modules/finance/components";
+import { TransactionList } from "@/modules/finance/components";
 import {
   TransactionSourceType,
   TransactionStatus,
+  TransactionActorType,
   GetTransactionsFilters,
 } from "@/modules/finance/types";
 import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
 import { Button } from "@/components/ui/Button";
-import { Plus, X, Filter } from "lucide-react";
+import { Plus, Filter } from "lucide-react";
 
 export default function FinanceiroPage() {
   const router = useRouter();
   const { activeWorkspace } = useActiveWorkspace();
-  const [showForm, setShowForm] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState<GetTransactionsFilters>({
+
+  // Get current month boundaries
+  const now = new Date();
+  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+  const getDefaultFilters = (): GetTransactionsFilters => ({
     page: 1,
     limit: 20,
+    fromDate: firstDayOfMonth,
+    toDate: lastDayOfMonth,
   });
+
+  const [pendingFilters, setPendingFilters] =
+    useState<GetTransactionsFilters>(getDefaultFilters());
+  const [filters, setFilters] =
+    useState<GetTransactionsFilters>(getDefaultFilters());
 
   const {
     data: transactionsData = { data: [], total: 0, page: 1, limit: 20 },
@@ -44,6 +52,20 @@ export default function FinanceiroPage() {
   const { mutate: deleteTransaction } = useDeleteTransaction(
     activeWorkspace?.id || "",
   );
+
+  const handleApplyFilters = () => {
+    setFilters({ ...pendingFilters, page: 1 });
+  };
+
+  const handleResetFilters = () => {
+    const defaultFilters = getDefaultFilters();
+    setPendingFilters(defaultFilters);
+    setFilters(defaultFilters);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setFilters({ ...filters, page: newPage });
+  };
 
   if (!activeWorkspace?.id) {
     return (
@@ -66,38 +88,13 @@ export default function FinanceiroPage() {
               </p>
             </div>
             <Button
-              onClick={() => setShowForm(!showForm)}
+              onClick={() => router.push(`/finance/new`)}
               className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
             >
-              {showForm ? (
-                <>
-                  <X size={16} />
-                  Cancelar
-                </>
-              ) : (
-                <>
-                  <Plus size={16} />
-                  Nova Transação
-                </>
-              )}
+              <Plus size={16} />
+              Nova Transação
             </Button>
           </div>
-
-          {/* Form */}
-          {showForm && (
-            <div className="mb-8 p-6 border border-gh-border rounded-lg bg-gh-card">
-              <h2 className="text-lg font-semibold text-gh-text mb-4">
-                Criar Transação
-              </h2>
-              <TransactionForm
-                workspaceId={activeWorkspace.id}
-                onSuccess={() => {
-                  setShowForm(false);
-                }}
-                onCancel={() => setShowForm(false)}
-              />
-            </div>
-          )}
 
           {/* Filtros */}
           <div className="mb-6 flex items-center justify-between">
@@ -124,19 +121,18 @@ export default function FinanceiroPage() {
           {/* Filters Panel */}
           {showFilters && (
             <div className="mb-6 p-4 border border-gh-border rounded-lg bg-gh-card space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 {/* Source Type Filter */}
                 <div>
                   <label className="text-xs font-medium text-gh-text-secondary block mb-2">
                     Tipo de Origem
                   </label>
                   <select
-                    value={filters.sourceType || ""}
+                    value={pendingFilters.sourceType || ""}
                     onChange={(e) =>
-                      setFilters({
-                        ...filters,
+                      setPendingFilters({
+                        ...pendingFilters,
                         sourceType: e.target.value as TransactionSourceType,
-                        page: 1,
                       })
                     }
                     className="w-full px-3 py-2 text-sm border border-gh-border rounded bg-white dark:bg-gh-bg text-gh-text"
@@ -155,18 +151,38 @@ export default function FinanceiroPage() {
                   </select>
                 </div>
 
+                {/* Party Type Filter */}
+                <div>
+                  <label className="text-xs font-medium text-gh-text-secondary block mb-2">
+                    Tipo de Transação
+                  </label>
+                  <select
+                    value={pendingFilters.partyType || ""}
+                    onChange={(e) =>
+                      setPendingFilters({
+                        ...pendingFilters,
+                        partyType: e.target.value as TransactionActorType,
+                      })
+                    }
+                    className="w-full px-3 py-2 text-sm border border-gh-border rounded bg-white dark:bg-gh-bg text-gh-text"
+                  >
+                    <option value="">Todos</option>
+                    <option value={TransactionActorType.INCOME}>Entrada</option>
+                    <option value={TransactionActorType.EXPENSE}>Saída</option>
+                  </select>
+                </div>
+
                 {/* Status Filter */}
                 <div>
                   <label className="text-xs font-medium text-gh-text-secondary block mb-2">
                     Status
                   </label>
                   <select
-                    value={filters.status || ""}
+                    value={pendingFilters.status || ""}
                     onChange={(e) =>
-                      setFilters({
-                        ...filters,
+                      setPendingFilters({
+                        ...pendingFilters,
                         status: e.target.value as TransactionStatus,
-                        page: 1,
                       })
                     }
                     className="w-full px-3 py-2 text-sm border border-gh-border rounded bg-white dark:bg-gh-bg text-gh-text"
@@ -191,17 +207,18 @@ export default function FinanceiroPage() {
                   <input
                     type="date"
                     value={
-                      filters.fromDate
-                        ? new Date(filters.fromDate).toISOString().split("T")[0]
+                      pendingFilters.fromDate
+                        ? new Date(pendingFilters.fromDate)
+                            .toISOString()
+                            .split("T")[0]
                         : ""
                     }
                     onChange={(e) =>
-                      setFilters({
-                        ...filters,
+                      setPendingFilters({
+                        ...pendingFilters,
                         fromDate: e.target.value
                           ? new Date(e.target.value)
                           : undefined,
-                        page: 1,
                       })
                     }
                     className="w-full px-3 py-2 text-sm border border-gh-border rounded bg-white dark:bg-gh-bg text-gh-text"
@@ -216,17 +233,18 @@ export default function FinanceiroPage() {
                   <input
                     type="date"
                     value={
-                      filters.toDate
-                        ? new Date(filters.toDate).toISOString().split("T")[0]
+                      pendingFilters.toDate
+                        ? new Date(pendingFilters.toDate)
+                            .toISOString()
+                            .split("T")[0]
                         : ""
                     }
                     onChange={(e) =>
-                      setFilters({
-                        ...filters,
+                      setPendingFilters({
+                        ...pendingFilters,
                         toDate: e.target.value
                           ? new Date(e.target.value)
                           : undefined,
-                        page: 1,
                       })
                     }
                     className="w-full px-3 py-2 text-sm border border-gh-border rounded bg-white dark:bg-gh-bg text-gh-text"
@@ -234,27 +252,38 @@ export default function FinanceiroPage() {
                 </div>
               </div>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  setFilters({
-                    page: 1,
-                    limit: 20,
-                  })
-                }
-              >
-                Limpar Filtros
-              </Button>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetFilters}
+                >
+                  Limpar Filtros
+                </Button>
+                <Button
+                  onClick={handleApplyFilters}
+                  className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  <Filter size={16} />
+                  Pesquisar
+                </Button>
+              </div>
             </div>
           )}
 
           {/* Transactions List */}
-          <div className="bg-gh-card border border-gh-border rounded-lg p-6">
+          <div className="bg-white rounded-lg shadow overflow-hidden">
             <TransactionList
               transactions={transactionsData.data}
               workspaceId={activeWorkspace.id}
               isLoading={isLoading}
+              onDelete={(transactionId) =>
+                deleteTransaction(transactionId, {
+                  onSuccess: () => {
+                    // A query será invalidada automaticamente
+                  },
+                })
+              }
             />
           </div>
 
@@ -266,10 +295,7 @@ export default function FinanceiroPage() {
                 size="sm"
                 disabled={filters.page === 1}
                 onClick={() =>
-                  setFilters({
-                    ...filters,
-                    page: Math.max(1, (filters.page || 1) - 1),
-                  })
+                  handlePageChange(Math.max(1, (filters.page || 1) - 1))
                 }
               >
                 Anterior
@@ -286,12 +312,7 @@ export default function FinanceiroPage() {
                   (filters.page || 1) >=
                   Math.ceil(transactionsData.total / transactionsData.limit)
                 }
-                onClick={() =>
-                  setFilters({
-                    ...filters,
-                    page: (filters.page || 1) + 1,
-                  })
-                }
+                onClick={() => handlePageChange((filters.page || 1) + 1)}
               >
                 Próxima
               </Button>

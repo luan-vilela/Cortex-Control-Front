@@ -1,5 +1,9 @@
 export { SourceBadge } from "./SourceBadge";
 export { StatusBadge } from "./StatusBadge";
+export { ActorTypeBadge } from "./ActorTypeBadge";
 export { TransactionList } from "./TransactionList";
 export { TransactionForm } from "./TransactionForm";
 export { TransactionDetail } from "./TransactionDetail";
+export { PaymentModeConfig } from "./PaymentModeConfig";
+export { RecurrenceConfigComponent } from "./RecurrenceConfig";
+export { FinancialChargesConfig } from "./FinancialChargesConfig";

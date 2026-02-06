@@ -6,6 +6,7 @@ import { Loader2, Search } from "lucide-react";
 interface Column {
   key: string;
   label: string;
+  align?: "left" | "right";
   render?: (value: any, row: any) => React.ReactNode;
 }
 
@@ -91,28 +92,30 @@ export function DataTable({
   }
 
   return (
-    <div className="bg-gh-card border border-gh-border rounded-md overflow-hidden">
-      <table className="w-full">
-        <DataTableHeader
-          headers={headers}
-          selectable={selectable}
-          selectAll={selectAll}
-          onSelectAll={handleSelectAll}
-        />
-        <tbody className="divide-y divide-gh-border">
-          {data.map((row, index) => (
-            <DataTableRow
-              key={row.id || index}
-              row={row}
-              columns={headers}
-              selectable={selectable}
-              isSelected={selectedRows.has(row.id)}
-              onSelect={() => handleSelectRow(row.id)}
-              onRowClick={() => onRowClick?.(row)}
-            />
-          ))}
-        </tbody>
-      </table>
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gh-border">
+          <DataTableHeader
+            headers={headers}
+            selectable={selectable}
+            selectAll={selectAll}
+            onSelectAll={handleSelectAll}
+          />
+          <tbody className="divide-y divide-gh-border">
+            {data.map((row, index) => (
+              <DataTableRow
+                key={row.id || index}
+                row={row}
+                columns={headers}
+                selectable={selectable}
+                isSelected={selectedRows.has(row.id)}
+                onSelect={() => handleSelectRow(row.id)}
+                onRowClick={() => onRowClick?.(row)}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

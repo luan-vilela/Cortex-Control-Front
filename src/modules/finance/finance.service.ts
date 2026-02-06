@@ -5,7 +5,7 @@ import {
   UpdateTransactionPayload,
   GetTransactionsFilters,
   GetTransactionsResponse,
-  TransactionActor,
+  TransactionParty,
 } from "./types";
 
 const FINANCEIRO_API = "/workspaces";
@@ -37,6 +37,7 @@ export const financeService = {
       {
         params: {
           sourceType: filters?.sourceType,
+          partyType: filters?.partyType,
           status: filters?.status,
           fromDate: filters?.fromDate
             ? filters.fromDate.toISOString().split("T")[0]
@@ -97,7 +98,7 @@ export const financeService = {
    */
   async getTransactionActors(
     transactionId: number,
-  ): Promise<TransactionActor[]> {
+  ): Promise<TransactionParty[]> {
     const response = await api.get(
       `${FINANCEIRO_API}/:workspaceId/finance/transactions/${transactionId}/actors`,
     );
@@ -114,7 +115,7 @@ export const financeService = {
       workspaceId: string;
       actorType: string;
     },
-  ): Promise<TransactionActor> {
+  ): Promise<TransactionParty> {
     const response = await api.post(
       `${FINANCEIRO_API}/${workspaceId}/finance/transactions/${transactionId}/actors`,
       payload,

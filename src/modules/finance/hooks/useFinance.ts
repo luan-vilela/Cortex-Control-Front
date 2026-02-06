@@ -7,7 +7,7 @@ import {
   UpdateTransactionPayload,
   GetTransactionsFilters,
   GetTransactionsResponse,
-  TransactionActor,
+  TransactionParty,
 } from "../types";
 
 // Query key factory
@@ -179,7 +179,7 @@ export function useDeleteTransaction(workspaceId: string) {
  * Hook para obter atores de uma transação
  */
 export function useTransactionActors(transactionId: number, enabled = true) {
-  return useQuery<TransactionActor[]>({
+  return useQuery<TransactionParty[]>({
     queryKey: financeQueryKeys.actors(transactionId),
     queryFn: () => financeService.getTransactionActors(transactionId),
     enabled: enabled && !!transactionId,
