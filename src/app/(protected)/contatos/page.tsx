@@ -8,7 +8,9 @@ import { useDeletePerson } from "@/modules/person/hooks/usePersonMutations";
 import { EntityType } from "@/modules/person/types/person.types";
 import { useAlerts } from "@/contexts/AlertContext";
 import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
-import { Search, Loader2 } from "lucide-react";
+import { DataTable } from "@/components/DataTable";
+import { Search } from "lucide-react";
+import { formatDocument } from "@/lib/masks";
 
 const entityTypeLabels: Record<EntityType, string> = {
   [EntityType.PERSON]: "Contato",
@@ -43,6 +45,7 @@ export default function PersonsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [entityTypeFilter, setEntityTypeFilter] = useState<EntityType | "">("");
   const [totalPersons, setTotalPersons] = useState(0);
+  const [selectedPersons, setSelectedPersons] = useState<any[]>([]);
 
   const filters = useMemo(() => {
     const f: any = {};
@@ -101,7 +104,6 @@ export default function PersonsPage() {
             <span>+</span> Novo Contato
           </button>
         </div>
-
         {/* Barra de Pesquisa */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gh-text-secondary" />
@@ -113,7 +115,6 @@ export default function PersonsPage() {
             className="w-full pl-10 pr-4 py-2 bg-gh-card border border-gh-border rounded-md text-sm text-gh-text placeholder:text-gh-text-secondary focus:outline-none focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
           />
         </div>
-
         {/* Filtros por Tipo */}
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-medium text-gh-text-secondary">
@@ -143,7 +144,6 @@ export default function PersonsPage() {
             </button>
           ))}
         </div>
-
         {/* Contador */}
         {data && (
           <div className="flex items-center justify-between border-b border-gh-border pb-3">
@@ -160,89 +160,66 @@ export default function PersonsPage() {
             </div>
           </div>
         )}
-
-        {/* Lista de Contatos */}
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-gh-text-secondary" />
-          </div>
-        ) : data && data.length > 0 ? (
-          <div className="bg-gh-card border border-gh-border rounded-md overflow-hidden">
-            <table className="w-full">
-              <thead className="border-b border-gh-border bg-gh-bg">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                    Nome
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                    Tipo
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                    Documento
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gh-border">
-                {data.map((person) => (
-                  <tr
-                    key={person.id}
-                    className="hover:bg-gh-hover transition-colors"
-                    onClick={() => router.push(`/contatos/${person.id}`)}
-                  >
-                    <td className="px-6 py-3">{person.name}</td>
-                    <td className="px-6 py-3 text-sm text-gh-text-secondary">
-                      {person.email || "-"}
-                    </td>
-                    <td className="px-6 py-3">
-                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-gh-badge-bg text-gh-text">
-                        {getEntityTypeName(person)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-3 text-sm text-gh-text-secondary">
-                      {person.document || "-"}
-                    </td>
-                    <td className="px-6 py-3 text-sm">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => router.push(`/contatos/${person.id}`)}
-                          className="text-gh-accent hover:text-gh-accent-dark transition-colors text-xs font-medium"
-                        >
-                          Ver
-                        </button>
-                        <button
-                          onClick={() => handleDelete(person.id, person.name)}
-                          className="text-red-500 hover:text-red-700 transition-colors text-xs font-medium"
-                        >
-                          Remover
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="w-16 h-16 bg-gh-badge-bg rounded-full flex items-center justify-center mb-4">
-              <Search className="w-8 h-8 text-gh-text-secondary" />
-            </div>
-            <h3 className="text-lg font-semibold text-gh-text mb-2">
-              Nenhum contato encontrado
-            </h3>
-            <p className="text-sm text-gh-text-secondary mb-6 max-w-md">
-              {searchTerm
-                ? "Tente ajustar os termos de pesquisa ou limpar os filtros."
-                : "Comece criando seu primeiro contato."}
+        {/* DataTable */}
+        <DataTable
+          headers={[
+            {
+              key: "name",
+              label: "Nome",
+              render: (_, row) => (
+                <span className="font-medium text-gh-text">{row.name}</span>
+              ),
+            },
+            {
+              key: "email",
+              label: "Email",
+              render: (email) => (
+                <span className="text-sm text-gh-text-secondary">
+                  {email || "-"}
+                </span>
+              ),
+            },
+            {
+              key: "type",
+              label: "Tipo",
+              render: (_, row) => (
+                <span className="px-3 py-1 rounded-full text-xs font-medium bg-gh-badge-bg text-gh-text">
+                  {getEntityTypeName(row)}
+                </span>
+              ),
+            },
+            {
+              key: "document",
+              label: "Documento",
+              render: (document) => (
+                <span className="text-sm text-gh-text-secondary font-mono">
+                  {document ? formatDocument(document) : "-"}
+                </span>
+              ),
+            },
+          ]}
+          data={data || []}
+          isLoading={isLoading}
+          selectable={true}
+          onSelectionChange={(selected) => setSelectedPersons(selected)}
+          onRowClick={(row) => router.push(`/contatos/${row.id}`)}
+          emptyMessage={
+            searchTerm
+              ? "Tente ajustar os termos de pesquisa ou limpar os filtros."
+              : "Comece criando seu primeiro contato."
+          }
+        />
+        {/* Debug: Mostrar contatos selecionados */}
+        {selectedPersons.length > 0 && (
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-sm font-medium text-blue-900 mb-2">
+              {selectedPersons.length} contato(s) selecionado(s)
             </p>
+            <pre className="text-xs text-blue-800 overflow-auto max-h-64">
+              {JSON.stringify(selectedPersons, null, 2)}
+            </pre>
           </div>
-        )}
+        )}{" "}
       </div>
     </ModuleGuard>
   );

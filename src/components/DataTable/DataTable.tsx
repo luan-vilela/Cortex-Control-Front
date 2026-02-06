@@ -16,6 +16,7 @@ interface DataTableProps {
   emptyMessage?: string;
   selectable?: boolean;
   onSelectionChange?: (selectedRows: any[]) => void;
+  onRowClick?: (row: any) => void;
 }
 
 export function DataTable({
@@ -25,6 +26,7 @@ export function DataTable({
   emptyMessage = "Nenhum registro encontrado",
   selectable = false,
   onSelectionChange,
+  onRowClick,
 }: DataTableProps) {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [selectAll, setSelectAll] = useState(false);
@@ -43,11 +45,9 @@ export function DataTable({
       newSelected.add(rowId);
     }
     setSelectedRows(newSelected);
-    
+
     // Chamar callback com objetos selecionados
-    const selected = data.filter(
-      (row) => newSelected.has(row.id)
-    );
+    const selected = data.filter((row) => newSelected.has(row.id));
     onSelectionChange?.(selected);
 
     // Atualizar selectAll se não está totalmente selecionado
@@ -93,10 +93,23 @@ export function DataTable({
   return (
     <div className="bg-gh-card border border-gh-border rounded-md overflow-hidden">
       <table className="w-full">
-        <DataTableHeader headers={headers} />
+        <DataTableHeader
+          headers={headers}
+          selectable={selectable}
+          selectAll={selectAll}
+          onSelectAll={handleSelectAll}
+        />
         <tbody className="divide-y divide-gh-border">
           {data.map((row, index) => (
-            <DataTableRow key={row.id || index} row={row} columns={headers} />
+            <DataTableRow
+              key={row.id || index}
+              row={row}
+              columns={headers}
+              selectable={selectable}
+              isSelected={selectedRows.has(row.id)}
+              onSelect={() => handleSelectRow(row.id)}
+              onRowClick={() => onRowClick?.(row)}
+            />
           ))}
         </tbody>
       </table>

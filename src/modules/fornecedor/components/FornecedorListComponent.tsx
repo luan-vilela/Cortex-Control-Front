@@ -48,6 +48,7 @@ export function FornecedorListComponent() {
   const [tipoFilter, setTipoFilter] = useState<FornecedorTipo | "">("");
   const [statusFilter, setStatusFilter] = useState<FornecedorStatus | "">("");
   const [avaliacaoMin, setAvaliacaoMin] = useState<number | "">("");
+  const [selectedFornecedores, setSelectedFornecedores] = useState<any[]>([]);
 
   const filters = useMemo(() => {
     const f: any = {};
@@ -209,18 +210,6 @@ export function FornecedorListComponent() {
         </div>
       </div>
 
-      {/* Results counter */}
-      {data && (
-        <div className="flex items-center justify-between border-b border-gh-border pb-3">
-          <p className="text-sm text-gh-text-secondary">
-            <span className="font-medium text-gh-text">{data.length}</span>{" "}
-            fornecedor
-            {data.length !== 1 ? "es" : ""} encontrado
-            {data.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-      )}
-
       {/* Table */}
       {data && (
         <div className="flex items-center justify-between border-b border-gh-border pb-3">
@@ -290,26 +279,35 @@ export function FornecedorListComponent() {
             label: "Ações",
             render: (id: string, row: any) => (
               <ActionButtons
-                onView={() =>
-                  router.push(
-                    `/workspaces/${activeWorkspace.id}/fornecedores/${id}`,
-                  )
-                }
-                onDelete={() =>
-                  handleDelete(id, row.person?.name || "Fornecedor")
-                }
+                onView={() => router.push(`/contatos/${row.personId}`)}
+                showDelete={false}
               />
             ),
           },
         ]}
         data={data || []}
         isLoading={isLoading}
+        selectable={true}
+        onSelectionChange={(selected) => setSelectedFornecedores(selected)}
+        onRowClick={(row) => router.push(`/contatos/${row.personId}`)}
         emptyMessage={
           searchTerm
             ? "Tente ajustar os termos de pesquisa."
             : "Comece criando seu primeiro fornecedor."
         }
       />
+
+      {/* Debug: Mostrar fornecedores selecionados */}
+      {selectedFornecedores.length > 0 && (
+        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+          <p className="text-sm font-medium text-blue-900 mb-2">
+            {selectedFornecedores.length} fornecedor(es) selecionado(s)
+          </p>
+          <pre className="text-xs text-blue-800 overflow-auto max-h-64">
+            {JSON.stringify(selectedFornecedores, null, 2)}
+          </pre>
+        </div>
+      )}
     </div>
   );
 }

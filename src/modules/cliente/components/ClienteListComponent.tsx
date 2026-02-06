@@ -48,6 +48,7 @@ export function ClienteListComponent() {
     "",
   );
   const [statusFilter, setStatusFilter] = useState<ClienteStatus | "">("");
+  const [selectedClientes, setSelectedClientes] = useState<any[]>([]);
 
   const filters = useMemo(() => {
     const f: any = {};
@@ -160,17 +161,6 @@ export function ClienteListComponent() {
         </div>
       </div>
 
-      {/* Results counter */}
-      {data && (
-        <div className="flex items-center justify-between border-b border-gh-border pb-3">
-          <p className="text-sm text-gh-text-secondary">
-            <span className="font-medium text-gh-text">{data.length}</span>{" "}
-            cliente
-            {data.length !== 1 ? "s" : ""} encontrado
-            {data.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-      )}
       {/* Table */}
       {data && (
         <div className="flex items-center justify-between border-b border-gh-border pb-3">
@@ -244,24 +234,35 @@ export function ClienteListComponent() {
             label: "Ações",
             render: (id: string, row: any) => (
               <ActionButtons
-                onView={() =>
-                  router.push(
-                    `/workspaces/${activeWorkspace.id}/clientes/${id}`,
-                  )
-                }
-                onDelete={() => handleDelete(id, row.person?.name || "Cliente")}
+                onView={() => router.push(`/contatos/${row.personId}`)}
+                showDelete={false}
               />
             ),
           },
         ]}
         data={data || []}
         isLoading={isLoading}
+        selectable={true}
+        onSelectionChange={(selected) => setSelectedClientes(selected)}
+        onRowClick={(row) => router.push(`/contatos/${row.personId}`)}
         emptyMessage={
           searchTerm
             ? "Tente ajustar os termos de pesquisa."
             : "Comece criando seu primeiro cliente."
         }
       />
+
+      {/* Debug: Mostrar clientes selecionados */}
+      {selectedClientes.length > 0 && (
+        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+          <p className="text-sm font-medium text-blue-900 mb-2">
+            {selectedClientes.length} cliente(s) selecionado(s)
+          </p>
+          <pre className="text-xs text-blue-800 overflow-auto max-h-64">
+            {JSON.stringify(selectedClientes, null, 2)}
+          </pre>
+        </div>
+      )}
     </div>
   );
 }

@@ -47,6 +47,7 @@ export function ParceiroListComponent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [tipoFilter, setTipoFilter] = useState<ParceiroTipo | "">("");
   const [statusFilter, setStatusFilter] = useState<ParceiroStatus | "">("");
+  const [selectedParceiros, setSelectedParceiros] = useState<any[]>([]);
 
   const filters = useMemo(() => {
     const f: any = {};
@@ -158,6 +159,16 @@ export function ParceiroListComponent() {
         </div>
       </div>
 
+      {data && (
+        <div className="flex items-center justify-between border-b border-gh-border pb-3">
+          <p className="text-sm text-gh-text-secondary">
+            <span className="font-medium text-gh-text">{data.length}</span>{" "}
+            cliente
+            {data.length !== 1 ? "s" : ""} encontrado
+            {data.length !== 1 ? "s" : ""}
+          </p>
+        </div>
+      )}
       {/* DataTable Component */}
       <DataTable
         headers={[
@@ -224,26 +235,34 @@ export function ParceiroListComponent() {
             label: "Ações",
             render: (id: string, row: any) => (
               <ActionButtons
-                onView={() =>
-                  router.push(
-                    `/workspaces/${activeWorkspace.id}/parceiros/${id}`,
-                  )
-                }
-                onDelete={() =>
-                  handleDelete(id, row.person?.name || "Parceiro")
-                }
+                onView={() => router.push(`/contatos/${row.personId}`)}
+                showDelete={false}
               />
             ),
           },
         ]}
         data={data || []}
         isLoading={isLoading}
+        onSelectionChange={(selected) => setSelectedParceiros(selected)}
+        onRowClick={(row) => router.push(`/contatos/${row.personId}`)}
         emptyMessage={
           searchTerm
             ? "Nenhum parceiro encontrado. Tente ajustar os termos de pesquisa."
             : "Nenhum parceiro encontrado. Comece criando seu primeiro parceiro."
         }
       />
+
+      {/* Debug: Mostrar parceiros selecionados */}
+      {selectedParceiros.length > 0 && (
+        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+          <p className="text-sm font-medium text-blue-900 mb-2">
+            {selectedParceiros.length} parceiro(s) selecionado(s)
+          </p>
+          <pre className="text-xs text-blue-800 overflow-auto max-h-64">
+            {JSON.stringify(selectedParceiros, null, 2)}
+          </pre>
+        </div>
+      )}
     </div>
   );
 }
