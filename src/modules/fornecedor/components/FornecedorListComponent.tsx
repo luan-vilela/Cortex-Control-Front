@@ -237,7 +237,7 @@ export function FornecedorListComponent() {
             key: "papeisList",
             label: "Papéis",
             render: (papeisList: string[]) => (
-              <RolesBadge papeisList={papeisList} />
+              <RolesBadge papeisList={papeisList} showIcons={true} />
             ),
           },
           {

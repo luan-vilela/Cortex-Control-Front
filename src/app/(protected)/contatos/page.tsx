@@ -9,6 +9,7 @@ import { EntityType } from "@/modules/person/types/person.types";
 import { useAlerts } from "@/contexts/AlertContext";
 import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
 import { DataTable } from "@/components/DataTable";
+import { RolesBadge } from "@/components/RolesBadge";
 import { Search } from "lucide-react";
 import { formatDocument } from "@/lib/masks";
 
@@ -177,6 +178,13 @@ export default function PersonsPage() {
                 <span className="text-sm text-gh-text-secondary">
                   {email || "-"}
                 </span>
+              ),
+            },
+            {
+              key: "papeisList",
+              label: "Papéis",
+              render: (papeisList) => (
+                <RolesBadge papeisList={papeisList} showIcons={true} />
               ),
             },
             {

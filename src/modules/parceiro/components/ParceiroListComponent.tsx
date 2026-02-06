@@ -185,7 +185,7 @@ export function ParceiroListComponent() {
             key: "papeisList",
             label: "Papéis",
             render: (papeisList: string[] | undefined) => (
-              <RolesBadge papeisList={papeisList} />
+              <RolesBadge papeisList={papeisList} showIcons={true} />
             ),
           },
           {
