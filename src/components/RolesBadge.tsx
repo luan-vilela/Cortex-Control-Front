@@ -6,6 +6,7 @@ import { Users, Briefcase, Handshake } from "lucide-react";
 interface RolesBadgeProps {
   papeisList?: string[];
   showIcons?: boolean;
+  showLabel?: boolean;
 }
 
 const roleIcons = {
@@ -14,7 +15,11 @@ const roleIcons = {
   Parceiro: { Icon: Handshake, color: "text-purple-600", bg: "bg-purple-100" },
 };
 
-export function RolesBadge({ papeisList, showIcons = false }: RolesBadgeProps) {
+export function RolesBadge({
+  papeisList,
+  showIcons = false,
+  showLabel = false,
+}: RolesBadgeProps) {
   if (!papeisList || papeisList.length === 0) {
     return <span className="text-xs text-gh-text-secondary">-</span>;
   }
@@ -35,7 +40,7 @@ export function RolesBadge({ papeisList, showIcons = false }: RolesBadgeProps) {
               title={papel}
             >
               <Icon className={`w-3.5 h-3.5 ${color}`} />
-              {/* <span className={color}>{papel}</span> */}
+              {showLabel && <span className={color}>{papel}</span>}
             </div>
           );
         })}

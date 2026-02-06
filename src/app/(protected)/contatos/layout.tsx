@@ -25,7 +25,7 @@ const menuItems = [
     icon: UserPlus,
   },
   {
-    section: "criar",
+    section: "papel",
     items: [
       {
         label: "Clientes",
@@ -41,6 +41,11 @@ const menuItems = [
         label: "Parceiros",
         href: "/contatos/parceiros",
         icon: Handshake,
+      },
+      {
+        label: "Sem Papéis",
+        href: "/contatos/sem-papeis",
+        icon: TrendingUp,
       },
     ],
   },
@@ -92,11 +97,11 @@ export default function PersonsLayout({
             <div className="bg-gh-card border border-gh-border rounded-md overflow-hidden">
               {menuItems.map((item: any, index: number) => {
                 // Se é uma seção de grupo
-                if (item.section === "criar") {
+                if (item.section === "papel") {
                   return (
                     <div key={`section-${index}`}>
                       <div className="px-4 py-3 text-xs font-semibold text-gh-text-secondary uppercase tracking-wide border-t border-gh-border bg-gh-bg">
-                        CRIAR
+                        PAPÉIS
                       </div>
                       {item.items.map((subItem: any) => {
                         const Icon = subItem.icon;

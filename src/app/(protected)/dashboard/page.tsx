@@ -17,6 +17,7 @@ import {
   TrendingUp,
   Settings,
   Users2,
+  DollarSign,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -40,17 +41,19 @@ export default function DashboardPage() {
     conversations: MessageSquare,
     automations: Zap,
     sales: TrendingUp,
+    finance: DollarSign,
     settings: Settings,
     members: Users2,
   };
 
   const moduleColors: Record<string, string> = {
-    contacts: "hover:bg-blue-600",
-    conversations: "hover:bg-purple-600",
-    automations: "hover:bg-yellow-600",
-    sales: "hover:bg-green-600",
-    settings: "hover:bg-gray-600",
-    members: "hover:bg-pink-600",
+    contacts: "from-blue-500 to-blue-600",
+    conversations: "from-purple-500 to-purple-600",
+    automations: "from-yellow-500 to-yellow-600",
+    sales: "from-green-500 to-green-600",
+    finance: "from-emerald-500 to-emerald-600",
+    settings: "from-gray-500 to-gray-600",
+    members: "from-pink-500 to-pink-600",
   };
 
   const handleModuleClick = (moduleId: string) => {
@@ -59,6 +62,7 @@ export default function DashboardPage() {
       conversations: "/conversations",
       automations: "/automations",
       sales: "/sales",
+      finance: "/finance",
       settings: `/workspaces/${activeWorkspace?.id}/settings`,
       members: `/workspaces/${activeWorkspace?.id}/members`,
     };
@@ -94,8 +98,7 @@ export default function DashboardPage() {
                   >
                     <div
                       className={`w-16 h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center mb-4 transition-all group-hover:scale-110 ${
-                        moduleColors[module.id]?.replace("hover:", "") ||
-                        "from-gray-600 to-gray-700"
+                        moduleColors[module.id] || "from-gray-600 to-gray-700"
                       }`}
                     >
                       {React.createElement(Icon as React.ElementType, {

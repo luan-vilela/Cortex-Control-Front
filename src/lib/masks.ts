@@ -167,6 +167,20 @@ export function formatDocument(value: string): string {
 }
 
 /**
+ * REtorna documento formatado + tipo (CPF ou CNPJ)
+ * @param value - Documento sem formatação
+ * @returns Objeto com documento formatado e tipo
+ */
+export function formatDocumentWithType(value: string): {
+  formatted: string;
+  type: "cpf" | "cnpj" | "unknown";
+} {
+  const type = detectDocumentType(value);
+  const formatted = formatDocument(value);
+  return { formatted, type };
+}
+
+/**
  * Remove máscara de documento automaticamente
  * @param value - Documento formatado
  * @returns Documento sem formatação

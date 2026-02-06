@@ -9,3 +9,6 @@ export * from "./useWorkspaceMutations";
 
 // Module Access
 export * from "./useModuleAccess";
+
+// Active Workspace
+export * from "./useActiveWorkspace";

@@ -9,7 +9,6 @@ import { EntityType } from "@/modules/person/types/person.types";
 import { useAlerts } from "@/contexts/AlertContext";
 import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
 import { DataTable } from "@/components/DataTable";
-import { RolesBadge } from "@/components/RolesBadge";
 import { Search } from "lucide-react";
 import { formatDocument } from "@/lib/masks";
 
@@ -181,34 +180,43 @@ export default function PersonsPage() {
               ),
             },
             {
-              key: "papeisList",
-              label: "Papéis",
-              render: (papeisList) => (
-                <RolesBadge papeisList={papeisList} showIcons={true} />
-              ),
-            },
-            {
-              key: "type",
-              label: "Tipo",
-              render: (_, row) => (
-                <span className="px-3 py-1 rounded-full text-xs font-medium bg-gh-badge-bg text-gh-text">
-                  {getEntityTypeName(row)}
-                </span>
-              ),
+              key: "phones",
+              label: "Telefone",
+              render: (phones) => {
+                const primaryPhone = phones?.find((p: any) => p.isPrimary);
+                const phone = primaryPhone || phones?.[0];
+                return (
+                  <span className="text-sm text-gh-text-secondary">
+                    {phone?.number || "-"}
+                  </span>
+                );
+              },
             },
             {
               key: "document",
               label: "Documento",
-              render: (document) => (
-                <span className="text-sm text-gh-text-secondary font-mono">
-                  {document ? formatDocument(document) : "-"}
-                </span>
-              ),
+              render: (document) => {
+                if (!document)
+                  return (
+                    <span className="text-sm text-gh-text-secondary">-</span>
+                  );
+                const formatted = formatDocument(document);
+                const isCpf = document.length === 11;
+                const type = isCpf ? "CPF" : "CNPJ";
+                return (
+                  <div className="text-sm">
+                    <span className="text-xs font-medium text-gh-text-secondary">
+                      {type}
+                    </span>
+                    <p className="text-gh-text font-mono">{formatted}</p>
+                  </div>
+                );
+              },
             },
           ]}
           data={data || []}
           isLoading={isLoading}
-          selectable={true}
+          // selectable={true}
           onSelectionChange={(selected) => setSelectedPersons(selected)}
           onRowClick={(row) => router.push(`/contatos/${row.id}`)}
           emptyMessage={

@@ -11,6 +11,10 @@ import { ChevronLeft, Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import type { Person } from "@/modules/person/types/person.types";
 import { personService } from "@/modules/person/services/person.service";
+import { usePersonRoles } from "@/modules/person/hooks/usePersonRoles";
+import { RolesBadge } from "@/components/RolesBadge";
+import { formatDocumentWithType } from "@/lib/masks";
+import Link from "next/link";
 
 interface PersonFormData {
   name: string;
@@ -40,6 +44,10 @@ export default function PersonDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [person, setPerson] = useState<Person | null>(null);
+  const { data: papeisList = [] } = usePersonRoles(
+    activeWorkspace?.id || "",
+    personId,
+  );
   const [formData, setFormData] = useState<PersonFormData>({
     name: "",
     email: "",
@@ -54,6 +62,9 @@ export default function PersonDetailPage() {
     phones: [],
     active: true,
   });
+
+  const { formatted: formattedDocument, type: documentType } =
+    formatDocumentWithType(person?.document || "");
 
   // Carregar pessoa
   useEffect(() => {
@@ -297,10 +308,10 @@ export default function PersonDetailPage() {
                       </div>
                       <div>
                         <p className="text-sm text-gh-text-secondary mb-1">
-                          Documento
+                          {documentType ? `${documentType.toUpperCase()}` : ""}
                         </p>
                         <p className="text-gh-text font-medium">
-                          {person.document || "-"}
+                          {formattedDocument}
                         </p>
                       </div>
                       <div>
@@ -308,7 +319,14 @@ export default function PersonDetailPage() {
                           Website
                         </p>
                         <p className="text-gh-text font-medium">
-                          {person.website || "-"}
+                          <Link
+                            className="text-blue-600 hover:underline truncate block"
+                            href={person.website || "#"}
+                            target="_blank"
+                            title={person.website || ""}
+                          >
+                            {person.website || "-"}
+                          </Link>
                         </p>
                       </div>
                     </div>
@@ -587,9 +605,34 @@ export default function PersonDetailPage() {
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-4">
             {/* Info Card */}
+
             <div className="bg-gh-card border border-gh-border rounded-md p-4">
               <h4 className="font-semibold text-gh-text mb-3">Informações</h4>
-              <div className="space-y-2 text-sm">
+              <div className="space-y-3 text-sm">
+                <div>
+                  <p className="text-gh-text-secondary">Papéis</p>
+                  <div className="mt-1">
+                    {papeisList && papeisList.length > 0 ? (
+                      <RolesBadge
+                        papeisList={papeisList}
+                        showIcons={true}
+                        showLabel
+                      />
+                    ) : (
+                      <p className="text-xs text-gh-text-secondary">
+                        Nenhum papel atribuído
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-gh-text-secondary">Status</p>
+                  <p className="text-gh-text font-medium">
+                    {person.active ? "✓ Ativo" : "✗ Inativo"}
+                  </p>
+                </div>
+
                 <div>
                   <p className="text-gh-text-secondary">Criado em</p>
                   <p className="text-gh-text font-medium">
@@ -600,12 +643,6 @@ export default function PersonDetailPage() {
                   <p className="text-gh-text-secondary">Atualizado em</p>
                   <p className="text-gh-text font-medium">
                     {new Date(person.updatedAt).toLocaleDateString("pt-BR")}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gh-text-secondary">Status</p>
-                  <p className="text-gh-text font-medium">
-                    {person.active ? "✓ Ativo" : "✗ Inativo"}
                   </p>
                 </div>
               </div>
