@@ -28,6 +28,7 @@ export interface ParceiroData {
   totalConversoes: number;
   dataInclusao: string;
   ativo: boolean;
+  papeisList?: string[];
   person?: {
     id: string;
     name: string;

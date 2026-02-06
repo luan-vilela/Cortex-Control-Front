@@ -12,7 +12,10 @@ import {
   ParceiroStatus,
 } from "@/modules/parceiro/types/parceiro.types";
 import { useAlerts } from "@/contexts/AlertContext";
-import { Search, Loader2, Trash2 } from "lucide-react";
+import { Search } from "lucide-react";
+import { DataTable } from "@/components/DataTable";
+import { RolesBadge } from "@/components/RolesBadge";
+import { ActionButtons } from "@/components/ActionButtons";
 
 const tiposLabels: Record<ParceiroTipo, string> = {
   [ParceiroTipo.COMERCIAL]: "Comercial",
@@ -155,128 +158,92 @@ export function ParceiroListComponent() {
         </div>
       </div>
 
-      {/* Results counter */}
-      {data && (
-        <div className="flex items-center justify-between border-b border-gh-border pb-3">
-          <p className="text-sm text-gh-text-secondary">
-            <span className="font-medium text-gh-text">{data.length}</span>{" "}
-            parceiro
-            {data.length !== 1 ? "s" : ""} encontrado
-            {data.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-      )}
-
-      {/* Table */}
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin text-gh-text-secondary" />
-        </div>
-      ) : data && data.length > 0 ? (
-        <div className="bg-gh-card border border-gh-border rounded-md overflow-hidden">
-          <table className="w-full">
-            <thead className="border-b border-gh-border bg-gh-bg">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                  Nome
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                  Tipo
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                  Total Negócio
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                  Comissão Pendente
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gh-border">
-              {data.map((parceiro) => (
-                <tr
-                  key={parceiro.id}
-                  className="hover:bg-gh-hover transition-colors"
-                >
-                  <td className="px-6 py-3 font-medium text-gh-text">
-                    {parceiro.person?.name || "N/A"}
-                  </td>
-                  <td className="px-6 py-3">
-                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-gh-badge-bg text-gh-text">
-                      {tiposLabels[parceiro.tipo]}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[parceiro.status]}`}
-                    >
-                      {statusLabels[parceiro.status]}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 text-sm text-gh-text-secondary">
-                    {formatCurrency(parceiro.totalNegocioGerado)}
-                  </td>
-                  <td className="px-6 py-3 text-sm">
-                    <span
-                      className={`font-medium ${
-                        parceiro.totalComissaoPendente > 0
-                          ? "text-yellow-600"
-                          : "text-green-600"
-                      }`}
-                    >
-                      {formatCurrency(parceiro.totalComissaoPendente)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 text-sm">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() =>
-                          router.push(
-                            `/workspaces/${activeWorkspace.id}/parceiros/${parceiro.id}`,
-                          )
-                        }
-                        className="text-gh-accent hover:text-gh-accent-dark transition-colors text-xs font-medium"
-                      >
-                        Ver
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleDelete(
-                            parceiro.id,
-                            parceiro.person?.name || "Parceiro",
-                          )
-                        }
-                        className="text-red-500 hover:text-red-700 transition-colors text-xs font-medium"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="w-16 h-16 bg-gh-badge-bg rounded-full flex items-center justify-center mb-4">
-            <Search className="w-8 h-8 text-gh-text-secondary" />
-          </div>
-          <h3 className="text-lg font-semibold text-gh-text mb-2">
-            Nenhum parceiro encontrado
-          </h3>
-          <p className="text-sm text-gh-text-secondary">
-            {searchTerm
-              ? "Tente ajustar os termos de pesquisa."
-              : "Comece criando seu primeiro parceiro."}
-          </p>
-        </div>
-      )}
+      {/* DataTable Component */}
+      <DataTable
+        headers={[
+          {
+            key: "nome",
+            label: "Nome",
+            render: (_, row: any) => (
+              <span className="font-medium text-gh-text">
+                {row.person?.name || "N/A"}
+              </span>
+            ),
+          },
+          {
+            key: "papeisList",
+            label: "Papéis",
+            render: (papeisList: string[] | undefined) => (
+              <RolesBadge papeisList={papeisList} />
+            ),
+          },
+          {
+            key: "tipo",
+            label: "Tipo",
+            render: (tipo: ParceiroTipo) => (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-gh-badge-bg text-gh-text">
+                {tiposLabels[tipo]}
+              </span>
+            ),
+          },
+          {
+            key: "status",
+            label: "Status",
+            render: (status: ParceiroStatus) => (
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[status]}`}
+              >
+                {statusLabels[status]}
+              </span>
+            ),
+          },
+          {
+            key: "totalNegocioGerado",
+            label: "Total Negócio",
+            render: (value: number) => (
+              <span className="text-sm text-gh-text-secondary">
+                {formatCurrency(value)}
+              </span>
+            ),
+          },
+          {
+            key: "totalComissaoPendente",
+            label: "Comissão Pendente",
+            render: (value: number) => (
+              <span
+                className={`font-medium ${
+                  value > 0 ? "text-yellow-600" : "text-green-600"
+                }`}
+              >
+                {formatCurrency(value)}
+              </span>
+            ),
+          },
+          {
+            key: "id",
+            label: "Ações",
+            render: (id: string, row: any) => (
+              <ActionButtons
+                onView={() =>
+                  router.push(
+                    `/workspaces/${activeWorkspace.id}/parceiros/${id}`,
+                  )
+                }
+                onDelete={() =>
+                  handleDelete(id, row.person?.name || "Parceiro")
+                }
+              />
+            ),
+          },
+        ]}
+        data={data || []}
+        isLoading={isLoading}
+        emptyMessage={
+          searchTerm
+            ? "Nenhum parceiro encontrado. Tente ajustar os termos de pesquisa."
+            : "Nenhum parceiro encontrado. Comece criando seu primeiro parceiro."
+        }
+      />
     </div>
   );
 }

@@ -27,6 +27,7 @@ export interface ClienteData {
   dataUltimaPedido: string | null;
   dataInclusao: string;
   ativo: boolean;
+  papeisList?: string[];
   person?: {
     id: string;
     name: string;

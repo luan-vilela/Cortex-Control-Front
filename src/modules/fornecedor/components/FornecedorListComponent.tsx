@@ -12,7 +12,10 @@ import {
   FornecedorStatus,
 } from "@/modules/fornecedor/types/fornecedor.types";
 import { useAlerts } from "@/contexts/AlertContext";
-import { Search, Loader2, Trash2, Star } from "lucide-react";
+import { Search, Star } from "lucide-react";
+import { DataTable } from "@/components/DataTable";
+import { RolesBadge } from "@/components/RolesBadge";
+import { ActionButtons } from "@/components/ActionButtons";
 
 const tiposLabels: Record<FornecedorTipo, string> = {
   [FornecedorTipo.MATERIA_PRIMA]: "Matéria Prima",
@@ -219,107 +222,94 @@ export function FornecedorListComponent() {
       )}
 
       {/* Table */}
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin text-gh-text-secondary" />
-        </div>
-      ) : data && data.length > 0 ? (
-        <div className="bg-gh-card border border-gh-border rounded-md overflow-hidden">
-          <table className="w-full">
-            <thead className="border-b border-gh-border bg-gh-bg">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                  Nome
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                  Tipo
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                  Avaliação
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                  Total Compras
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gh-border">
-              {data.map((fornecedor) => (
-                <tr
-                  key={fornecedor.id}
-                  className="hover:bg-gh-hover transition-colors"
-                >
-                  <td className="px-6 py-3 font-medium text-gh-text">
-                    {fornecedor.person?.name || "N/A"}
-                  </td>
-                  <td className="px-6 py-3">
-                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-gh-badge-bg text-gh-text">
-                      {tiposLabels[fornecedor.tipo]}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[fornecedor.status]}`}
-                    >
-                      {statusLabels[fornecedor.status]}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 text-sm">
-                    {renderStars(fornecedor.avaliacao)}
-                  </td>
-                  <td className="px-6 py-3 text-sm text-gh-text-secondary">
-                    {formatCurrency(fornecedor.totalCompras)}
-                  </td>
-                  <td className="px-6 py-3 text-sm">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() =>
-                          router.push(
-                            `/workspaces/${activeWorkspace.id}/fornecedores/${fornecedor.id}`,
-                          )
-                        }
-                        className="text-gh-accent hover:text-gh-accent-dark transition-colors text-xs font-medium"
-                      >
-                        Ver
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleDelete(
-                            fornecedor.id,
-                            fornecedor.person?.name || "Fornecedor",
-                          )
-                        }
-                        className="text-red-500 hover:text-red-700 transition-colors text-xs font-medium"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="w-16 h-16 bg-gh-badge-bg rounded-full flex items-center justify-center mb-4">
-            <Search className="w-8 h-8 text-gh-text-secondary" />
-          </div>
-          <h3 className="text-lg font-semibold text-gh-text mb-2">
-            Nenhum fornecedor encontrado
-          </h3>
+      {data && (
+        <div className="flex items-center justify-between border-b border-gh-border pb-3">
           <p className="text-sm text-gh-text-secondary">
-            {searchTerm
-              ? "Tente ajustar os termos de pesquisa."
-              : "Comece criando seu primeiro fornecedor."}
+            <span className="font-medium text-gh-text">{data.length}</span>{" "}
+            fornecedor
+            {data.length !== 1 ? "es" : ""} encontrado
+            {data.length !== 1 ? "s" : ""}
           </p>
         </div>
       )}
+
+      <DataTable
+        headers={[
+          {
+            key: "nome",
+            label: "Nome",
+            render: (_, row: any) => (
+              <span className="font-medium text-gh-text">
+                {row.person?.name || "N/A"}
+              </span>
+            ),
+          },
+          {
+            key: "papeisList",
+            label: "Papéis",
+            render: (papeisList: string[]) => (
+              <RolesBadge papeisList={papeisList} />
+            ),
+          },
+          {
+            key: "tipo",
+            label: "Tipo",
+            render: (tipo: FornecedorTipo) => (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-gh-badge-bg text-gh-text">
+                {tiposLabels[tipo]}
+              </span>
+            ),
+          },
+          {
+            key: "status",
+            label: "Status",
+            render: (status: FornecedorStatus) => (
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[status]}`}
+              >
+                {statusLabels[status]}
+              </span>
+            ),
+          },
+          {
+            key: "avaliacao",
+            label: "Avaliação",
+            render: (value: number) => renderStars(value),
+          },
+          {
+            key: "totalCompras",
+            label: "Total Compras",
+            render: (value: number) => (
+              <span className="text-sm text-gh-text-secondary">
+                {formatCurrency(value)}
+              </span>
+            ),
+          },
+          {
+            key: "id",
+            label: "Ações",
+            render: (id: string, row: any) => (
+              <ActionButtons
+                onView={() =>
+                  router.push(
+                    `/workspaces/${activeWorkspace.id}/fornecedores/${id}`,
+                  )
+                }
+                onDelete={() =>
+                  handleDelete(id, row.person?.name || "Fornecedor")
+                }
+              />
+            ),
+          },
+        ]}
+        data={data || []}
+        isLoading={isLoading}
+        emptyMessage={
+          searchTerm
+            ? "Tente ajustar os termos de pesquisa."
+            : "Comece criando seu primeiro fornecedor."
+        }
+      />
     </div>
   );
 }

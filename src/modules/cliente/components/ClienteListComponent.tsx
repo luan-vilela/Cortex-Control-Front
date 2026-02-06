@@ -12,7 +12,10 @@ import {
   ClienteStatus,
 } from "@/modules/cliente/types/cliente.types";
 import { useAlerts } from "@/contexts/AlertContext";
-import { Search, Loader2, Trash2 } from "lucide-react";
+import { Search } from "lucide-react";
+import { DataTable } from "@/components/DataTable";
+import { RolesBadge } from "@/components/RolesBadge";
+import { ActionButtons } from "@/components/ActionButtons";
 
 const categoriasLabels: Record<ClienteCategoria, string> = {
   [ClienteCategoria.VIP]: "VIP",
@@ -168,109 +171,97 @@ export function ClienteListComponent() {
           </p>
         </div>
       )}
-
       {/* Table */}
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin text-gh-text-secondary" />
-        </div>
-      ) : data && data.length > 0 ? (
-        <div className="bg-gh-card border border-gh-border rounded-md overflow-hidden">
-          <table className="w-full">
-            <thead className="border-b border-gh-border bg-gh-bg">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                  Nome
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                  Categoria
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                  Total Compras
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                  Ticket Médio
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gh-text-secondary uppercase">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gh-border">
-              {data.map((cliente) => (
-                <tr
-                  key={cliente.id}
-                  className="hover:bg-gh-hover transition-colors"
-                >
-                  <td className="px-6 py-3 font-medium text-gh-text">
-                    {cliente.person?.name || "N/A"}
-                  </td>
-                  <td className="px-6 py-3">
-                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-gh-badge-bg text-gh-text">
-                      {categoriasLabels[cliente.categoria]}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[cliente.status]}`}
-                    >
-                      {statusLabels[cliente.status]}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 text-sm text-gh-text-secondary">
-                    {formatCurrency(cliente.totalCompras)}
-                  </td>
-                  <td className="px-6 py-3 text-sm text-gh-text-secondary">
-                    {formatCurrency(cliente.ticketMedio)}
-                  </td>
-                  <td className="px-6 py-3 text-sm">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() =>
-                          router.push(
-                            `/workspaces/${activeWorkspace.id}/clientes/${cliente.id}`,
-                          )
-                        }
-                        className="text-gh-accent hover:text-gh-accent-dark transition-colors text-xs font-medium"
-                      >
-                        Ver
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleDelete(
-                            cliente.id,
-                            cliente.person?.name || "Cliente",
-                          )
-                        }
-                        className="text-red-500 hover:text-red-700 transition-colors text-xs font-medium"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="w-16 h-16 bg-gh-badge-bg rounded-full flex items-center justify-center mb-4">
-            <Search className="w-8 h-8 text-gh-text-secondary" />
-          </div>
-          <h3 className="text-lg font-semibold text-gh-text mb-2">
-            Nenhum cliente encontrado
-          </h3>
+      {data && (
+        <div className="flex items-center justify-between border-b border-gh-border pb-3">
           <p className="text-sm text-gh-text-secondary">
-            {searchTerm
-              ? "Tente ajustar os termos de pesquisa."
-              : "Comece criando seu primeiro cliente."}
+            <span className="font-medium text-gh-text">{data.length}</span>{" "}
+            cliente
+            {data.length !== 1 ? "s" : ""} encontrado
+            {data.length !== 1 ? "s" : ""}
           </p>
         </div>
       )}
+
+      <DataTable
+        headers={[
+          {
+            key: "nome",
+            label: "Nome",
+            render: (_, row: any) => (
+              <span className="font-medium text-gh-text">
+                {row.person?.name || "N/A"}
+              </span>
+            ),
+          },
+          {
+            key: "papeisList",
+            label: "Papéis",
+            render: (papeisList: string[]) => (
+              <RolesBadge papeisList={papeisList} />
+            ),
+          },
+          {
+            key: "categoria",
+            label: "Categoria",
+            render: (categoria: ClienteCategoria) => (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-gh-badge-bg text-gh-text">
+                {categoriasLabels[categoria]}
+              </span>
+            ),
+          },
+          {
+            key: "status",
+            label: "Status",
+            render: (status: ClienteStatus) => (
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[status]}`}
+              >
+                {statusLabels[status]}
+              </span>
+            ),
+          },
+          {
+            key: "totalCompras",
+            label: "Total Compras",
+            render: (value: number) => (
+              <span className="text-sm text-gh-text-secondary">
+                {formatCurrency(value)}
+              </span>
+            ),
+          },
+          {
+            key: "ticketMedio",
+            label: "Ticket Médio",
+            render: (value: number) => (
+              <span className="text-sm text-gh-text-secondary">
+                {formatCurrency(value)}
+              </span>
+            ),
+          },
+          {
+            key: "id",
+            label: "Ações",
+            render: (id: string, row: any) => (
+              <ActionButtons
+                onView={() =>
+                  router.push(
+                    `/workspaces/${activeWorkspace.id}/clientes/${id}`,
+                  )
+                }
+                onDelete={() => handleDelete(id, row.person?.name || "Cliente")}
+              />
+            ),
+          },
+        ]}
+        data={data || []}
+        isLoading={isLoading}
+        emptyMessage={
+          searchTerm
+            ? "Tente ajustar os termos de pesquisa."
+            : "Comece criando seu primeiro cliente."
+        }
+      />
     </div>
   );
 }

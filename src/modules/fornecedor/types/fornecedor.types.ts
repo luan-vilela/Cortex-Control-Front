@@ -27,6 +27,7 @@ export interface FornecedorData {
   dataUltimaCompra: string | null;
   dataInclusao: string;
   ativo: boolean;
+  papeisList?: string[];
   person?: {
     id: string;
     name: string;
