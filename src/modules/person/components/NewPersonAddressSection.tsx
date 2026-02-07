@@ -41,10 +41,12 @@ export const AddressSection = ({
   };
 
   return (
-    <div className="bg-gh-card p-6 rounded-md border border-gh-border">
-      <h3 className="text-base font-semibold text-gh-text mb-4">Endereço</h3>
+    <div className="bg-gh-card p-4 sm:p-6 rounded-md border border-gh-border">
+      <h3 className="text-sm sm:text-base font-semibold text-gh-text mb-4">
+        Endereço
+      </h3>
 
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         <Controller
           name="address"
           control={control}
@@ -59,7 +61,7 @@ export const AddressSection = ({
           )}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           <Controller
             name="city"
             control={control}

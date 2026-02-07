@@ -16,8 +16,10 @@ export const AdditionalInfoSection = ({
 }: AdditionalInfoSectionProps) => {
   return (
     <>
-      <div className="bg-gh-card p-6 rounded-md border border-gh-border">
-        <h3 className="text-base font-semibold text-gh-text mb-4">Website</h3>
+      <div className="bg-gh-card p-4 sm:p-6 rounded-md border border-gh-border">
+        <h3 className="text-sm sm:text-base font-semibold text-gh-text mb-4">
+          Website
+        </h3>
 
         <Controller
           name="website"
@@ -34,8 +36,8 @@ export const AdditionalInfoSection = ({
         />
       </div>
 
-      <div className="bg-gh-card p-6 rounded-md border border-gh-border">
-        <h3 className="text-base font-semibold text-gh-text mb-4">
+      <div className="bg-gh-card p-4 sm:p-6 rounded-md border border-gh-border">
+        <h3 className="text-sm sm:text-base font-semibold text-gh-text mb-4">
           Observações
         </h3>
 

@@ -102,41 +102,40 @@ export default function NewPersonPage() {
 
   return (
     <ModuleGuard moduleId="contacts" workspaceId={activeWorkspace?.id}>
-      <div className="space-y-6">
+      <div className="px-4 sm:px-6 lg:px-8 py-6 lg:py-8 space-y-6">
         {/* Header com Botões */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gh-text mb-1">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex-1">
+            <h2 className="text-xl sm:text-2xl font-bold text-gh-text mb-1">
               Nova Pessoa
             </h2>
-            <p className="text-sm text-gh-text-secondary">
-              Cadastre uma nova pessoa. <br />
-              Os papéis são definidos automaticamente pelo sistema com base nas
-              ações e processos do sistema.
+            <p className="text-xs sm:text-sm text-gh-text-secondary">
+              Cadastre uma nova pessoa. Os papéis são definidos automaticamente
+              pelo sistema com base nas ações e processos do sistema.
             </p>
           </div>
-        </div>
 
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="secondary"
-            size="md"
-            style={{ minWidth: 150 }}
-            onClick={() => router.push("/contatos")}
-          >
-            Descartar
-          </Button>
-          <Button
-            variant="primary"
-            size="md"
-            type="submit"
-            form="new-person-form"
-            disabled={createMutation.isPending}
-            isLoading={createMutation.isPending}
-            style={{ minWidth: 150 }}
-          >
-            {createMutation.isPending ? "Salvando..." : "Salvar"}
-          </Button>
+          <div className="flex gap-2 w-full md:w-auto">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="flex-1 md:flex-none"
+              onClick={() => router.push("/contatos")}
+            >
+              Descartar
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              type="submit"
+              form="new-person-form"
+              disabled={createMutation.isPending}
+              isLoading={createMutation.isPending}
+              className="flex-1 md:flex-none"
+            >
+              {createMutation.isPending ? "Salvando..." : "Salvar"}
+            </Button>
+          </div>
         </div>
 
         {/* Formulário */}
