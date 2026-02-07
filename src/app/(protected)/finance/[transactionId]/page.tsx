@@ -22,13 +22,17 @@ export default function TransactionDetailPage() {
   const { moduleRoutes } = useModuleConfig();
   const [isChangingStatus, setIsChangingStatus] = useState(false);
 
-  const transactionId = Number(params.transactionId);
+  const transactionId = parseInt(params.transactionId as string, 10);
   const workspaceId = activeWorkspace?.id || "";
 
-  const { data: transaction, isLoading } = useTransactionDetail(
+  const {
+    data: transaction,
+    isLoading,
+    error,
+  } = useTransactionDetail(
     workspaceId,
     transactionId,
-    !!workspaceId && !!transactionId,
+    !!workspaceId && !isNaN(transactionId),
   );
 
   // Atualizar breadcrumb quando transação carrega
@@ -82,7 +86,14 @@ export default function TransactionDetailPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gh-bg via-gh-bg to-gh-hover p-6">
         <div className="max-w-4xl mx-auto text-center py-12">
-          <p className="text-gh-text-secondary">Transação não encontrada</p>
+          <p className="text-gh-text-secondary mb-2">
+            Transação não encontrada
+          </p>
+          {error && (
+            <p className="text-red-600 text-sm mb-4">
+              {(error as any)?.message || "Erro ao carregar transação"}
+            </p>
+          )}
           <Button
             onClick={() => router.push(moduleRoutes.finance)}
             className="mt-4"
