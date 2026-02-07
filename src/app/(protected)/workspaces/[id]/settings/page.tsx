@@ -23,7 +23,7 @@ export default function WorkspaceSettingsPage() {
   useBreadcrumb([
     {
       label: "Workspaces",
-      href: `/workspaces/${workspaceId}`,
+      href: `/workspaces/`,
     },
     {
       label: "Configurações",

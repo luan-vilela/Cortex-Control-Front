@@ -19,7 +19,7 @@ export default function ModuleDetailsPage() {
   useBreadcrumb([
     {
       label: "Workspaces",
-      href: `/workspaces/${workspaceId}`,
+      href: `/workspaces/`,
     },
     {
       label: "Gerenciar Módulos",

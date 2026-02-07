@@ -42,7 +42,7 @@ export default function ModulesMarketplacePage() {
   useBreadcrumb([
     {
       label: "Workspaces",
-      href: `/workspaces/${workspaceId}`,
+      href: `/workspaces/`,
     },
     {
       label: "Gerenciar Módulos",

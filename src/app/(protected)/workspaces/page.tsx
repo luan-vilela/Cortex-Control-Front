@@ -1,12 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { useWorkspaces } from "@/modules/workspace/hooks";
-import { WorkspaceSwitcher } from "@/modules/workspace/components/WorkspaceSwitcher";
-import { NotificationBell } from "@/components/NotificationBell";
-import { WalletDisplay } from "@/components/WalletDisplay";
-import { UserMenu } from "@/components/UserMenu";
+import { useBreadcrumb, useWorkspaces } from "@/modules/workspace/hooks";
 import { StatusBadge } from "@/components/StatusBadge";
 import { WorkspaceStatus } from "@/modules/workspace/types/workspace.types";
 import {
@@ -18,10 +13,17 @@ import {
   Search,
   Filter,
 } from "lucide-react";
+import Link from "next/link";
 
 export default function WorkspacesPage() {
-  const router = useRouter();
   const { data: workspaces = [], isLoading } = useWorkspaces();
+
+  useBreadcrumb([
+    {
+      label: "Workspaces",
+      href: "/workspaces",
+    },
+  ]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -44,13 +46,13 @@ export default function WorkspacesPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-bold text-gray-900">Meus Workspaces</h2>
-          <a
+          <Link
             href="/workspaces/new"
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Plus className="w-4 h-4" />
             Criar Workspace
-          </a>
+          </Link>
         </div>
 
         {/* Filtros e Pesquisa */}
@@ -274,13 +276,13 @@ export default function WorkspacesPage() {
             <p className="text-gray-600 mb-6">
               Crie seu primeiro workspace para começar
             </p>
-            <a
+            <Link
               href="/workspaces/new"
               className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="w-5 h-5" />
               Criar Workspace
-            </a>
+            </Link>
           </div>
         )}
       </div>

@@ -51,7 +51,7 @@ export default function WorkspaceMembersPage() {
   useBreadcrumb([
     {
       label: "Workspaces",
-      href: `/workspaces/${workspaceId}`,
+      href: `/workspaces/`,
     },
     {
       label: "Gerenciar Membros",
