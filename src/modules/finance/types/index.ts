@@ -125,6 +125,7 @@ export interface GetTransactionsFilters {
   partyType?: TransactionActorType;
   fromDate?: Date;
   toDate?: Date;
+  search?: string;
   page?: number;
   limit?: number;
 }

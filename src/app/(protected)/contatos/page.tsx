@@ -14,14 +14,6 @@ import { Trash2, Edit, Plus } from "lucide-react";
 import { formatDocument } from "@/lib/masks";
 import { useBreadcrumb } from "@/modules/workspace/hooks";
 
-const entityTypeLabels: Record<EntityType, string> = {
-  [EntityType.PERSON]: "Contato",
-  [EntityType.LEAD]: "Lead",
-  [EntityType.CLIENTE]: "Cliente",
-  [EntityType.FORNECEDOR]: "Fornecedor",
-  [EntityType.PARCEIRO]: "Parceiro",
-};
-
 export default function PersonsPage() {
   const router = useRouter();
   const { activeWorkspace } = useWorkspaceStore();
@@ -154,22 +146,6 @@ export default function PersonsPage() {
           onSearch={setSearchTerm}
           exportData={data || []}
           exportFilename="contatos"
-          filters={[
-            {
-              id: "entityType",
-              label: "Tipo",
-              options: Object.entries(entityTypeLabels).map(
-                ([value, label]) => ({
-                  id: value,
-                  value,
-                  label,
-                }),
-              ),
-              onChange: (value) =>
-                setEntityTypeFilter(value as EntityType | ""),
-              value: entityTypeFilter,
-            },
-          ]}
         />
 
         <DataTable

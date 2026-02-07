@@ -47,15 +47,15 @@ export function DataTableToolbar({
   isLoading = false,
 }: DataTableToolbarProps) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 w-full">
       {/* Linha 1: Search + Export */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 w-full">
         {onSearch && (
           <SearchInput
             placeholder={searchPlaceholder}
             onSearch={onSearch}
             disabled={isLoading}
-            className="flex-1"
+            className="w-full"
           />
         )}
         {exportData.length > 0 && (

@@ -71,11 +71,9 @@ export function DataTableRow({
                     action.onClick(row);
                   }}
                   className={`p-2 rounded inline-flex items-center justify-center transition-colors ${
-                    action.variant === "danger"
+                    action.variant === "destructive"
                       ? "text-red-600 hover:bg-red-50"
-                      : action.variant === "warning"
-                        ? "text-yellow-600 hover:bg-yellow-50"
-                        : "text-gh-text-secondary hover:bg-gh-card"
+                      : "text-gh-text-secondary hover:bg-gh-card"
                   }`}
                   title={action.label}
                 >
