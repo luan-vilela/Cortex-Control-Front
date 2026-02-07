@@ -12,3 +12,5 @@ export * from "./useModuleAccess";
 
 // Active Workspace
 export * from "./useActiveWorkspace";
+// Module Configuration
+export * from "./useModuleConfig";

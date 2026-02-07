@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useActiveWorkspace } from "@/modules/workspace/hooks/useActiveWorkspace";
+import { useModuleConfig } from "@/modules/workspace/hooks";
 import {
   useTransactionDetail,
   useUpdateTransaction,
@@ -18,6 +19,7 @@ export default function TransactionDetailPage() {
   const router = useRouter();
   const params = useParams();
   const { activeWorkspace } = useActiveWorkspace();
+  const { moduleRoutes } = useModuleConfig();
   const [isChangingStatus, setIsChangingStatus] = useState(false);
 
   const transactionId = Number(params.transactionId);
@@ -60,7 +62,7 @@ export default function TransactionDetailPage() {
         <div className="max-w-4xl mx-auto text-center py-12">
           <p className="text-gh-text-secondary">Transação não encontrada</p>
           <Button
-            onClick={() => router.push("/finance")}
+            onClick={() => router.push(moduleRoutes.finance)}
             className="mt-4"
             variant="outline"
           >
@@ -86,7 +88,7 @@ export default function TransactionDetailPage() {
     if (confirm("Tem certeza que deseja deletar esta transação?")) {
       deleteTransaction(transactionId, {
         onSuccess: () => {
-          router.push("/finance");
+          router.push(moduleRoutes.finance);
         },
       });
     }
@@ -108,7 +110,7 @@ export default function TransactionDetailPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => router.push("/finance")}
+              onClick={() => router.push(moduleRoutes.finance)}
               className="flex items-center gap-2"
             >
               <ArrowLeft size={16} />

@@ -6,6 +6,7 @@ import {
   useWorkspaces,
   useEnabledModules,
   useAvailableModules,
+  useModuleConfig,
 } from "@/modules/workspace/hooks";
 import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
 import * as LucideIcons from "lucide-react";
@@ -28,6 +29,7 @@ export default function DashboardPage() {
     activeWorkspace?.id || "",
   );
   const { data: availableModules = [] } = useAvailableModules();
+  const { moduleRoutes } = useModuleConfig();
 
   // Pré-carregar workspaces
   useWorkspaces();
@@ -57,16 +59,8 @@ export default function DashboardPage() {
   };
 
   const handleModuleClick = (moduleId: string) => {
-    const routes: Record<string, string> = {
-      contacts: "/contatos",
-      conversations: "/conversations",
-      automations: "/automations",
-      sales: "/sales",
-      finance: "/finance",
-      settings: `/workspaces/${activeWorkspace?.id}/settings`,
-      members: `/workspaces/${activeWorkspace?.id}/members`,
-    };
-    router.push(routes[moduleId] || "/");
+    const route = moduleRoutes[moduleId] || "/";
+    router.push(route);
   };
 
   return (
