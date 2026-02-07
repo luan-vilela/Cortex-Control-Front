@@ -8,21 +8,26 @@ import {
   useTransactions,
   useDeleteTransaction,
 } from "@/modules/finance/hooks/useFinance";
-import { TransactionList } from "@/modules/finance/components";
 import {
   TransactionSourceType,
   TransactionStatus,
   TransactionActorType,
   GetTransactionsFilters,
+  FinanceiroTransaction,
 } from "@/modules/finance/types";
 import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
-import { Button } from "@/components/ui/Button";
-import { Plus, Filter, DollarSign } from "lucide-react";
+import { DataTable, Column, RowAction } from "@/components/DataTable";
+import { PageHeader } from "@/components/patterns";
+import { Plus, Trash2, Eye } from "lucide-react";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import { SourceBadge } from "@/modules/finance/components/SourceBadge";
+import { StatusBadge } from "@/modules/finance/components/StatusBadge";
+import { ActorTypeBadge } from "@/modules/finance/components/ActorTypeBadge";
+import { Button } from "@/components/ui/button";
 
 export default function FinanceiroPage() {
   const router = useRouter();
   const { activeWorkspace } = useActiveWorkspace();
-  const [showFilters, setShowFilters] = useState(false);
 
   useBreadcrumb([
     {
@@ -43,6 +48,7 @@ export default function FinanceiroPage() {
     toDate: lastDayOfMonth,
   });
 
+  const [showFilters, setShowFilters] = useState(false);
   const [pendingFilters, setPendingFilters] =
     useState<GetTransactionsFilters>(getDefaultFilters());
   const [filters, setFilters] =
@@ -71,10 +77,6 @@ export default function FinanceiroPage() {
     setFilters(defaultFilters);
   };
 
-  const handlePageChange = (newPage: number) => {
-    setFilters({ ...filters, page: newPage });
-  };
-
   if (!activeWorkspace?.id) {
     return (
       <div className="text-center py-12">
@@ -83,52 +85,107 @@ export default function FinanceiroPage() {
     );
   }
 
+  // Definir colunas
+  const columns: Column[] = [
+    {
+      key: "partyType",
+      label: "Tipo",
+      render: (_, row) => {
+        if (row.parties && row.parties.length > 0) {
+          return (
+            <ActorTypeBadge
+              partyType={row.parties[0].partyType}
+              showIcon={true}
+            />
+          );
+        }
+        return <span className="text-xs text-gh-text-secondary">-</span>;
+      },
+    },
+    {
+      key: "description",
+      label: "Descrição",
+      render: (value) => (
+        <p className="text-gh-text font-medium truncate">{value}</p>
+      ),
+    },
+    {
+      key: "sourceType",
+      label: "Origem",
+      render: (value) => <SourceBadge sourceType={value} showIcon={true} />,
+    },
+    {
+      key: "amount",
+      label: "Valor",
+      render: (value) => (
+        <p className="text-sm font-semibold text-gh-text">
+          {formatCurrency(Number(value))}
+        </p>
+      ),
+    },
+    {
+      key: "dueDate",
+      label: "Vencimento",
+      render: (value) => (
+        <span className="text-sm text-gh-text-secondary">
+          {value ? formatDate(new Date(value)) : "-"}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (value) => <StatusBadge status={value} />,
+    },
+  ];
+
+  // Definir row actions
+  const rowActions: RowAction[] = [
+    {
+      id: "view",
+      label: "Visualizar",
+      icon: <Eye className="w-4 h-4" />,
+      onClick: (row) => router.push(`/finance/${row.id}`),
+    },
+    {
+      id: "delete",
+      label: "Deletar",
+      icon: <Trash2 className="w-4 h-4" />,
+      onClick: (row) => {
+        if (confirm("Tem certeza que deseja deletar esta transação?")) {
+          deleteTransaction(row.id);
+        }
+      },
+      variant: "destructive",
+    },
+  ];
+
   return (
     <ModuleGuard moduleId="finance" workspaceId={activeWorkspace?.id}>
-      <div className="min-h-screen bg-gradient-to-br from-gh-bg via-gh-bg to-gh-hover p-6">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gh-text">Financeiro</h1>
-              <p className="text-gh-text-secondary mt-1">
-                Gerencie suas transações e receitas/despesas
-              </p>
-            </div>
-            <Button
-              onClick={() => router.push(`/finance/new`)}
-              className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
-            >
-              <Plus size={16} />
-              Nova Transação
-            </Button>
-          </div>
+      <div className="space-y-6">
+        <PageHeader
+          title="Financeiro"
+          description="Gerencie suas transações e receitas/despesas"
+          action={{
+            label: "Nova Transação",
+            onClick: () => router.push(`/finance/new`),
+            icon: <Plus className="w-4 h-4" />,
+          }}
+        />
 
-          {/* Filtros */}
-          <div className="mb-6 flex items-center justify-between">
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2"
-              >
-                <Filter size={16} />
-                Filtros
-              </Button>
-            </div>
+        {/* Filtros */}
+        <div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+            className="mb-4"
+          >
+            {showFilters ? "Ocultar Filtros" : "Mostrar Filtros"}
+          </Button>
 
-            {transactionsData.total > 0 && (
-              <div className="text-sm text-gh-text-secondary">
-                {transactionsData.data.length} de {transactionsData.total}{" "}
-                transações
-              </div>
-            )}
-          </div>
-
-          {/* Filters Panel */}
           {showFilters && (
-            <div className="mb-6 p-4 border border-gh-border rounded-lg bg-gh-card space-y-4">
+            <div className="p-4 border border-gh-border rounded-lg bg-gh-card space-y-4 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 {/* Source Type Filter */}
                 <div>
@@ -266,67 +323,29 @@ export default function FinanceiroPage() {
                   size="sm"
                   onClick={handleResetFilters}
                 >
-                  Limpar Filtros
+                  Limpar
                 </Button>
                 <Button
                   onClick={handleApplyFilters}
-                  className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
+                  className="bg-blue-600 text-white hover:bg-blue-700"
                 >
-                  <Filter size={16} />
                   Pesquisar
                 </Button>
               </div>
             </div>
           )}
-
-          {/* Transactions List */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <TransactionList
-              transactions={transactionsData.data}
-              workspaceId={activeWorkspace.id}
-              isLoading={isLoading}
-              onDelete={(transactionId) =>
-                deleteTransaction(transactionId, {
-                  onSuccess: () => {
-                    // A query será invalidada automaticamente
-                  },
-                })
-              }
-            />
-          </div>
-
-          {/* Pagination */}
-          {transactionsData.total > transactionsData.limit && (
-            <div className="mt-6 flex items-center justify-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={filters.page === 1}
-                onClick={() =>
-                  handlePageChange(Math.max(1, (filters.page || 1) - 1))
-                }
-              >
-                Anterior
-              </Button>
-
-              <span className="text-sm text-gh-text-secondary">
-                Página {filters.page || 1}
-              </span>
-
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={
-                  (filters.page || 1) >=
-                  Math.ceil(transactionsData.total / transactionsData.limit)
-                }
-                onClick={() => handlePageChange((filters.page || 1) + 1)}
-              >
-                Próxima
-              </Button>
-            </div>
-          )}
         </div>
+
+        {/* DataTable */}
+        <DataTable
+          headers={columns}
+          data={transactionsData.data || []}
+          isLoading={isLoading}
+          emptyMessage="Nenhuma transação encontrada"
+          rowActions={rowActions}
+          pageSize={20}
+          maxPageSize={100}
+        />
       </div>
     </ModuleGuard>
   );

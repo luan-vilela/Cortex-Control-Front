@@ -1,7 +1,7 @@
 "use client";
 
 import { PaymentMode, PaymentConfig } from "../types";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 

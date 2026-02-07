@@ -1,7 +1,7 @@
 "use client";
 
 import { FinancialCharge, FinancialChargeType } from "../types";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { Plus, X, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 

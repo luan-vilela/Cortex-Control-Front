@@ -5,7 +5,7 @@ import {
   ModulePermissions,
 } from "@/modules/workspace/types/workspace.types";
 import { Modal } from "@/components/ui/Modal";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 
 interface InviteModalProps {
   isOpen: boolean;

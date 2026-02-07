@@ -6,7 +6,7 @@ import {
   UseFormSetValue,
   useWatch,
 } from "react-hook-form";
-import { Input } from "@/components/ui/Input";
+import { FormInput } from "@/components/FormInput";
 import { NewPersonFormData } from "@/modules/person/schemas/new-person.schema";
 import { useState } from "react";
 
@@ -51,7 +51,7 @@ export const AddressSection = ({
           name="address"
           control={control}
           render={({ field }) => (
-            <Input
+            <FormInput
               {...field}
               label="Endereço"
               type="text"
@@ -66,7 +66,7 @@ export const AddressSection = ({
             name="city"
             control={control}
             render={({ field }) => (
-              <Input
+              <FormInput
                 {...field}
                 label="Cidade"
                 type="text"
@@ -80,7 +80,7 @@ export const AddressSection = ({
             name="state"
             control={control}
             render={({ field }) => (
-              <Input
+              <FormInput
                 {...field}
                 label="Estado (UF)"
                 type="text"
@@ -95,12 +95,12 @@ export const AddressSection = ({
             name="postalCode"
             control={control}
             render={({ field }) => (
-              <Input
+              <FormInput
                 {...field}
                 label="CEP"
                 type="text"
                 placeholder="00000-000"
-                isLoading={isCepLoading}
+                disabled={isCepLoading}
                 error={errors.postalCode?.message}
                 onChange={(e) => {
                   const formatted = formatCepInput(e.target.value);
@@ -116,7 +116,7 @@ export const AddressSection = ({
           name="country"
           control={control}
           render={({ field }) => (
-            <Input
+            <FormInput
               {...field}
               label="País"
               type="text"

@@ -1,3 +1,8 @@
 export { DataTable } from "./DataTable";
-export { DataTableHeader } from "./DataTableHeader";
-export { DataTableRow } from "./DataTableRow";
+export { DataTablePagination } from "./DataTablePagination";
+export type {
+  Column,
+  PaginationConfig,
+  SortingConfig,
+  RowAction,
+} from "./DataTable";

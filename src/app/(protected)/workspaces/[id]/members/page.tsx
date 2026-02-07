@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import {
   useWorkspace,
@@ -33,6 +33,12 @@ import type {
   WorkspacePermissions,
   ModulePermissions,
 } from "@/modules/workspace/types/workspace.types";
+import {
+  PageHeader,
+  DataTableToolbar,
+  BulkActions,
+} from "@/components/patterns";
+import { DataTable, Column, RowAction } from "@/components/DataTable";
 
 interface EditingMember {
   memberId: string;
@@ -61,19 +67,21 @@ export default function WorkspaceMembersPage() {
     },
   ]);
 
-  // React Query hooks
+  // Queries
   const { data: workspace } = useWorkspace(workspaceId);
   const { data: members = [], isLoading } = useWorkspaceMembers(workspaceId);
   const { data: pendingInvites = [] } = useWorkspacePendingInvites(workspaceId);
   const { data: enabledModules = [] } = useEnabledModules(workspaceId);
   const { data: defaultPermissions = [] } =
     useDefaultMemberPermissions(workspaceId);
+
+  // Mutations
   const inviteMutation = useInviteMember(workspaceId);
   const updatePermissionsMutation = useUpdateMemberPermissions(workspaceId);
   const removeMemberMutation = useRemoveMember(workspaceId);
   const updateInviteMutation = useUpdateInvite(workspaceId);
 
-  // Estado local apenas para UI
+  // State
   const [editing, setEditing] = useState<EditingMember | null>(null);
   const [editingInvite, setEditingInvite] = useState<EditingInvite | null>(
     null,
@@ -85,11 +93,11 @@ export default function WorkspaceMembersPage() {
     useState<WorkspacePermissions>({
       members: { read: false, write: false, delete: false },
     } as WorkspacePermissions);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const canManageMembers = workspace?.permissions?.members?.write || false;
   const canDeleteMembers = workspace?.permissions?.members?.delete || false;
 
-  // Mapear nomes de módulos para labels em português
   const moduleLabels: Record<string, string> = {
     contacts: "Contatos",
     conversations: "Conversas",
@@ -99,30 +107,24 @@ export default function WorkspaceMembersPage() {
     customers: "Clientes",
   };
 
-  // Labels para permissões em português
   const permissionLabels: Record<string, string> = {
     read: "Visualizar",
     write: "Editar",
     delete: "Deletar",
   };
 
-  // Gerar permissões padrão dinâmicas baseado nas configurações do workspace
+  // Funções auxiliares
   const getDefaultPermissionsByRole = (role: string): WorkspacePermissions => {
-    // Procurar configuração padrão do workspace para este role
     const defaultConfig = defaultPermissions?.find((p: any) => p.role === role);
     if (defaultConfig) {
       return defaultConfig.permissions;
     }
 
-    // Fallback: gerar baseado nos módulos habilitados
     const permissions: any = {};
-
-    // Iterar pelos módulos habilitados e atribuir permissões padrão
     enabledModules.forEach((module) => {
       if (role === "admin") {
         permissions[module] = { read: true, write: true, delete: true };
       } else {
-        // Member: read+write em modules principais, read-only em settings/members
         if (["settings", "members"].includes(module)) {
           permissions[module] = { read: true, write: false, delete: false };
         } else {
@@ -132,6 +134,119 @@ export default function WorkspaceMembersPage() {
     });
 
     return permissions as WorkspacePermissions;
+  };
+
+  // Handlers - Membros
+  const handleStartEdit = (member: WorkspaceMember) => {
+    setEditing({
+      memberId: member.id,
+      role: member.role,
+      permissions: { ...member.permissions },
+    });
+  };
+
+  const handleSaveEdit = () => {
+    if (!editing) return;
+    const member = members.find((m) => m.id === editing.memberId);
+    if (!member) return;
+
+    updatePermissionsMutation.mutate(
+      {
+        userId: member.id,
+        data: {
+          role: editing.role,
+          permissions: editing.permissions,
+        },
+      },
+      {
+        onSuccess: () => setEditing(null),
+        onError: (error: any) => {
+          console.error("Erro ao atualizar membro:", error);
+          alert("Erro ao atualizar permissões do membro");
+        },
+      },
+    );
+  };
+
+  const handleRemoveMember = (memberId: string, userName: string) => {
+    if (!confirm(`Tem certeza que deseja remover ${userName} do workspace?`))
+      return;
+    removeMemberMutation.mutate(memberId, {
+      onError: (error: any) => {
+        console.error("Erro ao remover membro:", error);
+        alert("Erro ao remover membro");
+      },
+    });
+  };
+
+  const togglePermission = (
+    module: keyof EditingMember["permissions"],
+    permission: "read" | "write" | "delete",
+  ) => {
+    if (!editing) return;
+    setEditing({
+      ...editing,
+      permissions: {
+        ...editing.permissions,
+        [module]: {
+          ...editing.permissions[module],
+          [permission]: !editing.permissions[module][permission],
+        },
+      },
+    });
+  };
+
+  // Handlers - Convites
+  const handleStartEditInvite = (invite: any) => {
+    setEditingInvite({
+      inviteId: invite.id,
+      role: invite.role,
+      permissions: invite.permissions || {
+        contacts: { read: true, write: false, delete: false },
+        conversations: { read: true, write: false, delete: false },
+        automations: { read: false, write: false, delete: false },
+        settings: { read: false, write: false, delete: false },
+        members: { read: false, write: false, delete: false },
+      },
+    });
+  };
+
+  const handleSaveEditInvite = () => {
+    if (!editingInvite) return;
+
+    updateInviteMutation.mutate(
+      {
+        inviteId: editingInvite.inviteId,
+        data: {
+          role: editingInvite.role,
+          permissions: editingInvite.permissions,
+        },
+      },
+      {
+        onSuccess: () => setEditingInvite(null),
+        onError: (error: any) => {
+          console.error("Erro ao atualizar convite:", error);
+          alert("Erro ao atualizar permissões do convite");
+        },
+      },
+    );
+  };
+
+  const toggleInvitePermission = (
+    module: keyof EditingInvite["permissions"],
+    permission: "read" | "write" | "delete",
+  ) => {
+    if (!editingInvite) return;
+    setEditingInvite({
+      ...editingInvite,
+      permissions: {
+        ...editingInvite.permissions,
+        [module]: {
+          ...editingInvite.permissions[module],
+          [permission]: !editingInvite.permissions[module][permission],
+        },
+      },
+    });
   };
 
   const handleRoleChange = (role: string) => {
@@ -151,116 +266,6 @@ export default function WorkspaceMembersPage() {
         [permission]: value,
       },
     }));
-  };
-
-  const handleStartEdit = (member: WorkspaceMember) => {
-    setEditing({
-      memberId: member.id,
-      role: member.role,
-      permissions: { ...member.permissions },
-    });
-  };
-
-  const handleCancelEdit = () => {
-    setEditing(null);
-  };
-
-  const handleSaveEdit = () => {
-    if (!editing) return;
-
-    const member = members.find((m) => m.id === editing.memberId);
-    if (!member) return;
-
-    updatePermissionsMutation.mutate(
-      {
-        userId: member.id,
-        data: {
-          role: editing.role,
-          permissions: editing.permissions,
-        },
-      },
-      {
-        onSuccess: () => {
-          setEditing(null);
-        },
-        onError: (error: any) => {
-          console.error("Erro ao atualizar membro:", error);
-          alert("Erro ao atualizar permissões do membro");
-        },
-      },
-    );
-  };
-
-  const handleRemoveMember = (memberId: string, userName: string) => {
-    if (!confirm(`Tem certeza que deseja remover ${userName} do workspace?`)) {
-      return;
-    }
-
-    removeMemberMutation.mutate(memberId, {
-      onError: (error: any) => {
-        console.error("Erro ao remover membro:", error);
-        alert("Erro ao remover membro");
-      },
-    });
-  };
-
-  const handleStartEditInvite = (invite: any) => {
-    setEditingInvite({
-      inviteId: invite.id,
-      role: invite.role,
-      permissions: invite.permissions || {
-        contacts: { read: true, write: false, delete: false },
-        conversations: { read: true, write: false, delete: false },
-        automations: { read: false, write: false, delete: false },
-        settings: { read: false, write: false, delete: false },
-        members: { read: false, write: false, delete: false },
-      },
-    });
-  };
-
-  const handleCancelEditInvite = () => {
-    setEditingInvite(null);
-  };
-
-  const handleSaveEditInvite = () => {
-    if (!editingInvite) return;
-
-    updateInviteMutation.mutate(
-      {
-        inviteId: editingInvite.inviteId,
-        data: {
-          role: editingInvite.role,
-          permissions: editingInvite.permissions,
-        },
-      },
-      {
-        onSuccess: () => {
-          setEditingInvite(null);
-        },
-        onError: (error: any) => {
-          console.error("Erro ao atualizar convite:", error);
-          alert("Erro ao atualizar permissões do convite");
-        },
-      },
-    );
-  };
-
-  const toggleInvitePermission = (
-    module: keyof EditingInvite["permissions"],
-    permission: "read" | "write" | "delete",
-  ) => {
-    if (!editingInvite) return;
-
-    setEditingInvite({
-      ...editingInvite,
-      permissions: {
-        ...editingInvite.permissions,
-        [module]: {
-          ...editingInvite.permissions[module],
-          [permission]: !editingInvite.permissions[module][permission],
-        },
-      },
-    });
   };
 
   const handleInviteMember = (e: React.FormEvent) => {
@@ -288,474 +293,200 @@ export default function WorkspaceMembersPage() {
     );
   };
 
-  const togglePermission = (
-    module: keyof EditingMember["permissions"],
-    permission: "read" | "write" | "delete",
-  ) => {
-    if (!editing) return;
+  // Filtrar membros por busca
+  const filteredMembers = members.filter((m) =>
+    (m.user?.name || "").toLowerCase().includes(searchTerm.toLowerCase()),
+  );
 
-    setEditing({
-      ...editing,
-      permissions: {
-        ...editing.permissions,
-        [module]: {
-          ...editing.permissions[module],
-          [permission]: !editing.permissions[module][permission],
-        },
+  const allItems = [...filteredMembers, ...pendingInvites];
+
+  // Colunas para DataTable
+  const columns: Column[] = [
+    {
+      key: "member",
+      label: "Membro",
+      render: (_, row) => {
+        const isMember = "user" in row;
+        const userName = isMember ? row.user?.name : "Convite Pendente";
+        const userEmail = isMember ? row.user?.email : row.invitedBy?.email;
+        const userInitials =
+          userName
+            ?.split(" ")
+            .map((n: string) => n[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2) || "?";
+        const isOwner = isMember && row.isOwner;
+        const isPending = !isMember;
+
+        return (
+          <div className="flex items-center gap-3">
+            <div
+              className={`h-10 w-10 rounded-full flex items-center justify-center text-sm font-medium text-white ${
+                isPending
+                  ? "bg-yellow-500"
+                  : isOwner
+                    ? "bg-purple-500"
+                    : "bg-blue-500"
+              }`}
+            >
+              {userInitials}
+            </div>
+            <div>
+              <div className="flex items-center gap-2 font-medium">
+                <span>{userName}</span>
+                {isOwner && <Crown className="w-4 h-4 text-yellow-500" />}
+                {isPending && <Clock className="w-4 h-4 text-yellow-500" />}
+              </div>
+              <div className="text-sm text-gray-500">{userEmail}</div>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      key: "role",
+      label: "Função",
+      render: (_, row) => {
+        const isMember = "user" in row;
+        const isEditing = isMember
+          ? editing?.memberId === row.id
+          : editingInvite?.inviteId === row.id;
+
+        if (isEditing) {
+          return (
+            <select
+              value={isMember ? editing?.role : editingInvite?.role}
+              onChange={(e) => {
+                if (isMember) {
+                  setEditing((prev) =>
+                    prev ? { ...prev, role: e.target.value } : null,
+                  );
+                } else {
+                  setEditingInvite((prev) =>
+                    prev ? { ...prev, role: e.target.value } : null,
+                  );
+                }
+              }}
+              className="px-2 py-1 border border-gray-300 rounded text-sm"
+              disabled={isMember && row.isOwner}
+            >
+              <option value="owner">Owner</option>
+              <option value="admin">Admin</option>
+              <option value="member">Member</option>
+            </select>
+          );
+        }
+
+        return (
+          <div className="flex items-center gap-2">
+            <Shield className="w-4 h-4 text-gray-400" />
+            <span className="capitalize text-sm">
+              {isMember ? row.role : row.role}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (_, row) => {
+        const isMember = "user" in row;
+        const variant = isMember ? "default" : "secondary";
+        const bgColor =
+          variant === "default"
+            ? "bg-green-100 text-green-800"
+            : "bg-yellow-100 text-yellow-800";
+        return (
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${bgColor}`}
+          >
+            {isMember ? "Ativo" : "Pendente"}
+          </span>
+        );
+      },
+    },
+  ];
+
+  // Row Actions
+  const rowActions: RowAction[] = [];
+
+  if (canManageMembers) {
+    rowActions.push({
+      id: "edit",
+      label: "Editar",
+      icon: <Edit className="w-4 h-4" />,
+      onClick: (row) => {
+        const isMember = "user" in row;
+        if (isMember && !row.isOwner) {
+          handleStartEdit(row as WorkspaceMember);
+        } else if (!isMember) {
+          handleStartEditInvite(row);
+        }
       },
     });
-  };
+  }
+
+  if (canDeleteMembers) {
+    rowActions.push({
+      id: "delete",
+      label: "Deletar",
+      icon: <Trash2 className="w-4 h-4" />,
+      onClick: (row) => {
+        const isMember = "user" in row;
+        if (isMember) {
+          const member = row as WorkspaceMember;
+          if (!member.isOwner) {
+            handleRemoveMember(member.id, member.user?.name || "Desconhecido");
+          }
+        } else {
+          if (
+            confirm(
+              `Cancelar convite para ${row.invitedBy?.email || "este usuário"}?`,
+            )
+          ) {
+            alert("Funcionalidade em desenvolvimento");
+          }
+        }
+      },
+      variant: "destructive",
+    });
+  }
 
   return (
-    <div className="min-h-screen bg-gh-bg">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Configuração de Permissões Padrão */}
-        {canManageMembers && (
-          <DefaultPermissionsConfig workspaceId={workspaceId} />
-        )}
+    <div className="space-y-6">
+      <DefaultPermissionsConfig workspaceId={workspaceId} />
 
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              Membros do Workspace
-            </h2>
-            <p className="text-gray-600 mt-1">
-              Gerencie os membros e suas permissões
-            </p>
-          </div>
+      <PageHeader
+        title="Membros do Workspace"
+        description="Gerencie os membros e suas permissões"
+        action={
+          canManageMembers
+            ? {
+                label: "Convidar Membro",
+                onClick: () => setShowInviteModal(true),
+                icon: <UserPlus className="w-4 h-4" />,
+              }
+            : undefined
+        }
+      />
 
-          {canManageMembers && (
-            <button
-              onClick={() => setShowInviteModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <UserPlus className="w-4 h-4" />
-              Convidar Membro
-            </button>
-          )}
-        </div>
+      <DataTableToolbar
+        searchPlaceholder="Pesquisar por nome..."
+        onSearch={setSearchTerm}
+        exportData={filteredMembers}
+        exportFilename="members"
+      />
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gh-hover"></div>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gh-border">
-                <thead className="bg-gh-bg">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Membro
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Função
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Permissões
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Membro desde
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Ações
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gh-border">
-                  {members.map((member) => {
-                    const isEditing = editing?.memberId === member.id;
-                    const userName = member.user?.name || "Usuário";
-                    const userEmail = member.user?.email || "email@example.com";
-                    const userInitials = userName
-                      .split(" ")
-                      .map((n: string) => n[0])
-                      .join("")
-                      .toUpperCase()
-                      .slice(0, 2);
+      <DataTable
+        headers={columns}
+        data={allItems}
+        isLoading={isLoading}
+        emptyMessage="Nenhum membro encontrado"
+        rowActions={rowActions}
+      />
 
-                    return (
-                      <tr key={member.id} className="hover:bg-gh-bg">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="shrink-0 h-10 w-10">
-                              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                <span className="text-blue-600 font-medium">
-                                  {userInitials}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
-                                {userName}
-                                {member.isOwner && (
-                                  <Crown className="w-4 h-4 text-yellow-500" />
-                                )}
-                              </div>
-                              <div className="text-sm text-gray-500 flex items-center gap-1">
-                                <Mail className="w-3 h-3" />
-                                {userEmail}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {isEditing ? (
-                            <select
-                              value={editing.role}
-                              onChange={(e) =>
-                                setEditing({ ...editing, role: e.target.value })
-                              }
-                              className="px-2 py-1 border border-gray-300 rounded text-sm"
-                              disabled={member.isOwner}
-                            >
-                              <option value="owner">Owner</option>
-                              <option value="admin">Admin</option>
-                              <option value="member">Member</option>
-                            </select>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <Shield className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm text-gray-900 capitalize">
-                                {member.role}
-                              </span>
-                            </div>
-                          )}
-                        </td>
-
-                        <td className="px-6 py-4">
-                          {isEditing ? (
-                            <div className="space-y-2">
-                              {Object.entries(editing.permissions).map(
-                                ([module, perms]) => (
-                                  <div key={module} className="text-xs">
-                                    <span className="font-semibold capitalize text-gray-900">
-                                      {moduleLabels[
-                                        module as keyof typeof moduleLabels
-                                      ] || module}
-                                      :
-                                    </span>
-                                    <div className="flex gap-2 mt-1">
-                                      {["read", "write", "delete"].map(
-                                        (perm) => (
-                                          <label
-                                            key={perm}
-                                            className="flex items-center gap-1 cursor-pointer"
-                                          >
-                                            <input
-                                              type="checkbox"
-                                              checked={
-                                                perms[
-                                                  perm as keyof typeof perms
-                                                ]
-                                              }
-                                              onChange={() =>
-                                                togglePermission(
-                                                  module as any,
-                                                  perm as any,
-                                                )
-                                              }
-                                              className="rounded border-gray-300"
-                                            />
-                                            <span className="capitalize text-gray-900 font-medium">
-                                              {
-                                                permissionLabels[
-                                                  perm as keyof typeof permissionLabels
-                                                ]
-                                              }
-                                            </span>
-                                          </label>
-                                        ),
-                                      )}
-                                    </div>
-                                  </div>
-                                ),
-                              )}
-                            </div>
-                          ) : (
-                            <div className="flex flex-wrap gap-1 max-h-[48px] overflow-hidden">
-                              {Object.entries(member.permissions)
-                                .filter(([, perms]) => perms.read)
-                                .map(([module], index) => {
-                                  const totalPermissions = Object.entries(
-                                    member.permissions,
-                                  ).filter(([, perms]) => perms.read).length;
-                                  const showMore = index >= 2;
-
-                                  if (showMore && index === 2) {
-                                    return (
-                                      <span
-                                        key="more"
-                                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700"
-                                      >
-                                        +{totalPermissions - 2}
-                                      </span>
-                                    );
-                                  }
-
-                                  if (showMore) return null;
-
-                                  return (
-                                    <span
-                                      key={module}
-                                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize"
-                                    >
-                                      {module}
-                                    </span>
-                                  );
-                                })}
-                            </div>
-                          )}
-                        </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(member.joinedAt).toLocaleDateString(
-                            "pt-BR",
-                          )}
-                        </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          {isEditing ? (
-                            <div className="flex items-center justify-end gap-2">
-                              <button
-                                onClick={handleSaveEdit}
-                                className="p-1 text-green-600 hover:text-green-900"
-                                title="Salvar"
-                              >
-                                <Check className="w-5 h-5" />
-                              </button>
-                              <button
-                                onClick={handleCancelEdit}
-                                className="p-1 text-red-600 hover:text-red-900"
-                                title="Cancelar"
-                              >
-                                <X className="w-5 h-5" />
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-end gap-2">
-                              {canManageMembers && !member.isOwner && (
-                                <button
-                                  onClick={() => handleStartEdit(member)}
-                                  className="p-1 text-blue-600 hover:text-blue-900"
-                                  title="Editar permissões"
-                                >
-                                  <Edit className="w-5 h-5" />
-                                </button>
-                              )}
-                              {canDeleteMembers && !member.isOwner && (
-                                <button
-                                  onClick={() =>
-                                    handleRemoveMember(
-                                      member.id,
-                                      member.user?.name || "Desconhecido",
-                                    )
-                                  }
-                                  className="p-1 text-red-600 hover:text-red-900"
-                                  title="Remover membro"
-                                >
-                                  <Trash2 className="w-5 h-5" />
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-
-                  {/* Convites Pendentes */}
-                  {pendingInvites.map((invite) => {
-                    const isEditingInvite =
-                      editingInvite?.inviteId === invite.id;
-
-                    return (
-                      <tr
-                        key={invite.id}
-                        className="hover:bg-gh-bg bg-yellow-50"
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="shrink-0 h-10 w-10">
-                              <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                                <Mail className="w-5 h-5 text-yellow-600" />
-                              </div>
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
-                                Convite Pendente
-                                <Clock className="w-4 h-4 text-yellow-500" />
-                              </div>
-                              <div className="text-sm text-gray-500 flex items-center gap-1">
-                                <Mail className="w-3 h-3" />
-                                {invite.invitedBy?.email || "Convite pendente"}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {isEditingInvite ? (
-                            <select
-                              value={editingInvite.role}
-                              onChange={(e) =>
-                                setEditingInvite({
-                                  ...editingInvite,
-                                  role: e.target.value,
-                                })
-                              }
-                              className="px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
-                            >
-                              <option value="owner">Owner</option>
-                              <option value="admin">Admin</option>
-                              <option value="member">Member</option>
-                            </select>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <Shield className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm text-gray-900 capitalize">
-                                {invite.role}
-                              </span>
-                            </div>
-                          )}
-                        </td>
-
-                        <td className="px-6 py-4">
-                          {isEditingInvite ? (
-                            <div className="space-y-2">
-                              {Object.entries(editingInvite.permissions).map(
-                                ([module, perms]) => (
-                                  <div key={module} className="text-xs">
-                                    <span className="font-semibold capitalize text-gray-900">
-                                      {moduleLabels[
-                                        module as keyof typeof moduleLabels
-                                      ] || module}
-                                      :
-                                    </span>
-                                    <div className="flex gap-2 mt-1">
-                                      {["read", "write", "delete"].map(
-                                        (perm) => (
-                                          <label
-                                            key={perm}
-                                            className="flex items-center gap-1 cursor-pointer"
-                                          >
-                                            <input
-                                              type="checkbox"
-                                              checked={
-                                                perms[
-                                                  perm as keyof typeof perms
-                                                ]
-                                              }
-                                              onChange={() =>
-                                                toggleInvitePermission(
-                                                  module as any,
-                                                  perm as any,
-                                                )
-                                              }
-                                              className="rounded border-gray-300"
-                                            />
-                                            <span className="capitalize text-gray-900 font-medium">
-                                              {
-                                                permissionLabels[
-                                                  perm as keyof typeof permissionLabels
-                                                ]
-                                              }
-                                            </span>
-                                          </label>
-                                        ),
-                                      )}
-                                    </div>
-                                  </div>
-                                ),
-                              )}
-                            </div>
-                          ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                              Aguardando aceitação
-                            </span>
-                          )}
-                        </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          Expira em{" "}
-                          {new Date(invite.expiresAt).toLocaleDateString(
-                            "pt-BR",
-                          )}
-                        </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          {isEditingInvite ? (
-                            <div className="flex items-center justify-end gap-2">
-                              <button
-                                onClick={handleSaveEditInvite}
-                                className="p-1 text-green-600 hover:text-green-900"
-                                title="Salvar"
-                              >
-                                <Check className="w-5 h-5" />
-                              </button>
-                              <button
-                                onClick={handleCancelEditInvite}
-                                className="p-1 text-red-600 hover:text-red-900"
-                                title="Cancelar"
-                              >
-                                <X className="w-5 h-5" />
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-end gap-2">
-                              {canManageMembers && (
-                                <button
-                                  onClick={() => handleStartEditInvite(invite)}
-                                  className="p-1 text-blue-600 hover:text-blue-900"
-                                  title="Editar convite"
-                                >
-                                  <Edit className="w-5 h-5" />
-                                </button>
-                              )}
-                              <button
-                                onClick={() => {
-                                  if (
-                                    confirm(
-                                      `Cancelar convite para ${invite.invitedBy?.email || "este usuário"}?`,
-                                    )
-                                  ) {
-                                    // TODO: implementar cancelar convite
-                                    alert("Funcionalidade em desenvolvimento");
-                                  }
-                                }}
-                                className="p-1 text-red-600 hover:text-red-900"
-                                title="Cancelar convite"
-                              >
-                                <X className="w-5 h-5" />
-                              </button>
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {members.length === 0 && pendingInvites.length === 0 && (
-              <div className="text-center py-12">
-                <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Nenhum membro encontrado
-                </h3>
-                <p className="text-gray-600">
-                  Convide membros para colaborar neste workspace
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Modal de Convite */}
       <InviteModal
         isOpen={showInviteModal}
         onClose={() => {

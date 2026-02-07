@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
@@ -12,23 +12,175 @@ import {
 import { NotificationBell } from "@/components/NotificationBell";
 import { WalletDisplay } from "@/components/WalletDisplay";
 import { UserMenu } from "@/components/UserMenu";
-import { LayoutDashboard, MoreHorizontal } from "lucide-react";
-import * as LucideIcons from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { LayoutDashboard, MoreHorizontal, Package } from "lucide-react";
 
 interface NavItem {
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   moduleId?: string;
-  required?: boolean; // Indica se é um módulo obrigatório para o workspace
+  required?: boolean;
+  description?: string;
 }
 
+// Componente: Logo
+function NavbarLogo() {
+  return (
+    <div className="flex items-center gap-3 min-w-fit">
+      <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-lg">
+        <span className="text-white font-bold text-lg">CC</span>
+      </div>
+      <Link
+        href="/dashboard"
+        className="text-lg font-bold text-gh-text hover:text-blue-600 transition-colors"
+      >
+        Cortex Control
+      </Link>
+    </div>
+  );
+}
+
+// Componente: Item de menu navegável
+interface NavItemProps {
+  item: NavItem;
+  isActive: boolean;
+}
+
+function NavbarItem({ item, isActive }: NavItemProps) {
+  const Icon = item.icon;
+  return (
+    <Link
+      href={item.href}
+      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+        isActive
+          ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+          : "text-gh-text hover:bg-gh-bg"
+      }`}
+    >
+      <Icon className="w-4 h-4" />
+      {item.label}
+    </Link>
+  );
+}
+
+// Componente: Item no dropdown
+interface DropdownItemProps {
+  module: any;
+  icon: React.ComponentType<{ className?: string }>;
+  isActive: boolean;
+  onSelect: (moduleId: string) => void;
+}
+
+function ModuleDropdownItem({
+  module,
+  icon: Icon,
+  isActive,
+  onSelect,
+}: DropdownItemProps) {
+  return (
+    <button
+      onClick={() => onSelect(module.id)}
+      className={`w-full flex items-start gap-3 px-3 py-2 rounded-lg text-left text-sm transition-all ${
+        isActive ? "bg-blue-50 dark:bg-blue-900/20" : "hover:bg-gh-bg"
+      }`}
+    >
+      <Icon className="w-4 h-4 mt-0.5 flex-shrink-0 text-gh-text" />
+      <div className="flex-1 min-w-0">
+        <div
+          className={`font-medium ${
+            isActive ? "text-blue-600 dark:text-blue-400" : "text-gh-text"
+          }`}
+        >
+          {module.name}
+        </div>
+        <p className="text-xs text-gh-text-secondary line-clamp-1">
+          {module.description}
+        </p>
+      </div>
+    </button>
+  );
+}
+
+// Componente: Dropdown de módulos
+interface ModulesDropdownProps {
+  isOpen: boolean;
+  onToggle: (open: boolean) => void;
+  modules: any[];
+  moduleIcons: Record<string, React.ComponentType<{ className?: string }>>;
+  moduleRoutes: Record<string, string>;
+  isActive: (href: string) => boolean;
+  onModuleSelect: (moduleId: string) => void;
+}
+
+function ModulesDropdown({
+  isOpen,
+  onToggle,
+  modules,
+  moduleIcons,
+  moduleRoutes,
+  isActive,
+  onModuleSelect,
+}: ModulesDropdownProps) {
+  return (
+    <DropdownMenu open={isOpen} onOpenChange={onToggle}>
+      <DropdownMenuTrigger asChild>
+        <button
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gh-text hover:bg-gh-bg transition-all"
+          title="Ver todos os módulos"
+        >
+          <MoreHorizontal className="w-4 h-4" />
+        </button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align="end" className="w-64">
+        {modules.length === 0 ? (
+          <div className="px-3 py-2 text-sm text-gh-text-secondary">
+            Nenhum módulo instalado
+          </div>
+        ) : (
+          modules.map((module) => {
+            const Icon = moduleIcons[module.id] || Package;
+            const isCurrentModule = isActive(moduleRoutes[module.id] || "/");
+            return (
+              <ModuleDropdownItem
+                key={module.id}
+                module={module}
+                icon={Icon}
+                isActive={isCurrentModule}
+                onSelect={onModuleSelect}
+              />
+            );
+          })
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+// Componente: Seção direita da navbar
+function NavbarRightSection() {
+  return (
+    <div className="flex items-center gap-3 min-w-fit">
+      <NotificationBell />
+      <WalletDisplay />
+      <div className="w-px h-6 bg-gh-border" />
+      <UserMenu />
+    </div>
+  );
+}
+
+// Componente: Navbar principal
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = React.useRef<HTMLDivElement>(null);
   const { activeWorkspace } = useWorkspaceStore();
+
   const { data: enabledModules = [] } = useEnabledModules(
     activeWorkspace?.id || "",
   );
@@ -37,31 +189,16 @@ export function Navbar() {
     activeWorkspace?.id || ":workspaceId",
   );
 
-  // Fechar dropdown ao clicar fora
-  React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   const isActive = (href: string) => {
     return pathname === href || pathname.startsWith(href + "/");
   };
 
-  // Filtrar módulos instalados (mesmo padrão do Dashboard)
+  // Filtrar módulos instalados
   const enabledModulesData = availableModules.filter((m: any) =>
     enabledModules.includes(m.id),
   );
 
-  // Construir itens de menu dinamicamente
+  // Construir itens de menu
   const visibleMenuItems: NavItem[] = [
     {
       label: "Dashboard",
@@ -69,13 +206,14 @@ export function Navbar() {
       icon: LayoutDashboard,
     },
     ...enabledModulesData.map((module: any) => {
-      const icon = moduleIcons[module.id] || LucideIcons.Package;
+      const icon = moduleIcons[module.id] || Package;
       return {
         label: module.name,
-        href: moduleRoutes[module.id] || `/`,
-        icon: icon,
+        href: moduleRoutes[module.id] || "/",
+        icon,
         moduleId: module.id,
         required: module.required,
+        description: module.description,
       };
     }),
   ];
@@ -90,111 +228,32 @@ export function Navbar() {
     <header className="bg-gh-card border-b border-gh-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 py-3">
         <div className="flex items-center justify-between gap-8">
-          {/* Logo + Nome */}
-          <div className="flex items-center gap-3 min-w-fit">
-            <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-lg">
-              <span className="text-white font-bold text-lg">CC</span>
-            </div>
-            <Link
-              href="/dashboard"
-              className="text-lg font-bold text-gh-text hover:text-blue-600 transition-colors"
-            >
-              Cortex Control
-            </Link>
-          </div>
+          <NavbarLogo />
 
-          {/* Navigation */}
           <nav className="flex items-center gap-1 flex-1">
-            {visibleMenuItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-              const isMandatoryModule = item.required;
-
-              if (isMandatoryModule) return null;
-
-              return (
-                <Link
+            {visibleMenuItems
+              .filter((item) => !item.required)
+              .map((item) => (
+                <NavbarItem
                   key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                    active
-                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                      : "text-gh-text hover:bg-gh-bg"
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {item.label}
-                </Link>
-              );
-            })}
-
-            {/* All Modules Dropdown */}
-            <div className="relative ml-auto" ref={dropdownRef}>
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gh-text hover:bg-gh-bg transition-all"
-                title="Ver todos os módulos"
-              >
-                <MoreHorizontal className="w-4 h-4" />
-              </button>
-
-              {/* Dropdown Menu */}
-              {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-gh-card border border-gh-border rounded-lg shadow-lg z-[100]">
-                  <div className="p-2 max-h-96 overflow-y-auto">
-                    {enabledModulesData.length === 0 ? (
-                      <div className="px-3 py-2 text-sm text-gh-text-secondary">
-                        Nenhum módulo instalado
-                      </div>
-                    ) : (
-                      enabledModulesData.map((module: any) => {
-                        const Icon =
-                          moduleIcons[module.id] || LucideIcons.Package;
-                        const isCurrentModule = isActive(
-                          moduleRoutes[module.id] || "/",
-                        );
-
-                        return (
-                          <button
-                            key={module.id}
-                            onClick={() => handleModuleClick(module.id)}
-                            className={`w-full flex items-start gap-3 px-3 py-2 rounded-lg text-left text-sm transition-all ${
-                              isCurrentModule
-                                ? "bg-blue-50 dark:bg-blue-900/20"
-                                : "hover:bg-gh-bg"
-                            }`}
-                          >
-                            <Icon className="w-4 h-4 mt-0.5 flex-shrink-0 text-gh-text" />
-                            <div className="flex-1 min-w-0">
-                              <div
-                                className={`font-medium ${
-                                  isCurrentModule
-                                    ? "text-blue-600 dark:text-blue-400"
-                                    : "text-gh-text"
-                                }`}
-                              >
-                                {module.name}
-                              </div>
-                              <p className="text-xs text-gh-text-secondary line-clamp-1">
-                                {module.description}
-                              </p>
-                            </div>
-                          </button>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+                  item={item}
+                  isActive={isActive(item.href)}
+                />
+              ))}
           </nav>
 
-          {/* Right Section */}
           <div className="flex items-center gap-3 min-w-fit">
-            <NotificationBell />
-            <WalletDisplay />
+            <ModulesDropdown
+              isOpen={isDropdownOpen}
+              onToggle={setIsDropdownOpen}
+              modules={enabledModulesData}
+              moduleIcons={moduleIcons}
+              moduleRoutes={moduleRoutes}
+              isActive={isActive}
+              onModuleSelect={handleModuleClick}
+            />
             <div className="w-px h-6 bg-gh-border" />
-            <UserMenu />
+            <NavbarRightSection />
           </div>
         </div>
       </div>

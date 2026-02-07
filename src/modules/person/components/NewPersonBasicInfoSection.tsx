@@ -1,7 +1,7 @@
 "use client";
 
 import { Controller, Control } from "react-hook-form";
-import { Input } from "@/components/ui/Input";
+import { FormInput } from "@/components/FormInput";
 import { NewPersonFormData } from "@/modules/person/schemas/new-person.schema";
 import { useCpfCnpj } from "@/modules/person/hooks/useCpfCnpj";
 
@@ -28,7 +28,7 @@ export const BasicInfoSection = ({
             name="name"
             control={control}
             render={({ field }) => (
-              <Input
+              <FormInput
                 {...field}
                 label="Nome completo *"
                 type="text"
@@ -43,7 +43,7 @@ export const BasicInfoSection = ({
           name="document"
           control={control}
           render={({ field }) => (
-            <Input
+            <FormInput
               {...field}
               label="Documento (CPF/CNPJ)"
               type="text"
@@ -62,7 +62,7 @@ export const BasicInfoSection = ({
             name="email"
             control={control}
             render={({ field }) => (
-              <Input
+              <FormInput
                 {...field}
                 label="Email"
                 type="email"

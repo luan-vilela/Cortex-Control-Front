@@ -1,28 +1,28 @@
-/**
- * Gera um ID único usando crypto.randomUUID()
- * @returns String UUID v4
- */
-export function generateUniqueId(): string {
-  return crypto.randomUUID();
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
 }
 
-/**
- * Formata um valor numérico como moeda (BRL)
- */
-export function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
+export function formatCurrency(
+  value: number,
+  locale: string = "pt-BR",
+): string {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "BRL",
   }).format(value);
 }
 
-/**
- * Formata uma data para o padrão pt-BR
- */
-export function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
+export function formatDate(
+  date: string | Date,
+  locale: string = "pt-BR",
+): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  return d.toLocaleDateString(locale);
+}
+
+export function generateUniqueId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }

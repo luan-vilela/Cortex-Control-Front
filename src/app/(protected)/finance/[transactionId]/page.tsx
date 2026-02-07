@@ -10,7 +10,7 @@ import {
 } from "@/modules/finance/hooks/useFinance";
 import { TransactionDetail } from "@/modules/finance/components";
 import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { ArrowLeft, Trash2, DollarSign } from "lucide-react";
 import { TransactionStatus } from "@/modules/finance/types";
 import { useState } from "react";

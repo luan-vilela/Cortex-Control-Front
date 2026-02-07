@@ -1,8 +1,8 @@
 "use client";
 
 import { Controller, Control } from "react-hook-form";
-import { Input } from "@/components/ui/Input";
-import { Textarea } from "@/components/ui/Textarea";
+import { FormInput } from "@/components/FormInput";
+import { FormTextarea } from "@/components/FormTextarea";
 import { NewPersonFormData } from "@/modules/person/schemas/new-person.schema";
 
 interface AdditionalInfoSectionProps {
@@ -25,7 +25,7 @@ export const AdditionalInfoSection = ({
           name="website"
           control={control}
           render={({ field }) => (
-            <Input
+            <FormInput
               {...field}
               label="Website"
               type="url"
@@ -45,7 +45,7 @@ export const AdditionalInfoSection = ({
           name="notes"
           control={control}
           render={({ field }) => (
-            <Textarea
+            <FormTextarea
               {...field}
               label="Observações"
               rows={4}

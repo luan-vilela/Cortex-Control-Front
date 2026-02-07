@@ -3,7 +3,7 @@
 import React from "react";
 import { X } from "lucide-react";
 import { CreatePhoneDto, PhoneType } from "../types/person.types";
-import { Input } from "@/components/ui/Input";
+import { Input } from "@/components/ui/input";
 
 const phoneTypeLabels: Record<PhoneType, string> = {
   [PhoneType.MOBILE]: "Celular",

@@ -9,7 +9,7 @@ import { useCreatePerson } from "@/modules/person/hooks/usePersonMutations";
 import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
 import { useAlerts } from "@/contexts/AlertContext";
 import { useBreadcrumb } from "@/modules/workspace/hooks";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import {
   newPersonFormSchema,
   NewPersonFormData,
@@ -125,12 +125,11 @@ export default function NewPersonPage() {
               Descartar
             </Button>
             <Button
-              variant="primary"
+              variant="default"
               size="sm"
               type="submit"
               form="new-person-form"
               disabled={createMutation.isPending}
-              isLoading={createMutation.isPending}
               className="flex-1 md:flex-none"
             >
               {createMutation.isPending ? "Salvando..." : "Salvar"}

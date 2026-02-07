@@ -11,9 +11,9 @@ import {
   RecurrenceConfig,
   FinancialCharge,
 } from "../types";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Textarea } from "@/components/ui/Textarea";
+import { Button } from "@/components/ui/button";
+import { FormInput } from "@/components/FormInput";
+import { FormTextarea } from "@/components/FormTextarea";
 import {
   PaymentModeConfig,
   RecurrenceConfigComponent,
@@ -139,7 +139,7 @@ export function TransactionForm({
       </div>
 
       {/* Descrição */}
-      <Input
+      <FormInput
         type="text"
         label="Descrição"
         placeholder="Ex: Serviço de consultoria, Venda de produtos..."
@@ -151,7 +151,7 @@ export function TransactionForm({
 
       {/* Valor e Data */}
       <div className="grid grid-cols-2 gap-3">
-        <Input
+        <FormInput
           type="number"
           label="Valor"
           step="0.01"
@@ -160,7 +160,7 @@ export function TransactionForm({
           value={formData.amount}
           onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
         />
-        <Input
+        <FormInput
           type="date"
           label="Vencimento"
           value={formData.dueDate}
@@ -171,7 +171,7 @@ export function TransactionForm({
       </div>
 
       {/* Notas */}
-      <Textarea
+      <FormTextarea
         label="Notas (opcional)"
         placeholder="Adicione observações sobre essa transação..."
         value={formData.notes}
