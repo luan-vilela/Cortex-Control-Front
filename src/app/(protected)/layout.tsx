@@ -7,6 +7,9 @@ import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
 import { useWorkspaces } from "@/modules/workspace/hooks";
 import { Navbar } from "@/components/Navbar";
 import { SecondaryHeader } from "@/components/SecondaryHeader";
+import { LayoutProvider } from "@/context/layout-provider";
+import { AppSidebar } from "@/components/layout/app-sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 export default function ProtectedLayout({
   children,
@@ -48,15 +51,28 @@ export default function ProtectedLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gh-bg flex flex-col">
-      {/* Primary Header */}
-      <Navbar />
+    <SidebarProvider>
+      <LayoutProvider>
+        <div className="min-h-screen bg-gh-bg flex flex-col">
+          {/* Primary Header */}
+          <Navbar />
 
-      {/* Secondary Header with Breadcrumbs */}
-      <SecondaryHeader />
+          {/* Layout com Sidebar + Content */}
+          <div className="flex flex-1 overflow-hidden">
+            {/* Sidebar */}
+            <AppSidebar />
 
-      {/* Content */}
-      <div className="flex-1 overflow-auto">{children}</div>
-    </div>
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+              {/* Secondary Header with Breadcrumbs */}
+              <SecondaryHeader />
+
+              {/* Content */}
+              <div className="flex-1 overflow-auto">{children}</div>
+            </div>
+          </div>
+        </div>
+      </LayoutProvider>
+    </SidebarProvider>
   );
 }

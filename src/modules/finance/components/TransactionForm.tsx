@@ -15,14 +15,20 @@ import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/FormInput";
 import { FormTextarea } from "@/components/FormTextarea";
 import { DatePicker } from "@/components/patterns/DatePicker";
-import { RadioGroup } from "@/components/ui/RadioGroup";
-import { RadioButton } from "@/components/ui/RadioButton";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   PaymentModeConfig,
   RecurrenceConfigComponent,
   InterestConfigComponent,
 } from "./index";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, TrendingUp, TrendingDown } from "lucide-react";
 
 interface TransactionFormProps {
   workspaceId: string;
@@ -105,28 +111,60 @@ export function TransactionForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 px-4 py-6">
-      {/* Tipo de Transação - Radio Group */}
-      <RadioGroup
-        name="partyType"
-        value={partyType}
-        onChange={(value) => setPartyType(value as TransactionActorType)}
-        label="Tipo de Transação"
-        containerClassName="flex flex-row gap-4"
-      >
-        <RadioButton
-          id="income"
-          name="partyType"
-          value={TransactionActorType.INCOME}
-          label="Entrada"
-        />
-        <RadioButton
-          id="expense"
-          name="partyType"
-          value={TransactionActorType.EXPENSE}
-          label="Saída"
-        />
-      </RadioGroup>
+    <form onSubmit={handleSubmit} className="space-y-6 px-4 py-6">
+      {/* Tipo de Transação - RadioGroup Cards em Linha */}
+      <div className="space-y-3">
+        <h3 className="text-lg font-semibold text-gh-text">
+          Tipo de Transação
+        </h3>
+        <RadioGroup
+          value={partyType}
+          onValueChange={(value) => setPartyType(value as TransactionActorType)}
+          className="grid grid-cols-2 gap-4 max-w-2xl"
+        >
+          <FieldLabel htmlFor="income-type" className="cursor-pointer">
+            <Field orientation="horizontal" className="flex flex-col">
+              <div className="flex items-start justify-between w-full gap-4">
+                <FieldContent>
+                  <FieldTitle className="flex items-center gap-3">
+                    <TrendingUp className="w-5 h-5 text-green-600" />
+                    Entrada
+                  </FieldTitle>
+                  <FieldDescription>
+                    Vendas, serviços, investimentos
+                  </FieldDescription>
+                </FieldContent>
+                <RadioGroupItem
+                  value={TransactionActorType.INCOME}
+                  id="income-type"
+                  className="mt-1"
+                />
+              </div>
+            </Field>
+          </FieldLabel>
+
+          <FieldLabel htmlFor="expense-type" className="cursor-pointer">
+            <Field orientation="horizontal" className="flex flex-col">
+              <div className="flex items-start justify-between w-full gap-4">
+                <FieldContent>
+                  <FieldTitle className="flex items-center gap-3">
+                    <TrendingDown className="w-5 h-5 text-red-600" />
+                    Saída
+                  </FieldTitle>
+                  <FieldDescription>
+                    Despesas, custos, pagamentos
+                  </FieldDescription>
+                </FieldContent>
+                <RadioGroupItem
+                  value={TransactionActorType.EXPENSE}
+                  id="expense-type"
+                  className="mt-1"
+                />
+              </div>
+            </Field>
+          </FieldLabel>
+        </RadioGroup>
+      </div>
 
       {/* Descrição */}
       <FormInput
