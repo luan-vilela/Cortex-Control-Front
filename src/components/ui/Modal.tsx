@@ -7,6 +7,7 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   children: ReactNode;
+  blur?: "none" | "sm" | "md" | "lg";
 }
 
 interface ModalHeaderProps {
@@ -22,14 +23,26 @@ interface ModalFooterProps {
   children: ReactNode;
 }
 
-export function Modal({ isOpen, onClose, children }: ModalProps) {
+export function Modal({
+  isOpen,
+  onClose,
+  children,
+  blur = "none",
+}: ModalProps) {
   if (!isOpen) return null;
+
+  const blurClasses = {
+    none: "",
+    sm: "backdrop-blur-sm",
+    md: "backdrop-blur-md",
+    lg: "backdrop-blur-lg",
+  };
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className={`fixed inset-0 bg-black/20 transition-opacity ${blurClasses[blur]}`}
         onClick={onClose}
       />
 
@@ -48,7 +61,7 @@ export function Modal({ isOpen, onClose, children }: ModalProps) {
 
 Modal.Header = function ModalHeader({ children, onClose }: ModalHeaderProps) {
   return (
-    <div className="flex items-center justify-between p-6 border-b border-gh-border">
+    <div className="flex items-center justify-between p-6">
       <h3 className="text-xl font-semibold text-gh-text">{children}</h3>
       {onClose && (
         <button
@@ -68,8 +81,6 @@ Modal.Body = function ModalBody({ children }: ModalBodyProps) {
 
 Modal.Footer = function ModalFooter({ children }: ModalFooterProps) {
   return (
-    <div className="flex items-center justify-end gap-3 p-6 border-t border-gh-border">
-      {children}
-    </div>
+    <div className="flex items-center justify-end gap-3 p-6">{children}</div>
   );
 };

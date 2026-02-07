@@ -1,7 +1,9 @@
 "use client";
 
 import React from "react";
+import { X } from "lucide-react";
 import { CreatePhoneDto, PhoneType } from "../types/person.types";
+import { Input } from "@/components/ui/Input";
 
 const phoneTypeLabels: Record<PhoneType, string> = {
   [PhoneType.MOBILE]: "Celular",
@@ -61,78 +63,70 @@ export function PhoneInput({ phones, onChange }: PhoneInputProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <label className="block text-sm font-medium text-gh-text">
-          Telefones
-        </label>
+      {phones.length === 0 ? (
         <button
           type="button"
           onClick={addPhone}
-          className="text-sm text-blue-600 hover:text-blue-800"
+          className="w-full p-4 border-2 border-dashed border-gh-border rounded-md text-gh-text-secondary hover:border-gh-hover hover:text-gh-hover transition-colors"
         >
           + Adicionar telefone
         </button>
-      </div>
-
-      {phones.length === 0 ? (
-        <p className="text-sm text-gh-text-secondary italic">
-          Nenhum telefone adicionado
-        </p>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {phones.map((phone, index) => (
             <div
               key={index}
-              className="flex gap-2 items-start p-3 bg-gh-bg rounded-lg"
+              className="flex gap-3 items-center p-4 bg-gh-bg rounded-md border border-gh-border"
             >
-              <div className="flex-1 space-y-2">
-                <input
-                  type="text"
-                  value={phone.number}
-                  onChange={(e) => updatePhone(index, "number", e.target.value)}
-                  placeholder="(00) 00000-0000"
-                  className="w-full px-3 py-2 border border-gh-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+              <input
+                type="checkbox"
+                checked={phone.isPrimary}
+                onChange={(e) =>
+                  updatePhone(index, "isPrimary", e.target.checked)
+                }
+                className="rounded border-gh-border text-gh-hover focus:ring-gh-hover flex-shrink-0"
+              />
 
-                <div className="flex gap-2 items-center">
-                  <select
-                    value={phone.type}
-                    onChange={(e) =>
-                      updatePhone(index, "type", e.target.value as PhoneType)
-                    }
-                    className="flex-1 px-3 py-2 border border-gh-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    {Object.entries(phoneTypeLabels).map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
+              <select
+                value={phone.type}
+                onChange={(e) =>
+                  updatePhone(index, "type", e.target.value as PhoneType)
+                }
+                className="px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-transparent min-w-max"
+              >
+                {Object.entries(phoneTypeLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
 
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={phone.isPrimary}
-                      onChange={(e) =>
-                        updatePhone(index, "isPrimary", e.target.checked)
-                      }
-                      className="rounded border-gh-border text-blue-600 focus:ring-blue-500"
-                    />
-                    Principal
-                  </label>
-                </div>
-              </div>
+              <Input
+                type="text"
+                value={phone.number}
+                onChange={(e) => updatePhone(index, "number", e.target.value)}
+                placeholder="(00) 00000-0000"
+                className="flex-1"
+              />
 
               <button
                 type="button"
                 onClick={() => removePhone(index)}
-                className="mt-1 text-red-600 hover:text-red-800"
+                className="flex items-center justify-center w-8 h-8 text-red-600 hover:bg-red-50 rounded-md transition-colors flex-shrink-0"
                 title="Remover telefone"
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
           ))}
+
+          <button
+            type="button"
+            onClick={addPhone}
+            className="w-full p-4 border-2 border-dashed border-gh-border rounded-md text-gh-text-secondary hover:border-gh-hover hover:text-gh-hover transition-colors"
+          >
+            + Adicionar telefone
+          </button>
         </div>
       )}
     </div>

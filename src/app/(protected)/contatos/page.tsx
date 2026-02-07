@@ -11,6 +11,7 @@ import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
 import { DataTable } from "@/components/DataTable";
 import { Search } from "lucide-react";
 import { formatDocument } from "@/lib/masks";
+import { useBreadcrumb } from "@/modules/workspace/hooks";
 
 const entityTypeLabels: Record<EntityType, string> = {
   [EntityType.PERSON]: "Contato",
@@ -20,27 +21,17 @@ const entityTypeLabels: Record<EntityType, string> = {
   [EntityType.PARCEIRO]: "Parceiro",
 };
 
-// Função helper para detectar o tipo de entidade
-function getEntityTypeName(person: any): string {
-  if ("status" in person && "source" in person && "score" in person) {
-    return entityTypeLabels[EntityType.LEAD];
-  }
-  if ("categoria" in person && "clienteStatus" in person) {
-    return entityTypeLabels[EntityType.CLIENTE];
-  }
-  if ("fornecedorStatus" in person && "prazoPagamento" in person) {
-    return entityTypeLabels[EntityType.FORNECEDOR];
-  }
-  if ("parceiroStatus" in person && "comissaoPercentual" in person) {
-    return entityTypeLabels[EntityType.PARCEIRO];
-  }
-  return entityTypeLabels[EntityType.PERSON];
-}
-
 export default function PersonsPage() {
   const router = useRouter();
   const { activeWorkspace } = useWorkspaceStore();
   const alerts = useAlerts();
+
+  useBreadcrumb([
+    {
+      label: "Contatos",
+      href: "/contatos",
+    },
+  ]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [entityTypeFilter, setEntityTypeFilter] = useState<EntityType | "">("");

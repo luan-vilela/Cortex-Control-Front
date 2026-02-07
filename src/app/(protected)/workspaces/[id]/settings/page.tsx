@@ -1,35 +1,35 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import {
   useWorkspace,
   useUpdateWorkspace,
   useDeleteWorkspace,
+  useBreadcrumb,
 } from "@/modules/workspace/hooks";
 import { useAlerts } from "@/contexts/AlertContext";
 import { workspaceService } from "@/modules/workspace/services/workspace.service";
 import { WorkspaceStatus } from "@/modules/workspace/types/workspace.types";
-import { StatusBadge } from "@/components/StatusBadge";
-import { NotificationBell } from "@/components/NotificationBell";
-import { WalletDisplay } from "@/components/WalletDisplay";
-import { UserMenu } from "@/components/UserMenu";
 import { Modal } from "@/components/ui/Modal";
-import {
-  ArrowLeft,
-  Settings as SettingsIcon,
-  Save,
-  Trash2,
-  LogOut,
-  AlertTriangle,
-  Power,
-} from "lucide-react";
+import { Save, Trash2, LogOut, AlertTriangle } from "lucide-react";
 
 export default function WorkspaceSettingsPage() {
   const router = useRouter();
   const params = useParams();
   const workspaceId = params.id as string;
   const alerts = useAlerts();
+
+  useBreadcrumb([
+    {
+      label: "Workspaces",
+      href: `/workspaces/${workspaceId}`,
+    },
+    {
+      label: "Configurações",
+      href: `/workspaces/${workspaceId}/settings`,
+    },
+  ]);
 
   const { data: workspace, isLoading } = useWorkspace(workspaceId);
   const updateWorkspaceMutation = useUpdateWorkspace(workspaceId);

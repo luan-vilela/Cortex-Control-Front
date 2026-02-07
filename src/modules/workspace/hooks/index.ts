@@ -14,3 +14,5 @@ export * from "./useModuleAccess";
 export * from "./useActiveWorkspace";
 // Module Configuration
 export * from "./useModuleConfig";
+// Breadcrumb
+export * from "./useBreadcrumb";

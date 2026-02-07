@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { useWorkspaceStore } from "../store/workspace.store";
 import { ChevronDown, Building2, Plus, Check, Package } from "lucide-react";
 import Link from "next/link";
 
 export function WorkspaceSwitcher() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const {
     workspaces,
@@ -29,8 +32,14 @@ export function WorkspaceSwitcher() {
 
   const handleSwitchWorkspace = async (workspaceId: string) => {
     try {
-      await switchWorkspace(workspaceId);
       setIsOpen(false);
+
+      const pathSegments = pathname.split("/").filter(Boolean);
+      const firstRoute = pathSegments[0] ? `/${pathSegments[0]}` : "/dashboard";
+      router.push(firstRoute);
+
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await switchWorkspace(workspaceId);
     } catch (error) {
       console.error("Erro ao trocar workspace:", error);
     }

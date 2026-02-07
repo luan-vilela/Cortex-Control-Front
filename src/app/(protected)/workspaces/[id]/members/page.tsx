@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import {
   useWorkspace,
   useWorkspaceMembers,
@@ -11,13 +11,10 @@ import {
   useRemoveMember,
   useUpdateInvite,
   useEnabledModules,
+  useBreadcrumb,
 } from "@/modules/workspace/hooks";
 import { InviteModal } from "@/modules/workspace/components/InviteModal";
-import { NotificationBell } from "@/components/NotificationBell";
-import { WalletDisplay } from "@/components/WalletDisplay";
-import { UserMenu } from "@/components/UserMenu";
 import {
-  ArrowLeft,
   Users,
   Mail,
   Shield,
@@ -48,9 +45,19 @@ interface EditingInvite {
 }
 
 export default function WorkspaceMembersPage() {
-  const router = useRouter();
   const params = useParams();
   const workspaceId = params.id as string;
+
+  useBreadcrumb([
+    {
+      label: "Workspaces",
+      href: `/workspaces/${workspaceId}`,
+    },
+    {
+      label: "Gerenciar Membros",
+      href: `/workspaces/${workspaceId}/members`,
+    },
+  ]);
 
   // React Query hooks
   const { data: workspace } = useWorkspace(workspaceId);
@@ -108,13 +115,6 @@ export default function WorkspaceMembersPage() {
 
     return permissions as WorkspacePermissions;
   };
-
-  // Sincronizar permissões quando os módulos mudam
-  useEffect(() => {
-    if (enabledModules.length > 0) {
-      setInvitePermissions(getDefaultPermissionsByRole(inviteRole));
-    }
-  }, [enabledModules]);
 
   const handleRoleChange = (role: string) => {
     setInviteRole(role);

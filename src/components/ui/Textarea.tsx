@@ -30,9 +30,9 @@ const getMessageStyles = (type?: string) => {
 
 const getInputBorderStyles = (hasError: boolean) => {
   if (hasError) {
-    return "border-red-200 dark:border-red-800 focus:ring-red-300 dark:focus:ring-red-700";
+    return "border-red-500 dark:border-red-500 focus:ring-red-300 dark:focus:ring-red-700";
   }
-  return "border-gray-300 dark:border-gray-700 focus:border-blue-300 focus:ring-blue-300 dark:focus:ring-blue-700";
+  return "border-gh-border focus:ring-gh-hover";
 };
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
@@ -61,17 +61,16 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
 
     const textareaClasses = `
       w-full
-      px-4 py-2.5
-      bg-white
+      px-3 py-2
+      bg-gh-bg
       border
-      rounded-lg
+      rounded-md
       text-gh-text placeholder:text-gray-400 dark:placeholder:text-gray-500
-      transition-all duration-200
-      focus:outline-none focus:ring-2 focus:ring-offset-0
+      focus:outline-none focus:ring-2
       resize-none
       ${getInputBorderStyles(!!hasError || !!isOverLimit)}
       ${disabled ? "text-gray-400 cursor-not-allowed opacity-60" : ""}
-      ${isOverLimit ? "border-red-200 dark:border-red-800 focus:ring-red-300" : ""}
+      ${isOverLimit ? "border-red-500 dark:border-red-500 focus:ring-red-300" : ""}
       ${className}
     `.trim();
 

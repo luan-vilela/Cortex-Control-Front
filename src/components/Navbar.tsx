@@ -20,9 +20,10 @@ interface NavItem {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   moduleId?: string;
+  required?: boolean; // Indica se é um módulo obrigatório para o workspace
 }
 
-export function Header() {
+export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -74,6 +75,7 @@ export function Header() {
         href: moduleRoutes[module.id] || `/`,
         icon: icon,
         moduleId: module.id,
+        required: module.required,
       };
     }),
   ];
@@ -106,6 +108,9 @@ export function Header() {
             {visibleMenuItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
+              const isMandatoryModule = item.required;
+
+              if (isMandatoryModule) return null;
 
               return (
                 <Link

@@ -1,60 +1,84 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
 import { useCreatePerson } from "@/modules/person/hooks/usePersonMutations";
 import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
-import { PhoneInput } from "@/modules/person/components/PhoneInput";
-import { CreatePersonDto } from "@/modules/person/types/person.types";
 import { useAlerts } from "@/contexts/AlertContext";
+import { useBreadcrumb } from "@/modules/workspace/hooks";
+import { Button } from "@/components/ui/Button";
+import {
+  newPersonFormSchema,
+  NewPersonFormData,
+} from "@/modules/person/schemas/new-person.schema";
+import { useNewPersonForm } from "@/modules/person/hooks/useNewPersonForm";
+import { BasicInfoSection } from "@/modules/person/components/NewPersonBasicInfoSection";
+import { PhonesSection } from "@/modules/person/components/NewPersonPhonesSection";
+import { AddressSection } from "@/modules/person/components/NewPersonAddressSection";
+import { AdditionalInfoSection } from "@/modules/person/components/NewPersonAdditionalInfoSection";
 
 export default function NewPersonPage() {
   const router = useRouter();
   const { activeWorkspace } = useWorkspaceStore();
   const alerts = useAlerts();
-
-  const [formData, setFormData] = useState<CreatePersonDto>({
-    name: "",
-    email: "",
-    document: "",
-    address: "",
-    city: "",
-    state: "",
-    country: "Brasil",
-    postalCode: "",
-    notes: "",
-    phones: [],
-    active: true,
-  });
-
+  const { handleCepBlur, formatCepInput } = useNewPersonForm();
   const createMutation = useCreatePerson(activeWorkspace?.id || "");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+  } = useForm<NewPersonFormData>({
+    resolver: zodResolver(newPersonFormSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      document: "",
+      address: "",
+      city: "",
+      state: "",
+      country: "Brasil",
+      postalCode: "",
+      website: "",
+      notes: "",
+      phones: undefined,
+    },
+  });
 
-    if (!formData.name.trim()) {
-      alerts.warning("O nome é obrigatório");
-      return;
-    }
+  useBreadcrumb([
+    {
+      label: "Contatos",
+      href: "/contatos",
+    },
+    {
+      label: "Nova Pessoa",
+      href: "/contatos/new",
+    },
+  ]);
 
-    // Remover campos vazios
-    const cleanData: CreatePersonDto = {
-      name: formData.name,
-      active: formData.active !== false,
+  const onSubmit = async (data: NewPersonFormData) => {
+    const cleanData: any = {
+      name: data.name,
+      active: true,
     };
 
-    if (formData.email?.trim()) cleanData.email = formData.email;
-    if (formData.document?.trim()) cleanData.document = formData.document;
-    if (formData.website?.trim()) cleanData.website = formData.website;
-    if (formData.address?.trim()) cleanData.address = formData.address;
-    if (formData.city?.trim()) cleanData.city = formData.city;
-    if (formData.state?.trim()) cleanData.state = formData.state;
-    if (formData.country?.trim()) cleanData.country = formData.country;
-    if (formData.postalCode?.trim()) cleanData.postalCode = formData.postalCode;
-    if (formData.notes?.trim()) cleanData.notes = formData.notes;
-    if (formData.phones && formData.phones.length > 0) {
-      cleanData.phones = formData.phones.filter((p) => p.number.trim());
+    if (data.email && data.email.trim()) cleanData.email = data.email;
+    if (data.document && data.document.trim())
+      cleanData.document = data.document;
+    if (data.website && data.website.trim()) cleanData.website = data.website;
+    if (data.address && data.address.trim()) cleanData.address = data.address;
+    if (data.city && data.city.trim()) cleanData.city = data.city;
+    if (data.state && data.state.trim()) cleanData.state = data.state;
+    if (data.country && data.country.trim()) cleanData.country = data.country;
+    if (data.postalCode && data.postalCode.trim())
+      cleanData.postalCode = data.postalCode;
+    if (data.notes && data.notes.trim()) cleanData.notes = data.notes;
+    if (data.phones && data.phones.length > 0) {
+      cleanData.phones = data.phones.filter((p) => p.number?.trim());
     }
 
     createMutation.mutate(cleanData, {
@@ -79,219 +103,61 @@ export default function NewPersonPage() {
   return (
     <ModuleGuard moduleId="contacts" workspaceId={activeWorkspace?.id}>
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h2 className="text-2xl font-bold text-gh-text mb-1">Nova Pessoa</h2>
-          <p className="text-sm text-gh-text-secondary">
-            Cadastre uma nova pessoa. Após o cadastro, você poderá adicionar
-            papéis como Lead, Cliente, Fornecedor ou Parceiro.
-          </p>
+        {/* Header com Botões */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gh-text mb-1">
+              Nova Pessoa
+            </h2>
+            <p className="text-sm text-gh-text-secondary">
+              Cadastre uma nova pessoa. <br />
+              Os papéis são definidos automaticamente pelo sistema com base nas
+              ações e processos do sistema.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="secondary"
+            size="md"
+            style={{ minWidth: 150 }}
+            onClick={() => router.push("/contatos")}
+          >
+            Descartar
+          </Button>
+          <Button
+            variant="primary"
+            size="md"
+            type="submit"
+            form="new-person-form"
+            disabled={createMutation.isPending}
+            isLoading={createMutation.isPending}
+            style={{ minWidth: 150 }}
+          >
+            {createMutation.isPending ? "Salvando..." : "Salvar"}
+          </Button>
         </div>
 
         {/* Formulário */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Informações Básicas */}
-          <div className="bg-gh-card p-6 rounded-md border border-gh-border">
-            <h3 className="text-base font-semibold text-gh-text mb-4">
-              Informações Básicas
-            </h3>
+        <form
+          id="new-person-form"
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-6"
+        >
+          <BasicInfoSection control={control} errors={errors} />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gh-text mb-1">
-                  Nome completo *
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  required
-                  className="w-full px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
-                  placeholder="Ex: João da Silva"
-                />
-              </div>
+          <PhonesSection control={control} />
 
-              <div>
-                <label className="block text-sm font-medium text-gh-text mb-1">
-                  Documento (CPF/CNPJ)
-                </label>
-                <input
-                  type="text"
-                  value={formData.document || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, document: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
-                  placeholder="000.000.000-00"
-                />
-              </div>
+          <AddressSection
+            control={control}
+            errors={errors}
+            setValue={setValue}
+            formatCepInput={formatCepInput}
+            onCepBlur={handleCepBlur}
+          />
 
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gh-text mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
-                  placeholder="email@exemplo.com"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Telefones */}
-          <div className="bg-gh-card p-6 rounded-md border border-gh-border">
-            <h3 className="text-base font-semibold text-gh-text mb-4">
-              Telefones
-            </h3>
-            <PhoneInput
-              phones={formData.phones || []}
-              onChange={(phones) => setFormData({ ...formData, phones })}
-            />
-          </div>
-
-          {/* Endereço */}
-          <div className="bg-gh-card p-6 rounded-md border border-gh-border">
-            <h3 className="text-base font-semibold text-gh-text mb-4">
-              Endereço
-            </h3>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gh-text mb-1">
-                  Endereço
-                </label>
-                <input
-                  type="text"
-                  value={formData.address || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, address: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
-                  placeholder="Rua, Avenida, Travessa..."
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gh-text mb-1">
-                    Cidade
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.city || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, city: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
-                    placeholder="São Paulo"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gh-text mb-1">
-                    Estado (UF)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.state || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, state: e.target.value })
-                    }
-                    maxLength={2}
-                    className="w-full px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
-                    placeholder="SP"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gh-text mb-1">
-                    CEP
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.postalCode || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, postalCode: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
-                    placeholder="00000-000"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gh-text mb-1">
-                  País
-                </label>
-                <input
-                  type="text"
-                  value={formData.country || "Brasil"}
-                  onChange={(e) =>
-                    setFormData({ ...formData, country: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
-                  placeholder="Brasil"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Website */}
-          <div className="bg-gh-card p-6 rounded-md border border-gh-border">
-            <h3 className="text-base font-semibold text-gh-text mb-4">
-              Website
-            </h3>
-            <input
-              type="url"
-              value={formData.website || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, website: e.target.value })
-              }
-              className="w-full px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
-              placeholder="https://exemplo.com"
-            />
-          </div>
-
-          {/* Observações */}
-          <div className="bg-gh-card p-6 rounded-md border border-gh-border">
-            <h3 className="text-base font-semibold text-gh-text mb-4">
-              Observações
-            </h3>
-            <textarea
-              value={formData.notes || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, notes: e.target.value })
-              }
-              rows={4}
-              className="w-full px-3 py-2 border border-gh-border rounded-md bg-gh-bg text-gh-text focus:ring-2 focus:ring-gh-hover focus:border-gh-hover"
-              placeholder="Notas, comentários ou informações adicionais..."
-            />
-          </div>
-
-          {/* Botões */}
-          <div className="flex gap-3 justify-end">
-            <button
-              type="button"
-              onClick={() => router.push("/contatos")}
-              className="px-4 py-2 border border-gh-border text-gh-text rounded-md hover:bg-gh-hover transition-colors text-sm font-medium"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={createMutation.isPending}
-              className="px-4 py-2 bg-gh-hover text-white rounded-md hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-            >
-              {createMutation.isPending ? "Salvando..." : "Criar Pessoa"}
-            </button>
-          </div>
+          <AdditionalInfoSection control={control} errors={errors} />
         </form>
       </div>
     </ModuleGuard>

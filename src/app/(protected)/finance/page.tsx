@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useActiveWorkspace } from "@/modules/workspace/hooks/useActiveWorkspace";
+import { useBreadcrumb } from "@/modules/workspace/hooks";
 import {
   useTransactions,
   useDeleteTransaction,
@@ -16,12 +17,19 @@ import {
 } from "@/modules/finance/types";
 import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
 import { Button } from "@/components/ui/Button";
-import { Plus, Filter } from "lucide-react";
+import { Plus, Filter, DollarSign } from "lucide-react";
 
 export default function FinanceiroPage() {
   const router = useRouter();
   const { activeWorkspace } = useActiveWorkspace();
   const [showFilters, setShowFilters] = useState(false);
+
+  useBreadcrumb([
+    {
+      label: "Finanças",
+      href: "/finance",
+    },
+  ]);
 
   // Get current month boundaries
   const now = new Date();

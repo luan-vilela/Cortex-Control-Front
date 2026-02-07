@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/modules/auth/store/auth.store";
 import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
 import { useWorkspaces } from "@/modules/workspace/hooks";
-import { Header } from "@/components/Header";
+import { Navbar } from "@/components/Navbar";
+import { SecondaryHeader } from "@/components/SecondaryHeader";
 
 export default function ProtectedLayout({
   children,
@@ -48,8 +49,11 @@ export default function ProtectedLayout({
 
   return (
     <div className="min-h-screen bg-gh-bg flex flex-col">
-      {/* Header */}
-      <Header />
+      {/* Primary Header */}
+      <Navbar />
+
+      {/* Secondary Header with Breadcrumbs */}
+      <SecondaryHeader />
 
       {/* Content */}
       <div className="flex-1 overflow-auto">{children}</div>

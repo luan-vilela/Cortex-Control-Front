@@ -6,6 +6,7 @@ import {
   useWorkspace,
   useEnabledModules,
   useAvailableModules,
+  useBreadcrumb,
 } from "@/modules/workspace/hooks";
 import { workspaceService } from "@/modules/workspace/services/workspace.service";
 import { useAlerts } from "@/contexts/AlertContext";
@@ -38,10 +39,24 @@ export default function ModulesMarketplacePage() {
   const workspaceId = params.id as string;
   const alerts = useAlerts();
 
+  useBreadcrumb([
+    {
+      label: "Workspaces",
+      href: `/workspaces/${workspaceId}`,
+    },
+    {
+      label: "Gerenciar Módulos",
+      href: `/workspaces/${workspaceId}/modules`,
+    },
+  ]);
+
   const { data: workspace } = useWorkspace(workspaceId);
   const { data: enabledModules = [], refetch } = useEnabledModules(workspaceId);
-  const { data: availableModules = [], isLoading: modulesLoading } =
-    useAvailableModules();
+  const {
+    data: availableModules = [],
+    isLoading: modulesLoading,
+    refetch: refetchAvailableModules,
+  } = useAvailableModules();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>("all");
@@ -78,8 +93,8 @@ export default function ModulesMarketplacePage() {
       return;
     }
 
-    const module = availableModules.find((m: any) => m.id === moduleId);
-    const required = module?.required;
+    const selectedModule = availableModules.find((m: any) => m.id === moduleId);
+    const required = selectedModule?.required;
     if (required && isEnabled) {
       alerts.error(`${moduleId} é um módulo obrigatório`);
       return;
@@ -93,6 +108,7 @@ export default function ModulesMarketplacePage() {
 
       await workspaceService.updateEnabledModules(workspaceId, newModules);
       await refetch();
+      await refetchAvailableModules();
       alerts.success(
         `Módulo ${isEnabled ? "desinstalado" : "instalado"} com sucesso`,
       );
@@ -115,8 +131,11 @@ export default function ModulesMarketplacePage() {
     return (
       <div className="bg-white border border-gh-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
         {/* Cabeçalho com ícone e categoria */}
-        <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 flex items-start justify-between group cursor-pointer hover:from-blue-100 hover:to-blue-200 transition-colors"
-          onClick={() => router.push(`/workspaces/${workspaceId}/modules/${module.id}`)}
+        <div
+          className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 flex items-start justify-between group cursor-pointer hover:from-blue-100 hover:to-blue-200 transition-colors"
+          onClick={() =>
+            router.push(`/workspaces/${workspaceId}/modules/${module.id}`)
+          }
         >
           <div className="flex items-start gap-3">
             <div className="p-2 bg-white rounded-lg text-blue-600">

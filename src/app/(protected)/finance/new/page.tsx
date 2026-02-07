@@ -5,10 +5,22 @@ import { useActiveWorkspace } from "@/modules/workspace/hooks/useActiveWorkspace
 import { TransactionForm } from "@/modules/finance/components";
 import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
 import { ArrowLeft } from "lucide-react";
+import { useBreadcrumb } from "@/modules/workspace/hooks";
 
 export default function NewTransactionPage() {
   const router = useRouter();
   const { activeWorkspace } = useActiveWorkspace();
+
+  useBreadcrumb([
+    {
+      label: "Finanças",
+      href: "/finance",
+    },
+    {
+      label: "Nova Transação",
+      href: "/finance/new",
+    },
+  ]);
 
   if (!activeWorkspace?.id) {
     return (

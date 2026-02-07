@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useActiveWorkspace } from "@/modules/workspace/hooks/useActiveWorkspace";
-import { useModuleConfig } from "@/modules/workspace/hooks";
+import { useModuleConfig, useBreadcrumb } from "@/modules/workspace/hooks";
 import {
   useTransactionDetail,
   useUpdateTransaction,
@@ -11,7 +11,7 @@ import {
 import { TransactionDetail } from "@/modules/finance/components";
 import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
 import { Button } from "@/components/ui/Button";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2, DollarSign } from "lucide-react";
 import { TransactionStatus } from "@/modules/finance/types";
 import { useState } from "react";
 
@@ -29,6 +29,28 @@ export default function TransactionDetailPage() {
     workspaceId,
     transactionId,
     !!workspaceId && !!transactionId,
+  );
+
+  // Atualizar breadcrumb quando transação carrega
+  useBreadcrumb(
+    transaction
+      ? [
+          {
+            label: "Finanças",
+            href: "/finance",
+            icon: DollarSign,
+          },
+          {
+            label: `${transaction.sourceType} #${transaction.id}`,
+          },
+        ]
+      : [
+          {
+            label: "Finanças",
+            href: "/finance",
+            icon: DollarSign,
+          },
+        ],
   );
 
   const { mutate: updateTransaction } = useUpdateTransaction(

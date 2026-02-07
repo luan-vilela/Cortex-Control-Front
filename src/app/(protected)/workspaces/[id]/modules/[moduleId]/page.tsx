@@ -1,7 +1,11 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useAvailableModules, useWorkspace } from "@/modules/workspace/hooks";
+import {
+  useAvailableModules,
+  useBreadcrumb,
+  useWorkspace,
+} from "@/modules/workspace/hooks";
 import * as LucideIcons from "lucide-react";
 import React from "react";
 import { ArrowLeft } from "lucide-react";
@@ -12,13 +16,29 @@ export default function ModuleDetailsPage() {
   const workspaceId = params.id as string;
   const moduleId = params.moduleId as string;
 
+  useBreadcrumb([
+    {
+      label: "Workspaces",
+      href: `/workspaces/${workspaceId}`,
+    },
+    {
+      label: "Gerenciar Módulos",
+      href: `/workspaces/${workspaceId}/modules`,
+    },
+    {
+      label: "Detalhes do Módulo",
+      href: `/workspaces/${workspaceId}/modules/${moduleId}`,
+    },
+  ]);
+
   const { data: workspace } = useWorkspace(workspaceId);
   const { data: availableModules = [], isLoading: modulesLoading } =
     useAvailableModules();
 
-  const module = availableModules.find((m: any) => m.id === moduleId);
+  const selectedModule = availableModules.find((m: any) => m.id === moduleId);
+
   const IconComponent =
-    LucideIcons[module?.icon as keyof typeof LucideIcons] ||
+    LucideIcons[selectedModule?.icon as keyof typeof LucideIcons] ||
     LucideIcons.Package;
 
   if (modulesLoading) {
@@ -29,7 +49,7 @@ export default function ModuleDetailsPage() {
     );
   }
 
-  if (!module) {
+  if (!selectedModule) {
     return (
       <div className="text-center py-16">
         <h3 className="text-xl font-semibold text-gray-900 mb-2">
@@ -69,15 +89,15 @@ export default function ModuleDetailsPage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {module.name}
+                {selectedModule.name}
               </h1>
-              <p className="text-gray-600 mb-4">{module.description}</p>
+              <p className="text-gray-600 mb-4">{selectedModule.description}</p>
               <span className="inline-block text-xs font-medium text-blue-600 bg-blue-200 px-3 py-1 rounded capitalize">
-                {module.category === "communication"
+                {selectedModule.category === "communication"
                   ? "Comunicação"
-                  : module.category === "automation"
+                  : selectedModule.category === "automation"
                     ? "Automação"
-                    : module.category === "core"
+                    : selectedModule.category === "core"
                       ? "Principal"
                       : "Integração"}
               </span>
@@ -95,22 +115,22 @@ export default function ModuleDetailsPage() {
                 Sobre o módulo
               </h2>
               <p className="text-gray-600 leading-relaxed mb-4">
-                {module.description}
+                {selectedModule.description}
               </p>
               <p className="text-gray-600 leading-relaxed">
                 Este módulo faz parte da categoria{" "}
                 <span className="font-medium text-gray-900">
-                  {module.category === "communication"
+                  {selectedModule.category === "communication"
                     ? "Comunicação"
-                    : module.category === "automation"
+                    : selectedModule.category === "automation"
                       ? "Automação"
-                      : module.category === "core"
+                      : selectedModule.category === "core"
                         ? "Principal"
                         : "Integração"}
                 </span>{" "}
                 e é essencial para gerenciar{" "}
                 <span className="font-medium text-gray-900">
-                  {module.name.toLowerCase()}
+                  {selectedModule.name.toLowerCase()}
                 </span>{" "}
                 no seu workspace.
               </p>
@@ -170,64 +190,66 @@ export default function ModuleDetailsPage() {
                 <p className="text-xs font-medium text-gray-500 mb-2">TIPO</p>
                 <span
                   className={`inline-block text-xs font-medium px-3 py-1 rounded ${
-                    module.required
+                    selectedModule.required
                       ? "bg-red-50 text-red-600"
                       : "bg-blue-50 text-blue-600"
                   }`}
                 >
-                  {module.required ? "Obrigatório" : "Opcional"}
+                  {selectedModule.required ? "Obrigatório" : "Opcional"}
                 </span>
               </div>
 
               {/* Dependências */}
-              {module.dependencies && module.dependencies.length > 0 && (
-                <div className="mb-6 pb-6 border-b border-gray-200">
-                  <p className="text-xs font-medium text-gray-500 mb-3">
-                    DEPENDÊNCIAS
-                  </p>
-                  <div className="space-y-2">
-                    {module.dependencies.map((depId: string) => {
-                      const depModule = availableModules.find(
-                        (m: any) => m.id === depId,
-                      );
-                      const DepIconComponent =
-                        LucideIcons[
-                          depModule?.icon as keyof typeof LucideIcons
-                        ] || LucideIcons.Package;
-                      return (
-                        <div
-                          key={depId}
-                          className="flex items-center gap-2 p-2 bg-gray-50 rounded"
-                        >
-                          <div className="text-gray-600">
-                            {React.createElement(
-                              DepIconComponent as React.ElementType,
-                              {
-                                className: "w-4 h-4",
-                              },
-                            )}
+              {selectedModule.dependencies &&
+                selectedModule.dependencies.length > 0 && (
+                  <div className="mb-6 pb-6 border-b border-gray-200">
+                    <p className="text-xs font-medium text-gray-500 mb-3">
+                      DEPENDÊNCIAS
+                    </p>
+                    <div className="space-y-2">
+                      {selectedModule.dependencies.map((depId: string) => {
+                        const depModule = availableModules.find(
+                          (m: any) => m.id === depId,
+                        );
+                        const DepIconComponent =
+                          LucideIcons[
+                            depModule?.icon as keyof typeof LucideIcons
+                          ] || LucideIcons.Package;
+                        return (
+                          <div
+                            key={depId}
+                            className="flex items-center gap-2 p-2 bg-gray-50 rounded"
+                          >
+                            <div className="text-gray-600">
+                              {React.createElement(
+                                DepIconComponent as React.ElementType,
+                                {
+                                  className: "w-4 h-4",
+                                },
+                              )}
+                            </div>
+                            <span className="text-sm text-gray-900 font-medium">
+                              {depModule?.name || depId}
+                            </span>
                           </div>
-                          <span className="text-sm text-gray-900 font-medium">
-                            {depModule?.name || depId}
-                          </span>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {/* Sem dependências */}
-              {module.dependencies && module.dependencies.length === 0 && (
-                <div className="mb-6 pb-6 border-b border-gray-200">
-                  <p className="text-xs font-medium text-gray-500 mb-2">
-                    DEPENDÊNCIAS
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Este módulo não tem dependências de outros módulos
-                  </p>
-                </div>
-              )}
+              {selectedModule.dependencies &&
+                selectedModule.dependencies.length === 0 && (
+                  <div className="mb-6 pb-6 border-b border-gray-200">
+                    <p className="text-xs font-medium text-gray-500 mb-2">
+                      DEPENDÊNCIAS
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Este módulo não tem dependências de outros módulos
+                    </p>
+                  </div>
+                )}
 
               {/* Preço */}
               <div className="mb-6">

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { forwardRef, ReactNode, InputHTMLAttributes } from "react";
+import { Loader2 } from "lucide-react";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -8,6 +9,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   messageType?: "error" | "success" | "warning" | "info";
   helperText?: string;
   icon?: ReactNode;
+  isLoading?: boolean;
   containerClassName?: string;
   labelClassName?: string;
   error?: string;
@@ -30,9 +32,9 @@ const getMessageStyles = (type?: string) => {
 
 const getInputBorderStyles = (hasError: boolean) => {
   if (hasError) {
-    return "border-red-200 dark:border-red-800 focus:ring-red-300 dark:focus:ring-red-700";
+    return "border-red-500 dark:border-red-500 focus:ring-red-300 dark:focus:ring-red-700";
   }
-  return "border-gray-300 dark:border-gray-700 focus:border-blue-300 focus:ring-blue-300 dark:focus:ring-blue-700";
+  return "border-gh-border focus:ring-gh-hover";
 };
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -43,6 +45,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       messageType = "error",
       helperText,
       icon,
+      isLoading = false,
       containerClassName = "",
       labelClassName = "",
       className = "",
@@ -56,16 +59,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
     const inputClasses = `
       w-full
-      px-4 py-2.5
-      bg-white
+      px-3 py-2
+      bg-gh-bg
       border
-      rounded-lg
+      rounded-md
       text-gh-text placeholder:text-gray-400 dark:placeholder:text-gray-500
-      transition-all duration-200
-      focus:outline-none focus:ring-2 focus:ring-offset-0
+      focus:outline-none focus:ring-2
       ${getInputBorderStyles(!!hasError)}
       ${disabled ? "text-gray-400 cursor-not-allowed opacity-60" : ""}
-      ${icon ? "pl-11" : ""}
+      ${icon || isLoading ? "pl-11" : ""}
+      ${isLoading ? "pr-11" : ""}
       ${className}
     `.trim();
 
@@ -86,10 +89,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             </div>
           )}
 
+          {isLoading && (
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
+              <Loader2 className="w-4 h-4 text-gh-hover animate-spin" />
+            </div>
+          )}
+
           <input
             ref={ref}
             className={inputClasses}
-            disabled={disabled}
+            disabled={disabled || isLoading}
             {...rest}
           />
         </div>
