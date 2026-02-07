@@ -12,8 +12,10 @@ import {
   useUpdateInvite,
   useEnabledModules,
   useBreadcrumb,
+  useDefaultMemberPermissions,
 } from "@/modules/workspace/hooks";
 import { InviteModal } from "@/modules/workspace/components/InviteModal";
+import { DefaultPermissionsConfig } from "@/modules/workspace/components/DefaultPermissionsConfig";
 import {
   Users,
   Mail,
@@ -64,6 +66,8 @@ export default function WorkspaceMembersPage() {
   const { data: members = [], isLoading } = useWorkspaceMembers(workspaceId);
   const { data: pendingInvites = [] } = useWorkspacePendingInvites(workspaceId);
   const { data: enabledModules = [] } = useEnabledModules(workspaceId);
+  const { data: defaultPermissions = [] } =
+    useDefaultMemberPermissions(workspaceId);
   const inviteMutation = useInviteMember(workspaceId);
   const updatePermissionsMutation = useUpdateMemberPermissions(workspaceId);
   const removeMemberMutation = useRemoveMember(workspaceId);
@@ -95,8 +99,22 @@ export default function WorkspaceMembersPage() {
     customers: "Clientes",
   };
 
-  // Gerar permissões padrão dinâmicas baseado nos módulos habilitados
+  // Labels para permissões em português
+  const permissionLabels: Record<string, string> = {
+    read: "Visualizar",
+    write: "Editar",
+    delete: "Deletar",
+  };
+
+  // Gerar permissões padrão dinâmicas baseado nas configurações do workspace
   const getDefaultPermissionsByRole = (role: string): WorkspacePermissions => {
+    // Procurar configuração padrão do workspace para este role
+    const defaultConfig = defaultPermissions?.find((p: any) => p.role === role);
+    if (defaultConfig) {
+      return defaultConfig.permissions;
+    }
+
+    // Fallback: gerar baseado nos módulos habilitados
     const permissions: any = {};
 
     // Iterar pelos módulos habilitados e atribuir permissões padrão
@@ -291,6 +309,11 @@ export default function WorkspaceMembersPage() {
   return (
     <div className="min-h-screen bg-gh-bg">
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Configuração de Permissões Padrão */}
+        {canManageMembers && (
+          <DefaultPermissionsConfig workspaceId={workspaceId} />
+        )}
+
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -409,7 +432,10 @@ export default function WorkspaceMembersPage() {
                                 ([module, perms]) => (
                                   <div key={module} className="text-xs">
                                     <span className="font-semibold capitalize text-gray-900">
-                                      {module}:
+                                      {moduleLabels[
+                                        module as keyof typeof moduleLabels
+                                      ] || module}
+                                      :
                                     </span>
                                     <div className="flex gap-2 mt-1">
                                       {["read", "write", "delete"].map(
@@ -434,7 +460,11 @@ export default function WorkspaceMembersPage() {
                                               className="rounded border-gray-300"
                                             />
                                             <span className="capitalize text-gray-900 font-medium">
-                                              {perm}
+                                              {
+                                                permissionLabels[
+                                                  perm as keyof typeof permissionLabels
+                                                ]
+                                              }
                                             </span>
                                           </label>
                                         ),
@@ -599,7 +629,10 @@ export default function WorkspaceMembersPage() {
                                 ([module, perms]) => (
                                   <div key={module} className="text-xs">
                                     <span className="font-semibold capitalize text-gray-900">
-                                      {module}:
+                                      {moduleLabels[
+                                        module as keyof typeof moduleLabels
+                                      ] || module}
+                                      :
                                     </span>
                                     <div className="flex gap-2 mt-1">
                                       {["read", "write", "delete"].map(
@@ -624,7 +657,11 @@ export default function WorkspaceMembersPage() {
                                               className="rounded border-gray-300"
                                             />
                                             <span className="capitalize text-gray-900 font-medium">
-                                              {perm}
+                                              {
+                                                permissionLabels[
+                                                  perm as keyof typeof permissionLabels
+                                                ]
+                                              }
                                             </span>
                                           </label>
                                         ),

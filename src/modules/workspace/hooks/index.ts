@@ -16,3 +16,5 @@ export * from "./useActiveWorkspace";
 export * from "./useModuleConfig";
 // Breadcrumb
 export * from "./useBreadcrumb";
+// Default Permissions
+export * from "./useDefaultPermissions";

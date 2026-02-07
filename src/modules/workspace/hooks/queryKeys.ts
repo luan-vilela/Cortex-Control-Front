@@ -9,3 +9,7 @@ export const workspaceKeys = {
   invites: () => [...workspaceKeys.all, "invites"] as const,
   availableModules: () => [...workspaceKeys.all, "available-modules"] as const,
 };
+
+export const queryKeys = {
+  DEFAULT_PERMISSIONS: "DEFAULT_PERMISSIONS",
+};
