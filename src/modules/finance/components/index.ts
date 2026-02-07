@@ -6,4 +6,4 @@ export { TransactionForm } from "./TransactionForm";
 export { TransactionDetail } from "./TransactionDetail";
 export { PaymentModeConfig } from "./PaymentModeConfig";
 export { RecurrenceConfigComponent } from "./RecurrenceConfig";
-export { FinancialChargesConfig } from "./FinancialChargesConfig";
+export { InterestConfigComponent } from "./FinancialChargesConfig";

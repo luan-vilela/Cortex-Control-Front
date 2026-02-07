@@ -10,7 +10,6 @@ interface RecurrenceConfigProps {
 }
 
 const RECURRENCE_LABELS: Record<RecurrenceType, string> = {
-  [RecurrenceType.ONCE]: "Uma única vez",
   [RecurrenceType.DAILY]: "Diária",
   [RecurrenceType.WEEKLY]: "Semanal",
   [RecurrenceType.BIWEEKLY]: "Quinzenal",
@@ -28,9 +27,7 @@ export function RecurrenceConfigComponent({
 
   const handleTypeChange = (type: RecurrenceType) => {
     const newConfig: RecurrenceConfig = { type };
-    if (type !== RecurrenceType.ONCE) {
-      newConfig.occurrences = config?.occurrences || 12;
-    }
+    newConfig.occurrences = config?.occurrences || 12;
     onChange(newConfig);
   };
 
@@ -73,7 +70,7 @@ export function RecurrenceConfigComponent({
               />
               <div className="flex-1">
                 <p className="font-medium text-gh-text">{label}</p>
-                {type !== RecurrenceType.ONCE && config?.type === type && (
+                {config?.type === type && (
                   <div className="mt-2">
                     <label className="text-xs text-gh-text-secondary">
                       Número de ocorrências:

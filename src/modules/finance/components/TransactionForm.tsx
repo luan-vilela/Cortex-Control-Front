@@ -9,15 +9,18 @@ import {
   PaymentConfig,
   PaymentMode,
   RecurrenceConfig,
-  FinancialCharge,
+  InterestConfig,
 } from "../types";
 import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/FormInput";
 import { FormTextarea } from "@/components/FormTextarea";
+import { DatePicker } from "@/components/patterns/DatePicker";
+import { RadioGroup } from "@/components/ui/RadioGroup";
+import { RadioButton } from "@/components/ui/RadioButton";
 import {
   PaymentModeConfig,
   RecurrenceConfigComponent,
-  FinancialChargesConfig,
+  InterestConfigComponent,
 } from "./index";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
@@ -49,9 +52,7 @@ export function TransactionForm({
   const [recurrenceConfig, setRecurrenceConfig] = useState<
     RecurrenceConfig | undefined
   >();
-  const [financialCharges, setFinancialCharges] = useState<FinancialCharge[]>(
-    [],
-  );
+  const [interest, setInterest] = useState<InterestConfig | undefined>();
 
   const { mutate: createTransaction, isPending } =
     useCreateTransaction(workspaceId);
@@ -77,9 +78,6 @@ export function TransactionForm({
       dueDate: new Date(formData.dueDate),
       notes: formData.notes || undefined,
       paymentConfig,
-      recurrenceConfig,
-      financialCharges:
-        financialCharges.length > 0 ? financialCharges : undefined,
       parties: [
         {
           workspaceId: workspaceId,
@@ -98,7 +96,7 @@ export function TransactionForm({
         });
         setPaymentConfig({ mode: PaymentMode.CASH });
         setRecurrenceConfig(undefined);
-        setFinancialCharges([]);
+        setInterest(undefined);
         setPartyType(TransactionActorType.INCOME);
         setShowAdvanced(false);
         onSuccess?.();
@@ -108,35 +106,27 @@ export function TransactionForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 px-4 py-6">
-      {/* Tipo de Transação - Rádio Buttons */}
-      <div className="flex gap-3">
-        <label className="flex items-center gap-3 flex-1 cursor-pointer p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
-          <input
-            type="radio"
-            name="partyType"
-            value={TransactionActorType.INCOME}
-            checked={partyType === TransactionActorType.INCOME}
-            onChange={(e) =>
-              setPartyType(e.target.value as TransactionActorType)
-            }
-            className="w-4 h-4 cursor-pointer"
-          />
-          <span className="text-sm font-medium text-gh-text">Entrada</span>
-        </label>
-        <label className="flex items-center gap-3 flex-1 cursor-pointer p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
-          <input
-            type="radio"
-            name="partyType"
-            value={TransactionActorType.EXPENSE}
-            checked={partyType === TransactionActorType.EXPENSE}
-            onChange={(e) =>
-              setPartyType(e.target.value as TransactionActorType)
-            }
-            className="w-4 h-4 cursor-pointer"
-          />
-          <span className="text-sm font-medium text-gh-text">Saída</span>
-        </label>
-      </div>
+      {/* Tipo de Transação - Radio Group */}
+      <RadioGroup
+        name="partyType"
+        value={partyType}
+        onChange={(value) => setPartyType(value as TransactionActorType)}
+        label="Tipo de Transação"
+        containerClassName="flex flex-row gap-4"
+      >
+        <RadioButton
+          id="income"
+          name="partyType"
+          value={TransactionActorType.INCOME}
+          label="Entrada"
+        />
+        <RadioButton
+          id="expense"
+          name="partyType"
+          value={TransactionActorType.EXPENSE}
+          label="Saída"
+        />
+      </RadioGroup>
 
       {/* Descrição */}
       <FormInput
@@ -160,14 +150,21 @@ export function TransactionForm({
           value={formData.amount}
           onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
         />
-        <FormInput
-          type="date"
-          label="Vencimento"
-          value={formData.dueDate}
-          onChange={(e) =>
-            setFormData({ ...formData, dueDate: e.target.value })
-          }
-        />
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gh-text">Vencimento</label>
+          <DatePicker
+            value={new Date(formData.dueDate)}
+            onValueChange={(date) => {
+              if (date) {
+                setFormData({
+                  ...formData,
+                  dueDate: date.toISOString().split("T")[0],
+                });
+              }
+            }}
+            placeholder="Selecionar data"
+          />
+        </div>
       </div>
 
       {/* Notas */}
@@ -214,11 +211,11 @@ export function TransactionForm({
               />
             </div>
 
-            {/* Encargos Financeiros */}
+            {/* Juros */}
             <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-              <FinancialChargesConfig
-                charges={financialCharges}
-                onChange={setFinancialCharges}
+              <InterestConfigComponent
+                interest={interest}
+                onChange={setInterest}
               />
             </div>
           </div>

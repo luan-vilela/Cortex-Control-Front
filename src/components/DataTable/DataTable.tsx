@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Loader2,
   Search,
@@ -96,12 +96,6 @@ export function DataTable({
   const [selectAll, setSelectAll] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  useEffect(() => {
-    setSelectedRows(new Set());
-    setSelectAll(false);
-    setCurrentPage(1);
-  }, [data]);
-
   // Paginação automática (20 itens por página)
   const effectivePageSize =
     pageSize > 0 && pageSize <= maxPageSize ? pageSize : 20;
@@ -109,6 +103,11 @@ export function DataTable({
   const startIndex = (currentPage - 1) * effectivePageSize;
   const endIndex = startIndex + effectivePageSize;
   const paginatedData = data.slice(startIndex, endIndex);
+
+  const dataKey = useMemo(() => {
+    if (!data?.length) return "empty";
+    return data.map((item) => item.id).join("|");
+  }, [data]);
 
   const handleSelectRow = (rowId: string) => {
     const newSelected = new Set(selectedRows);
@@ -159,7 +158,7 @@ export function DataTable({
 
   return (
     <div className="border border-border rounded-lg overflow-hidden">
-      <Table>
+      <Table key={dataKey}>
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/50">
             {selectable && (

@@ -7,7 +7,9 @@ import { usePersons } from "@/modules/person/hooks/usePersonQueries";
 import { useAlerts } from "@/contexts/AlertContext";
 import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
 import { DataTable } from "@/components/DataTable";
-import { Search } from "lucide-react";
+import { PageHeader } from "@/components/patterns/PageHeader";
+import { DataTableToolbar } from "@/components/patterns/DataTableToolbar";
+import { Plus } from "lucide-react";
 import { formatDocument } from "@/lib/masks";
 import api from "@/lib/api";
 
@@ -65,42 +67,22 @@ export default function SemPapelsPage() {
   return (
     <ModuleGuard moduleId="contacts" workspaceId={activeWorkspace?.id}>
       <div className="space-y-6">
-        {/* Page Header */}
-        <div>
-          <h2 className="text-2xl font-bold text-gh-text mb-1">
-            Contatos sem Papéis
-          </h2>
-          <p className="text-sm text-gh-text-secondary">
-            Pessoas que ainda não têm papéis definidos (Cliente, Fornecedor ou
-            Parceiro)
-          </p>
-        </div>
+        <PageHeader
+          title="Contatos sem Papéis"
+          description="Pessoas que ainda não têm papéis definidos (Cliente, Fornecedor ou Parceiro)"
+          action={{
+            label: "Novo Contato",
+            onClick: () => router.push(`/contatos/new`),
+            icon: <Plus className="w-4 h-4" />,
+          }}
+        />
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-3 w-5 h-5 text-gh-text-secondary" />
-          <input
-            type="text"
-            placeholder="Buscar por nome, email ou documento..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-gh-card border border-gh-border rounded-md text-gh-text placeholder-gh-text-secondary focus:outline-none focus:ring-2 focus:ring-gh-hover"
-          />
-        </div>
-
-        {/* Results */}
-        {filteredPersons.length > 0 && (
-          <div className="flex items-center justify-between border-b border-gh-border pb-3">
-            <p className="text-sm text-gh-text-secondary">
-              <span className="font-medium text-gh-text">
-                {filteredPersons.length}
-              </span>{" "}
-              pessoa
-              {filteredPersons.length !== 1 ? "s" : ""} encontrada
-              {filteredPersons.length !== 1 ? "s" : ""}
-            </p>
-          </div>
-        )}
+        <DataTableToolbar
+          searchPlaceholder="Buscar por nome, email ou documento..."
+          onSearch={setSearchTerm}
+          exportData={filteredPersons}
+          exportFilename="contatos-sem-papeis"
+        />
 
         {/* DataTable */}
         <DataTable

@@ -17,7 +17,7 @@ import {
 import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
 import { DataTable, Column, RowAction } from "@/components/DataTable";
 import { PageHeader, DataTableToolbar } from "@/components/patterns";
-import { Plus, Trash2, Eye, X } from "lucide-react";
+import { Plus, Trash2, Eye, X, Calendar as CalendarIcon } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { SourceBadge } from "@/modules/finance/components/SourceBadge";
 import { StatusBadge } from "@/modules/finance/components/StatusBadge";
@@ -25,6 +25,8 @@ import { ActorTypeBadge } from "@/modules/finance/components/ActorTypeBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FilterWithBadge } from "@/components/patterns/FilterWithBadge";
+import { DateRangePicker } from "@/components/patterns/DateRangePicker";
+import { DateRange } from "react-day-picker";
 
 export default function FinanceiroPage() {
   const router = useRouter();
@@ -270,42 +272,22 @@ export default function FinanceiroPage() {
             width="w-56"
           />
 
-          {/* Date Range */}
-          <div className="flex items-center gap-2">
-            <Input
-              type="date"
-              value={
-                filters.fromDate
-                  ? new Date(filters.fromDate).toISOString().split("T")[0]
-                  : ""
-              }
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  fromDate: e.target.value
-                    ? new Date(e.target.value)
-                    : undefined,
-                })
-              }
-              className="h-9 text-sm"
-            />
-            <span className="text-sm text-gh-text-secondary">até</span>
-            <Input
-              type="date"
-              value={
-                filters.toDate
-                  ? new Date(filters.toDate).toISOString().split("T")[0]
-                  : ""
-              }
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  toDate: e.target.value ? new Date(e.target.value) : undefined,
-                })
-              }
-              className="h-9 text-sm"
-            />
-          </div>
+          {/* Date Range Picker */}
+          <DateRangePicker
+            value={{
+              from: filters.fromDate,
+              to: filters.toDate,
+            }}
+            onValueChange={(range) => {
+              setFilters({
+                ...filters,
+                fromDate: range?.from,
+                toDate: range?.to,
+              });
+            }}
+            placeholder="Selecionar período"
+            className="w-56"
+          />
 
           {/* Clear Filters Button */}
           {(filters.sourceType ||

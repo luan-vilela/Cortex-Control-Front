@@ -28,6 +28,7 @@ interface FilterWithBadgeProps {
   width?: string;
   multiple?: boolean;
   searchable?: boolean;
+  badgeColor?: string;
 }
 
 export function FilterWithBadge({
@@ -38,6 +39,7 @@ export function FilterWithBadge({
   width = "w-64",
   multiple = false,
   searchable = false,
+  badgeColor = "bg-primary-badge-bg text-primary-badge-text",
 }: FilterWithBadgeProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -86,7 +88,7 @@ export function FilterWithBadge({
     <div className="inline-flex items-center border border-dashed border-gh-border rounded-md px-1">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-8 px-2">
+          <Button variant="ghost" size="sm" className="h-8 px-2 font-bold">
             {label}
             {selectedOptions.length > 0 && multiple && (
               <span className="ml-1 text-xs font-semibold text-gh-text-secondary">
@@ -140,14 +142,13 @@ export function FilterWithBadge({
           </div>
 
           {selectedOptions.length > 0 && (
-            <div className="p-2 border-t border-gh-border">
+            <div className="p-1 border-t border-gh-border">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleClear}
                 className="w-full text-xs"
               >
-                <X className="w-3 h-3 mr-1" />
                 Limpar filtros
               </Button>
             </div>
@@ -160,8 +161,7 @@ export function FilterWithBadge({
           {selectedOptions.map((opt, idx) => (
             <Badge
               key={opt?.value}
-              variant="secondary"
-              className={`rounded-sm text-xs ${idx === 0 ? "ml-1" : ""}`}
+              className={`${badgeColor} rounded-sm text-xs ${idx === 0 ? "ml-1" : ""}`}
             >
               {opt?.label}
             </Badge>

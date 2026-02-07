@@ -10,6 +10,7 @@ import { useAlerts } from "@/contexts/AlertContext";
 import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
 import { DataTable, Column, RowAction } from "@/components/DataTable";
 import { PageHeader, DataTableToolbar } from "@/components/patterns";
+import { FilterWithBadge } from "@/components/patterns/FilterWithBadge";
 import { Trash2, Edit, Plus } from "lucide-react";
 import { formatDocument } from "@/lib/masks";
 import { useBreadcrumb } from "@/modules/workspace/hooks";
