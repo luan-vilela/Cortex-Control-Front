@@ -1,167 +1,149 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useActiveWorkspace } from "@/modules/workspace/hooks/useActiveWorkspace";
-import { useBreadcrumb } from "@/modules/workspace/hooks";
+import { useState } from 'react'
+
+import { Eye, Plus, Trash2, X } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+
+import { type Column, DataTable, type RowAction } from '@/components/DataTable'
+import { DataTableToolbar, PageHeader } from '@/components/patterns'
+import { DateRangePicker } from '@/components/patterns/DateRangePicker'
+import { FilterWithBadge } from '@/components/patterns/FilterWithBadge'
+import { Button } from '@/components/ui/button'
+import { formatCurrency, formatDate } from '@/lib/utils'
+import { ActorTypeBadge } from '@/modules/finance/components/ActorTypeBadge'
+import { SourceBadge } from '@/modules/finance/components/SourceBadge'
+import { StatusBadge } from '@/modules/finance/components/StatusBadge'
+import { useDeleteTransaction, useTransactions } from '@/modules/finance/hooks/useFinance'
 import {
-  useTransactions,
-  useDeleteTransaction,
-} from "@/modules/finance/hooks/useFinance";
-import {
+  type GetTransactionsFilters,
+  TransactionActorType,
   TransactionSourceType,
   TransactionStatus,
-  TransactionActorType,
-  GetTransactionsFilters,
-} from "@/modules/finance/types";
-import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
-import { DataTable, Column, RowAction } from "@/components/DataTable";
-import { PageHeader, DataTableToolbar } from "@/components/patterns";
-import { Plus, Trash2, Eye, X, Calendar as CalendarIcon } from "lucide-react";
-import { formatCurrency, formatDate } from "@/lib/utils";
-import { SourceBadge } from "@/modules/finance/components/SourceBadge";
-import { StatusBadge } from "@/modules/finance/components/StatusBadge";
-import { ActorTypeBadge } from "@/modules/finance/components/ActorTypeBadge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { FilterWithBadge } from "@/components/patterns/FilterWithBadge";
-import { DateRangePicker } from "@/components/patterns/DateRangePicker";
-import { DateRange } from "react-day-picker";
+} from '@/modules/finance/types'
+import { ModuleGuard } from '@/modules/workspace/components/ModuleGuard'
+import { useBreadcrumb } from '@/modules/workspace/hooks'
+import { useActiveWorkspace } from '@/modules/workspace/hooks/useActiveWorkspace'
 
 export default function FinanceiroPage() {
-  const router = useRouter();
-  const { activeWorkspace } = useActiveWorkspace();
+  const router = useRouter()
+  const { activeWorkspace } = useActiveWorkspace()
 
   useBreadcrumb([
     {
-      label: "Finanças",
-      href: "/finance",
+      label: 'Finanças',
+      href: '/finance',
     },
-  ]);
+  ])
 
   // Get current month boundaries
-  const now = new Date();
-  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const now = new Date()
+  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
 
   const getDefaultFilters = (): GetTransactionsFilters => ({
     page: 1,
     limit: 20,
     fromDate: firstDayOfMonth,
     toDate: lastDayOfMonth,
-  });
+  })
 
-  const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] =
-    useState<GetTransactionsFilters>(getDefaultFilters());
-  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState<GetTransactionsFilters>(getDefaultFilters())
+  const [searchTerm, setSearchTerm] = useState('')
 
   // Use pendingFilters directly as active filters (apply immediately)
-  const activeFilters = filters;
+  const activeFilters = filters
 
-  const {
-    data: transactionsData = { data: [], total: 0, page: 1, limit: 20 },
-    isLoading,
-  } = useTransactions(
-    activeWorkspace?.id || "",
-    {
-      ...activeFilters,
-      search: searchTerm || undefined,
-    },
-    !!activeWorkspace?.id,
-  );
+  const { data: transactionsData = { data: [], total: 0, page: 1, limit: 20 }, isLoading } =
+    useTransactions(
+      activeWorkspace?.id || '',
+      {
+        ...activeFilters,
+        search: searchTerm || undefined,
+      },
+      !!activeWorkspace?.id
+    )
 
-  const { mutate: deleteTransaction } = useDeleteTransaction(
-    activeWorkspace?.id || "",
-  );
+  const { mutate: deleteTransaction } = useDeleteTransaction(activeWorkspace?.id || '')
 
   const handleResetFilters = () => {
-    const defaultFilters = getDefaultFilters();
-    setFilters(defaultFilters);
-  };
+    const defaultFilters = getDefaultFilters()
+    setFilters(defaultFilters)
+  }
 
   if (!activeWorkspace?.id) {
     return (
-      <div className="text-center py-12">
+      <div className="py-12 text-center">
         <p className="text-gh-text-secondary">Workspace não disponível</p>
       </div>
-    );
+    )
   }
 
   // Definir colunas
   const columns: Column[] = [
     {
-      key: "partyType",
-      label: "Tipo",
+      key: 'partyType',
+      label: 'Tipo',
       render: (_, row) => {
         if (row.parties && row.parties.length > 0) {
-          return (
-            <ActorTypeBadge
-              partyType={row.parties[0].partyType}
-              showIcon={true}
-            />
-          );
+          return <ActorTypeBadge partyType={row.parties[0].partyType} showIcon={true} />
         }
-        return <span className="text-xs text-gh-text-secondary">-</span>;
+        return <span className="text-gh-text-secondary text-xs">-</span>
       },
     },
     {
-      key: "description",
-      label: "Descrição",
-      render: (value) => (
-        <p className="text-gh-text font-medium truncate">{value}</p>
-      ),
+      key: 'description',
+      label: 'Descrição',
+      render: (value) => <p className="text-gh-text truncate font-medium">{value}</p>,
     },
     {
-      key: "sourceType",
-      label: "Origem",
+      key: 'sourceType',
+      label: 'Origem',
       render: (value) => <SourceBadge sourceType={value} showIcon={true} />,
     },
     {
-      key: "amount",
-      label: "Valor",
+      key: 'amount',
+      label: 'Valor',
       render: (value) => (
-        <p className="text-sm font-semibold text-gh-text">
-          {formatCurrency(Number(value))}
-        </p>
+        <p className="text-gh-text text-sm font-semibold">{formatCurrency(Number(value))}</p>
       ),
     },
     {
-      key: "dueDate",
-      label: "Vencimento",
+      key: 'dueDate',
+      label: 'Vencimento',
       render: (value) => (
-        <span className="text-sm text-gh-text-secondary">
-          {value ? formatDate(new Date(value)) : "-"}
+        <span className="text-gh-text-secondary text-sm">
+          {value ? formatDate(new Date(value)) : '-'}
         </span>
       ),
     },
     {
-      key: "status",
-      label: "Status",
+      key: 'status',
+      label: 'Status',
       render: (value) => <StatusBadge status={value} />,
     },
-  ];
+  ]
 
   // Definir row actions
   const rowActions: RowAction[] = [
     {
-      id: "view",
-      label: "Visualizar",
-      icon: <Eye className="w-4 h-4" />,
+      id: 'view',
+      label: 'Visualizar',
+      icon: <Eye className="h-4 w-4" />,
       onClick: (row) => router.push(`/finance/${row.id}`),
     },
     {
-      id: "delete",
-      label: "Deletar",
-      icon: <Trash2 className="w-4 h-4" />,
+      id: 'delete',
+      label: 'Deletar',
+      icon: <Trash2 className="h-4 w-4" />,
       onClick: (row) => {
-        if (confirm("Tem certeza que deseja deletar esta transação?")) {
-          deleteTransaction(row.id);
+        if (confirm('Tem certeza que deseja deletar esta transação?')) {
+          deleteTransaction(row.id)
         }
       },
-      variant: "destructive",
+      variant: 'destructive',
     },
-  ];
+  ]
 
   return (
     <ModuleGuard moduleId="finance" workspaceId={activeWorkspace?.id}>
@@ -171,9 +153,9 @@ export default function FinanceiroPage() {
           title="Financeiro"
           description="Gerencie suas transações e receitas/despesas"
           action={{
-            label: "Nova Transação",
+            label: 'Nova Transação',
             onClick: () => router.push(`/finance/new`),
-            icon: <Plus className="w-4 h-4" />,
+            icon: <Plus className="h-4 w-4" />,
           }}
         />
 
@@ -186,26 +168,26 @@ export default function FinanceiroPage() {
         />
 
         {/* Advanced Filters - Dropdown with Badge */}
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex flex-wrap items-center gap-3">
           {/* Source Type Filter */}
           <FilterWithBadge
             label="Origem"
             options={[
               {
                 value: TransactionSourceType.MANUAL,
-                label: "Manual",
+                label: 'Manual',
               },
               {
                 value: TransactionSourceType.SERVICE_ORDER,
-                label: "Ordem de Serviço",
+                label: 'Ordem de Serviço',
               },
               {
                 value: TransactionSourceType.PURCHASE_ORDER,
-                label: "Pedido de Compra",
+                label: 'Pedido de Compra',
               },
               {
                 value: TransactionSourceType.INVOICE,
-                label: "Nota Fiscal",
+                label: 'Nota Fiscal',
               },
             ]}
             value={filters.sourceType}
@@ -213,7 +195,7 @@ export default function FinanceiroPage() {
               setFilters({
                 ...filters,
                 sourceType: value as TransactionSourceType | undefined,
-              });
+              })
             }}
             width="w-56"
           />
@@ -224,11 +206,11 @@ export default function FinanceiroPage() {
             options={[
               {
                 value: TransactionActorType.INCOME,
-                label: "Entrada",
+                label: 'Entrada',
               },
               {
                 value: TransactionActorType.EXPENSE,
-                label: "Saída",
+                label: 'Saída',
               },
             ]}
             value={filters.partyType}
@@ -236,7 +218,7 @@ export default function FinanceiroPage() {
               setFilters({
                 ...filters,
                 partyType: value as TransactionActorType | undefined,
-              });
+              })
             }}
             width="w-48"
           />
@@ -247,19 +229,19 @@ export default function FinanceiroPage() {
             options={[
               {
                 value: TransactionStatus.PENDING,
-                label: "Pendente",
+                label: 'Pendente',
               },
               {
                 value: TransactionStatus.PAID,
-                label: "Pago",
+                label: 'Pago',
               },
               {
                 value: TransactionStatus.PARTIALLY_PAID,
-                label: "Parcialmente Pago",
+                label: 'Parcialmente Pago',
               },
               {
                 value: TransactionStatus.CANCELLED,
-                label: "Cancelado",
+                label: 'Cancelado',
               },
             ]}
             value={filters.status}
@@ -267,7 +249,7 @@ export default function FinanceiroPage() {
               setFilters({
                 ...filters,
                 status: value as TransactionStatus | undefined,
-              });
+              })
             }}
             width="w-56"
           />
@@ -283,7 +265,7 @@ export default function FinanceiroPage() {
                 ...filters,
                 fromDate: range?.from,
                 toDate: range?.to,
-              });
+              })
             }}
             placeholder="Selecionar período"
             className="w-56"
@@ -301,7 +283,7 @@ export default function FinanceiroPage() {
               onClick={handleResetFilters}
               className="text-gh-text-secondary hover:text-gh-text"
             >
-              <X className="w-4 h-4 mr-1" />
+              <X className="mr-1 h-4 w-4" />
               Limpar
             </Button>
           )}
@@ -314,8 +296,8 @@ export default function FinanceiroPage() {
           isLoading={isLoading}
           emptyMessage={
             searchTerm
-              ? "Nenhuma transação encontrada. Tente ajustar os filtros."
-              : "Nenhuma transação encontrada"
+              ? 'Nenhuma transação encontrada. Tente ajustar os filtros.'
+              : 'Nenhuma transação encontrada'
           }
           rowActions={rowActions}
           pageSize={20}
@@ -323,5 +305,5 @@ export default function FinanceiroPage() {
         />
       </div>
     </ModuleGuard>
-  );
+  )
 }

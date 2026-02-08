@@ -1,24 +1,33 @@
-import Link from "next/link";
-import { Menu } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { Menu } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+
+import type { ModuleMenuGroup, ModuleMenuItem } from '@/components/layouts/ModuleLayout'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
 
 type TopNavProps = React.HTMLAttributes<HTMLElement> & {
-  links: {
-    title: string;
-    href: string;
-    isActive: boolean;
-    disabled?: boolean;
-  }[];
-};
+  links?: ModuleMenuGroup[]
+}
 
 export function TopNav({ className, links, ...props }: TopNavProps) {
+  const pathname = usePathname()
+
+  if (!links) return null
+
+  const isSectionItem = (item: ModuleMenuGroup): item is any => 'section' in item
+  const isItemActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
+
+  const flattenedItems = links
+    .filter((item): item is ModuleMenuItem => !isSectionItem(item))
+    .slice(0, 5)
+
   return (
     <>
       <div className="lg:hidden">
@@ -29,13 +38,13 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent side="bottom" align="start">
-            {links.map(({ title, href, isActive, disabled }) => (
-              <DropdownMenuItem key={`${title}-${href}`} asChild>
+            {flattenedItems.map((item) => (
+              <DropdownMenuItem key={item.href} asChild>
                 <Link
-                  href={href}
-                  className={!isActive ? "text-muted-foreground" : ""}
+                  href={item.href}
+                  className={!isItemActive(item.href) ? 'text-muted-foreground' : ''}
                 >
-                  {title}
+                  {item.label}
                 </Link>
               </DropdownMenuItem>
             ))}
@@ -44,22 +53,19 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
       </div>
 
       <nav
-        className={cn(
-          "hidden items-center space-x-4 lg:flex lg:space-x-4 xl:space-x-6",
-          className,
-        )}
+        className={cn('hidden items-center space-x-4 lg:flex lg:space-x-4 xl:space-x-6', className)}
         {...props}
       >
-        {links.map(({ title, href, isActive, disabled }) => (
+        {flattenedItems.map((item) => (
           <Link
-            key={`${title}-${href}`}
-            href={href}
-            className={`text-sm font-medium transition-colors hover:text-primary ${isActive ? "" : "text-muted-foreground"}`}
+            key={item.href}
+            href={item.href}
+            className={`hover:text-primary text-sm font-medium transition-colors ${isItemActive(item.href) ? '' : 'text-muted-foreground'}`}
           >
-            {title}
+            {item.label}
           </Link>
         ))}
       </nav>
     </>
-  );
+  )
 }
