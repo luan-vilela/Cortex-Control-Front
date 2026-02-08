@@ -32,6 +32,10 @@ export { SkipToMain } from './skip-to-main'
 export { Alert } from './Alert'
 export { AlertContainer } from './AlertContainer'
 
+// Page Layout Components
+export { PageHeader } from './page-header'
+export { PageContent } from './page-content'
+
 // DataTable Components
 export { DataTable } from './data-table'
 export { DataTableColumnHeader } from './data-table/column-header'
