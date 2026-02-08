@@ -1,37 +1,40 @@
-import { useLayout } from '@/context/layout-provider'
+import { useLayout } from "@/context/layout-provider";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-} from '@/components/ui/sidebar'
-// import { AppTitle } from './app-title'
-import { sidebarData } from './data/sidebar-data'
-import { NavGroup } from './nav-group'
-import { NavUser } from './nav-user'
-import { TeamSwitcher } from './team-switcher'
+} from "@/components/ui/sidebar";
+import { useSidebarData } from "./hooks/useSidebarData";
+import { NavGroup } from "./nav-group";
+import { NavUser } from "./nav-user";
+import { TeamSwitcher } from "./team-switcher";
+import { PendingInvitesModal } from "@/components/PendingInvitesModal";
+import { useNotificationModal } from "@/modules/workspace/store/notification-modal.store";
 
 export function AppSidebar() {
-  const { collapsible, variant } = useLayout()
-  return (
-    <Sidebar collapsible={collapsible} variant={variant}>
-      <SidebarHeader>
-        <TeamSwitcher teams={sidebarData.teams} />
+  const { collapsible, variant } = useLayout();
+  const sidebarData = useSidebarData();
+  const { isOpen, setIsOpen } = useNotificationModal();
 
-        {/* Replace <TeamSwitch /> with the following <AppTitle />
-         /* if you want to use the normal app title instead of TeamSwitch dropdown */}
-        {/* <AppTitle /> */}
-      </SidebarHeader>
-      <SidebarContent>
-        {sidebarData.navGroups.map((props) => (
-          <NavGroup key={props.title} {...props} />
-        ))}
-      </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={sidebarData.user} />
-      </SidebarFooter>
-      <SidebarRail />
-    </Sidebar>
-  )
+  return (
+    <>
+      <Sidebar collapsible={collapsible} variant={variant}>
+        <SidebarHeader>
+          <TeamSwitcher teams={sidebarData.teams} />
+        </SidebarHeader>
+        <SidebarContent>
+          {sidebarData.navGroups.map((props) => (
+            <NavGroup key={props.title} {...props} />
+          ))}
+        </SidebarContent>
+        <SidebarFooter>
+          <NavUser user={sidebarData.user} />
+        </SidebarFooter>
+        <SidebarRail />
+      </Sidebar>
+      <PendingInvitesModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
+    </>
+  );
 }

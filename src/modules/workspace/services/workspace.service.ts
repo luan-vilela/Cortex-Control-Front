@@ -5,6 +5,7 @@ import {
   WorkspaceInvite,
   WorkspaceStatus,
   ModuleConfig,
+  EnabledModule,
   CreateWorkspaceDto,
   InviteMemberDto,
   UpdatePermissionsDto,
@@ -132,8 +133,20 @@ export const workspaceService = {
   },
 
   // Obter módulos habilitados do workspace
-  async getEnabledModules(workspaceId: string): Promise<string[]> {
+  async getEnabledModules(workspaceId: string): Promise<EnabledModule[]> {
     const response = await api.get(`/workspaces/${workspaceId}/modules`);
+    return response.data.modules;
+  },
+
+  // Atualizar módulos favoritos do workspace
+  async updateFavoriteModules(
+    workspaceId: string,
+    favoriteModuleIds: string[],
+  ): Promise<EnabledModule[]> {
+    const response = await api.patch(
+      `/workspaces/${workspaceId}/modules/favorites`,
+      { favoriteModuleIds },
+    );
     return response.data.modules;
   },
 

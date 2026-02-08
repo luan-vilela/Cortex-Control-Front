@@ -19,6 +19,7 @@ type BaseNavItem = {
 type NavLink = BaseNavItem & {
   url: string;
   items?: never;
+  onClick?: () => void;
 };
 
 type NavCollapsible = BaseNavItem & {

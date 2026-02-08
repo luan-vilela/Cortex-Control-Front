@@ -79,6 +79,25 @@ function SidebarMenuLink({
   pathname: string;
 }) {
   const { setOpenMobile } = useSidebar();
+
+  if (item.onClick) {
+    return (
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          onClick={() => {
+            item.onClick?.();
+            setOpenMobile(false);
+          }}
+          tooltip={item.title}
+        >
+          {item.icon && <item.icon />}
+          <span>{item.title}</span>
+          {item.badge && <NavBadge>{item.badge}</NavBadge>}
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  }
+
   return (
     <SidebarMenuItem>
       <SidebarMenuButton

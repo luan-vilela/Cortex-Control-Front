@@ -5,10 +5,10 @@ import {
   ChevronsUpDown,
   CreditCard,
   LogOut,
-  Sparkles,
 } from "lucide-react";
 import useDialogState from "@/hooks/use-dialog-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { WalletDisplay } from "@/components/WalletDisplay";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -79,10 +79,12 @@ export function NavUser({ user }: NavUserProps) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                <DropdownMenuItem>
-                  <Sparkles />
-                  Upgrade to Pro
-                </DropdownMenuItem>
+                <div className="px-2 py-1.5 flex items-center justify-between">
+                  <p className="text-xs font-semibold text-gh-text-secondary">
+                    Créditos
+                  </p>
+                  <WalletDisplay />
+                </div>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>

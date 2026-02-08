@@ -4,11 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
-import {
-  useEnabledModules,
-  useAvailableModules,
-  useModuleConfig,
-} from "@/modules/workspace/hooks";
+import { useEnabledModules, useModuleConfig } from "@/modules/workspace/hooks";
 import { NotificationBell } from "@/components/NotificationBell";
 import { WalletDisplay } from "@/components/WalletDisplay";
 import { UserMenu } from "@/components/UserMenu";
@@ -24,7 +20,6 @@ interface NavItem {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   moduleId?: string;
-  required?: boolean;
   description?: string;
 }
 
@@ -112,7 +107,6 @@ interface ModulesDropdownProps {
   onToggle: (open: boolean) => void;
   modules: any[];
   moduleIcons: Record<string, React.ComponentType<{ className?: string }>>;
-  moduleRoutes: Record<string, string>;
   isActive: (href: string) => boolean;
   onModuleSelect: (moduleId: string) => void;
 }
@@ -122,7 +116,6 @@ function ModulesDropdown({
   onToggle,
   modules,
   moduleIcons,
-  moduleRoutes,
   isActive,
   onModuleSelect,
 }: ModulesDropdownProps) {
@@ -145,7 +138,8 @@ function ModulesDropdown({
         ) : (
           modules.map((module) => {
             const Icon = moduleIcons[module.id] || Package;
-            const isCurrentModule = isActive(moduleRoutes[module.id] || "/");
+            const moduleRoute = module.domain;
+            const isCurrentModule = isActive(moduleRoute);
             return (
               <ModuleDropdownItem
                 key={module.id}
@@ -184,71 +178,61 @@ export function Navbar() {
   const { data: enabledModules = [] } = useEnabledModules(
     activeWorkspace?.id || "",
   );
-  const { data: availableModules = [] } = useAvailableModules();
-  const { moduleRoutes, moduleIcons } = useModuleConfig(
-    activeWorkspace?.id || ":workspaceId",
-  );
+  const { moduleIcons } = useModuleConfig(activeWorkspace?.id || "");
 
   const isActive = (href: string) => {
     return pathname === href || pathname.startsWith(href + "/");
   };
 
-  // Filtrar módulos instalados
-  const enabledModulesData = availableModules.filter((m: any) =>
-    enabledModules.includes(m.id),
-  );
-
-  // Construir itens de menu
+  // Construir itens de menu com módulos já habilitados
+  // enabledModules agora já vem com {id, name, category, domain, favorite}
   const visibleMenuItems: NavItem[] = [
     {
       label: "Dashboard",
       href: "/dashboard",
       icon: LayoutDashboard,
     },
-    ...enabledModulesData.map((module: any) => {
+    ...enabledModules.map((module: any) => {
       const icon = moduleIcons[module.id] || Package;
       return {
         label: module.name,
-        href: moduleRoutes[module.id] || "/",
+        href: module.domain,
         icon,
         moduleId: module.id,
-        required: module.required,
-        description: module.description,
+        description: module.name,
       };
     }),
   ];
 
   const handleModuleClick = (moduleId: string) => {
-    const route = moduleRoutes[moduleId] || "/";
+    const module = enabledModules.find((m: any) => m.id === moduleId);
+    const route = module?.domain || `/${moduleId.toLowerCase()}`;
     router.push(route);
     setIsDropdownOpen(false);
   };
 
   return (
-    <header className="bg-gh-card border-b border-gh-border sticky top-0 z-50">
+    <header className="bg-gh-card border-b border-gh-border sticky top-0 z-0 ">
       <div className="max-w-7xl mx-auto px-6 py-3">
         <div className="flex items-center justify-between gap-8">
           <NavbarLogo />
 
           <nav className="flex items-center gap-1 flex-1">
-            {visibleMenuItems
-              .filter((item) => !item.required)
-              .map((item) => (
-                <NavbarItem
-                  key={item.href}
-                  item={item}
-                  isActive={isActive(item.href)}
-                />
-              ))}
+            {visibleMenuItems.map((item) => (
+              <NavbarItem
+                key={item.href}
+                item={item}
+                isActive={isActive(item.href)}
+              />
+            ))}
           </nav>
 
           <div className="flex items-center gap-3 min-w-fit">
             <ModulesDropdown
               isOpen={isDropdownOpen}
               onToggle={setIsDropdownOpen}
-              modules={enabledModulesData}
+              modules={enabledModules}
               moduleIcons={moduleIcons}
-              moduleRoutes={moduleRoutes}
               isActive={isActive}
               onModuleSelect={handleModuleClick}
             />

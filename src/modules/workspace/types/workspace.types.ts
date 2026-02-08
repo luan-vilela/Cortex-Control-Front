@@ -4,6 +4,14 @@ export interface ModulePermissions {
   delete: boolean;
 }
 
+export interface EnabledModule {
+  id: string;
+  name: string;
+  category: "core" | "communication" | "automation" | "integration";
+  domain: string; // Rota do módulo (ex: /contacts, /conversations)
+  favorite: boolean;
+}
+
 export interface ModuleConfig {
   id: string;
   name: string;

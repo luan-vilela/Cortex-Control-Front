@@ -26,7 +26,7 @@ export default function Sidebar({
   const router = useRouter();
 
   const enabledModulesData = availableModules.filter((m: any) =>
-    enabledModules.includes(m.id),
+    enabledModules.some((mod: any) => mod.id === m.id),
   );
 
   const moduleIcons: Record<string, typeof Users> = {

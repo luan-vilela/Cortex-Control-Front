@@ -35,7 +35,7 @@ export function ModuleGuard({
     );
   }
 
-  const isEnabled = enabledModules.includes(moduleId);
+  const isEnabled = enabledModules.some((m: any) => m.id === moduleId);
 
   if (!isEnabled) {
     return fallback ? (

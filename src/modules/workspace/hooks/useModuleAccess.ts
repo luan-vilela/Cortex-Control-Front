@@ -10,7 +10,7 @@ export function useModuleAccess(moduleId: string) {
     activeWorkspace?.id || "",
   );
 
-  const isModuleEnabled = enabledModules.includes(moduleId);
+  const isModuleEnabled = enabledModules.some((m: any) => m.id === moduleId);
 
   return {
     isModuleEnabled,
@@ -23,8 +23,8 @@ export function useModuleAccess(moduleId: string) {
  * Função utilitária para verificar se pode acessar um módulo
  */
 export function canAccessModule(
-  enabledModules: string[],
+  enabledModules: any[],
   moduleId: string,
 ): boolean {
-  return enabledModules.includes(moduleId);
+  return enabledModules.some((m: any) => m.id === moduleId);
 }

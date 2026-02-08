@@ -123,12 +123,12 @@ export default function WorkspaceMembersPage() {
     const permissions: any = {};
     enabledModules.forEach((module) => {
       if (role === "admin") {
-        permissions[module] = { read: true, write: true, delete: true };
+        permissions[module.id] = { read: true, write: true, delete: true };
       } else {
-        if (["settings", "members"].includes(module)) {
-          permissions[module] = { read: true, write: false, delete: false };
+        if (["settings", "members"].includes(module.id)) {
+          permissions[module.id] = { read: true, write: false, delete: false };
         } else {
-          permissions[module] = { read: true, write: true, delete: false };
+          permissions[module.id] = { read: true, write: true, delete: false };
         }
       }
     });

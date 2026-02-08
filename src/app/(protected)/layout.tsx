@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/modules/auth/store/auth.store";
 import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
 import { useWorkspaces } from "@/modules/workspace/hooks";
-import { Navbar } from "@/components/Navbar";
 import { SecondaryHeader } from "@/components/SecondaryHeader";
 import { LayoutProvider } from "@/context/layout-provider";
 import { AppSidebar } from "@/components/layout/app-sidebar";
@@ -53,23 +52,17 @@ export default function ProtectedLayout({
   return (
     <SidebarProvider>
       <LayoutProvider>
-        <div className="min-h-screen bg-gh-bg flex flex-col">
-          {/* Primary Header */}
-          <Navbar />
+        <div className="min-h-screen bg-gh-bg flex">
+          {/* Sidebar */}
+          <AppSidebar />
 
-          {/* Layout com Sidebar + Content */}
-          <div className="flex flex-1 overflow-hidden">
-            {/* Sidebar */}
-            <AppSidebar />
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Header with Breadcrumbs, Notifications, Wallet, UserMenu */}
+            <SecondaryHeader />
 
-            {/* Main Content Area */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-              {/* Secondary Header with Breadcrumbs */}
-              <SecondaryHeader />
-
-              {/* Content */}
-              <div className="flex-1 overflow-auto">{children}</div>
-            </div>
+            {/* Content */}
+            <div className="flex-1 overflow-auto">{children}</div>
           </div>
         </div>
       </LayoutProvider>

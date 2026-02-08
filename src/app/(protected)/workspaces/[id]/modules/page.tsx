@@ -102,9 +102,11 @@ export default function ModulesMarketplacePage() {
 
     setInstalling(moduleId);
     try {
+      // Extrair apenas os IDs dos módulos habilitados
+      const enabledModuleIds = enabledModules.map((m: any) => m.id);
       const newModules = isEnabled
-        ? enabledModules.filter((m) => m !== moduleId)
-        : [...enabledModules, moduleId];
+        ? enabledModuleIds.filter((id: string) => id !== moduleId)
+        : [...enabledModuleIds, moduleId];
 
       await workspaceService.updateEnabledModules(workspaceId, newModules);
       await refetch();
@@ -121,7 +123,7 @@ export default function ModulesMarketplacePage() {
   };
 
   const ModuleCard = ({ module }: { module: any }) => {
-    const isEnabled = enabledModules.includes(module.id);
+    const isEnabled = enabledModules.some((m: any) => m.id === module.id);
     const required = module.required;
     const IconComponent =
       LucideIcons[module.icon as keyof typeof LucideIcons] ||

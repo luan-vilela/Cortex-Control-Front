@@ -21,7 +21,7 @@ export const sidebarData: SidebarData = {
     {
       name: "Cortex Control",
       logo: Briefcase,
-      plan: "CRM Pro",
+      plan: "Cortex Control",
     },
   ],
   navGroups: [

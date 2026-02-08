@@ -1,147 +1,135 @@
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { Input } from "./Input";
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 
-describe("Input", () => {
-  it("deve renderizar input sem label", () => {
-    render(<Input placeholder="Enter text" />);
+import { Input } from './input'
 
-    expect(screen.getByPlaceholderText(/enter text/i)).toBeInTheDocument();
-  });
+describe('Input', () => {
+  it('deve renderizar input sem label', () => {
+    render(<Input placeholder="Enter text" />)
 
-  it("deve renderizar input com label", () => {
-    render(<Input label="Email" placeholder="email@example.com" />);
+    expect(screen.getByPlaceholderText(/enter text/i)).toBeInTheDocument()
+  })
 
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(
-      screen.getByPlaceholderText(/email@example.com/i),
-    ).toBeInTheDocument();
-  });
+  it('deve renderizar input com label', () => {
+    render(<Input label="Email" placeholder="email@example.com" />)
 
-  it("deve exibir mensagem de erro", () => {
-    render(<Input label="Password" error="Senha obrigatória" />);
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(/email@example.com/i)).toBeInTheDocument()
+  })
 
-    expect(screen.getByText(/senha obrigatória/i)).toBeInTheDocument();
-  });
+  it('deve exibir mensagem de erro', () => {
+    render(<Input label="Password" error="Senha obrigatória" />)
 
-  it("deve aplicar estilo de erro quando error está presente", () => {
-    render(<Input error="Error message" />);
+    expect(screen.getByText(/senha obrigatória/i)).toBeInTheDocument()
+  })
 
-    const input = screen.getByRole("textbox");
-    expect(input).toHaveClass("border-red-500");
-  });
+  it('deve aplicar estilo de erro quando error está presente', () => {
+    render(<Input error="Error message" />)
 
-  it("deve aplicar estilo padrão quando não há erro", () => {
-    render(<Input />);
+    const input = screen.getByRole('textbox')
+    expect(input).toHaveClass('border-red-500')
+  })
 
-    const input = screen.getByRole("textbox");
-    expect(input).toHaveClass("border-gh-border");
-  });
+  it('deve aplicar estilo padrão quando não há erro', () => {
+    render(<Input />)
 
-  it("deve permitir digitação", async () => {
-    const user = userEvent.setup();
-    render(<Input placeholder="Type here" />);
+    const input = screen.getByRole('textbox')
+    expect(input).toHaveClass('border-gh-border')
+  })
 
-    const input = screen.getByPlaceholderText(/type here/i);
-    await user.type(input, "Hello World");
+  it('deve permitir digitação', async () => {
+    const user = userEvent.setup()
+    render(<Input placeholder="Type here" />)
 
-    expect(input).toHaveValue("Hello World");
-  });
+    const input = screen.getByPlaceholderText(/type here/i)
+    await user.type(input, 'Hello World')
 
-  it("deve chamar onChange quando o valor muda", async () => {
-    const handleChange = jest.fn();
-    const user = userEvent.setup();
+    expect(input).toHaveValue('Hello World')
+  })
 
-    render(<Input onChange={handleChange} />);
+  it('deve chamar onChange quando o valor muda', async () => {
+    const handleChange = jest.fn()
+    const user = userEvent.setup()
 
-    const input = screen.getByRole("textbox");
-    await user.type(input, "test");
+    render(<Input onChange={handleChange} />)
 
-    expect(handleChange).toHaveBeenCalled();
-  });
+    const input = screen.getByRole('textbox')
+    await user.type(input, 'test')
 
-  it("deve aplicar className customizada", () => {
-    render(<Input className="custom-input" />);
+    expect(handleChange).toHaveBeenCalled()
+  })
 
-    const input = screen.getByRole("textbox");
-    expect(input).toHaveClass("custom-input");
-  });
+  it('deve aplicar className customizada', () => {
+    render(<Input className="custom-input" />)
 
-  it("deve passar props HTML padrão", () => {
-    render(
-      <Input
-        type="password"
-        disabled
-        maxLength={10}
-        data-testid="password-input"
-      />,
-    );
+    const input = screen.getByRole('textbox')
+    expect(input).toHaveClass('custom-input')
+  })
 
-    const input = screen.getByTestId("password-input");
-    expect(input).toHaveAttribute("type", "password");
-    expect(input).toBeDisabled();
-    expect(input).toHaveAttribute("maxLength", "10");
-  });
+  it('deve passar props HTML padrão', () => {
+    render(<Input type="password" disabled maxLength={10} data-testid="password-input" />)
 
-  it("deve aplicar ref corretamente", () => {
-    const ref = { current: null as HTMLInputElement | null };
+    const input = screen.getByTestId('password-input')
+    expect(input).toHaveAttribute('type', 'password')
+    expect(input).toBeDisabled()
+    expect(input).toHaveAttribute('maxLength', '10')
+  })
 
-    render(<Input ref={ref} />);
+  it('deve aplicar ref corretamente', () => {
+    const ref = { current: null as HTMLInputElement | null }
 
-    expect(ref.current).toBeInstanceOf(HTMLInputElement);
-  });
+    render(<Input ref={ref} />)
 
-  it("deve ter estilos de foco", () => {
-    render(<Input />);
+    expect(ref.current).toBeInstanceOf(HTMLInputElement)
+  })
 
-    const input = screen.getByRole("textbox");
-    expect(input).toHaveClass(
-      "focus:outline-none",
-      "focus:ring-2",
-      "focus:ring-blue-500",
-    );
-  });
+  it('deve ter estilos de foco', () => {
+    render(<Input />)
 
-  it("deve aplicar estilos de foco de erro quando há erro", () => {
-    render(<Input error="Error" />);
+    const input = screen.getByRole('textbox')
+    expect(input).toHaveClass('focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500')
+  })
 
-    const input = screen.getByRole("textbox");
-    expect(input).toHaveClass("focus:ring-red-500");
-  });
+  it('deve aplicar estilos de foco de erro quando há erro', () => {
+    render(<Input error="Error" />)
 
-  it("deve renderizar com value controlado", () => {
-    render(<Input value="Controlled value" readOnly />);
+    const input = screen.getByRole('textbox')
+    expect(input).toHaveClass('focus:ring-red-500')
+  })
 
-    const input = screen.getByRole("textbox");
-    expect(input).toHaveValue("Controlled value");
-  });
+  it('deve renderizar com value controlado', () => {
+    render(<Input value="Controlled value" readOnly />)
 
-  it("deve permitir todos os tipos de input HTML", () => {
-    const { rerender } = render(<Input type="text" />);
-    expect(screen.getByRole("textbox")).toHaveAttribute("type", "text");
+    const input = screen.getByRole('textbox')
+    expect(input).toHaveValue('Controlled value')
+  })
 
-    rerender(<Input type="email" />);
-    expect(screen.getByRole("textbox")).toHaveAttribute("type", "email");
+  it('deve permitir todos os tipos de input HTML', () => {
+    const { rerender } = render(<Input type="text" />)
+    expect(screen.getByRole('textbox')).toHaveAttribute('type', 'text')
 
-    rerender(<Input type="password" />);
-    const passwordInput = screen.getByDisplayValue("");
-    expect(passwordInput).toHaveAttribute("type", "password");
-  });
+    rerender(<Input type="email" />)
+    expect(screen.getByRole('textbox')).toHaveAttribute('type', 'email')
 
-  it("deve manter acessibilidade com label", () => {
-    render(<Input label="Username" id="username" />);
+    rerender(<Input type="password" />)
+    const passwordInput = screen.getByDisplayValue('')
+    expect(passwordInput).toHaveAttribute('type', 'password')
+  })
 
-    const label = screen.getByText(/username/i);
-    const input = screen.getByLabelText(/username/i);
+  it('deve manter acessibilidade com label', () => {
+    render(<Input label="Username" id="username" />)
 
-    expect(label).toBeInTheDocument();
-    expect(input).toBeInTheDocument();
-  });
+    const label = screen.getByText(/username/i)
+    const input = screen.getByLabelText(/username/i)
 
-  it("deve exibir placeholder corretamente", () => {
-    render(<Input placeholder="Digite seu nome" />);
+    expect(label).toBeInTheDocument()
+    expect(input).toBeInTheDocument()
+  })
 
-    const input = screen.getByPlaceholderText(/digite seu nome/i);
-    expect(input).toHaveAttribute("placeholder", "Digite seu nome");
-  });
-});
+  it('deve exibir placeholder corretamente', () => {
+    render(<Input placeholder="Digite seu nome" />)
+
+    const input = screen.getByPlaceholderText(/digite seu nome/i)
+    expect(input).toHaveAttribute('placeholder', 'Digite seu nome')
+  })
+})
