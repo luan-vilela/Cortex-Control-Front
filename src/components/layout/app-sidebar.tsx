@@ -1,22 +1,23 @@
-import { useLayout } from "@/context/layout-provider";
+import { PendingInvitesModal } from '@/components/PendingInvitesModal'
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-} from "@/components/ui/sidebar";
-import { useSidebarData } from "./hooks/useSidebarData";
-import { NavGroup } from "./nav-group";
-import { NavUser } from "./nav-user";
-import { TeamSwitcher } from "./team-switcher";
-import { PendingInvitesModal } from "@/components/PendingInvitesModal";
-import { useNotificationModal } from "@/modules/workspace/store/notification-modal.store";
+} from '@/components/ui/sidebar'
+import { useLayout } from '@/context/layout-provider'
+import { useNotificationModal } from '@/modules/workspace/store/notification-modal.store'
+
+import { useSidebarData } from './hooks/useSidebarData'
+import { NavGroup } from './nav-group'
+import { NavUser } from './nav-user'
+import { TeamSwitcher } from './team-switcher'
 
 export function AppSidebar() {
-  const { collapsible, variant } = useLayout();
-  const sidebarData = useSidebarData();
-  const { isOpen, setIsOpen } = useNotificationModal();
+  const { collapsible, variant } = useLayout()
+  const sidebarData = useSidebarData()
+  const { isOpen, setIsOpen } = useNotificationModal()
 
   return (
     <>
@@ -30,11 +31,11 @@ export function AppSidebar() {
           ))}
         </SidebarContent>
         <SidebarFooter>
-          <NavUser user={sidebarData.user} />
+          <NavUser />
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>
       <PendingInvitesModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
     </>
-  );
+  )
 }

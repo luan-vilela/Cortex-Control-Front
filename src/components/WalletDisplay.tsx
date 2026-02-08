@@ -1,187 +1,191 @@
-"use client";
+'use client'
 
-import { useEffect, useState, useRef } from "react";
-import { Coins, Plus, TrendingUp, TrendingDown, Clock } from "lucide-react";
-import { useWallet, useWalletTransactions } from "@/modules/wallet/hooks";
-import { TransactionType } from "@/modules/wallet/types/wallet.types";
+import { useEffect, useRef, useState } from 'react'
+
+import { Clock, Coins, Plus, TrendingDown, TrendingUp } from 'lucide-react'
+
+import { useWallet, useWalletTransactions } from '@/modules/wallet/hooks'
+import { TransactionType } from '@/modules/wallet/types/wallet.types'
 
 export function WalletDisplay() {
-  const { data: wallet, isLoading } = useWallet();
-  const [isOpen, setIsOpen] = useState(false);
-  const [showTransactions, setShowTransactions] = useState(false);
-  const [page, setPage] = useState(1);
-  const { data: transactionsData } = useWalletTransactions(page, 10);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const { data: wallet, isLoading } = useWallet()
+  const [isOpen, setIsOpen] = useState(false)
+  const [showTransactions, setShowTransactions] = useState(false)
+  const [page, setPage] = useState(1)
+  const { data: transactionsData } = useWalletTransactions(page, 10)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const [dropdownTop, setDropdownTop] = useState(0)
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
         dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
+        !dropdownRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
       ) {
-        setIsOpen(false);
-        setShowTransactions(false);
+        setIsOpen(false)
+        setShowTransactions(false)
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      setDropdownTop(rect.bottom + 8)
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isOpen])
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
+    return new Intl.NumberFormat('pt-BR', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(value);
-  };
+    }).format(value)
+  }
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(date);
-  };
+    const date = new Date(dateString)
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date)
+  }
 
   const getCategoryLabel = (category: string) => {
     const labels: Record<string, string> = {
-      INITIAL_CREDIT: "Crédito Inicial",
-      MANUAL_RECHARGE: "Recarga Manual",
-      PAYMENT_RECHARGE: "Recarga por Pagamento",
-      WORKSPACE_DAILY_COST: "Custo Diário do Workspace",
-      MODULE_ACTIVATION: "Ativação de Módulo",
-      ACTION_EXECUTION: "Execução de Ação",
-      REFUND: "Reembolso",
-      ADJUSTMENT: "Ajuste",
-    };
-    return labels[category] || category;
-  };
+      INITIAL_CREDIT: 'Crédito Inicial',
+      MANUAL_RECHARGE: 'Recarga Manual',
+      PAYMENT_RECHARGE: 'Recarga por Pagamento',
+      WORKSPACE_DAILY_COST: 'Custo Diário do Workspace',
+      MODULE_ACTIVATION: 'Ativação de Módulo',
+      ACTION_EXECUTION: 'Execução de Ação',
+      REFUND: 'Reembolso',
+      ADJUSTMENT: 'Ajuste',
+    }
+    return labels[category] || category
+  }
 
   if (isLoading) {
     return (
       <div className="p-2">
-        <div className="w-5 h-5 border-2 border-gh-border border-t-blue-600 rounded-full animate-spin"></div>
+        <div className="border-gh-border h-5 w-5 animate-spin rounded-full border-2 border-t-blue-600"></div>
       </div>
-    );
+    )
   }
 
   return (
     <div className="relative" ref={dropdownRef}>
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 text-gh-text hover:bg-gh-bg rounded-lg transition-colors"
+        className="text-gh-text hover:bg-gh-bg flex items-center gap-2 rounded-lg px-3 py-2 transition-colors"
         aria-label="Carteira"
       >
-        <Coins className="w-5 h-5 text-yellow-600" />
+        <Coins className="h-5 w-5 text-yellow-600" />
         <span className="text-sm font-semibold">
-          {wallet ? formatCurrency(wallet.balance) : "0,00"}
+          {wallet ? formatCurrency(wallet.balance) : '0,00'}
         </span>
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-gh-card rounded-lg shadow-lg border border-gh-border z-50">
+        <div
+          className="bg-gh-card border-gh-border fixed z-50 w-80 rounded-lg border shadow-lg"
+          ref={dropdownRef}
+          style={{ top: `${dropdownTop}px`, left: 'auto', right: '0' }}
+        >
           {!showTransactions ? (
             <>
               {/* Cabeçalho */}
-              <div className="p-4 border-b border-gh-border">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-lg font-semibold text-gh-text">
-                    Minha Carteira
-                  </h3>
-                  <Coins className="w-6 h-6 text-yellow-600" />
+              <div className="border-gh-border border-b p-4">
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-gh-text text-lg font-semibold">Minha Carteira</h3>
+                  <Coins className="h-6 w-6 text-yellow-600" />
                 </div>
-                <div className="text-3xl font-bold text-gh-text">
-                  {wallet ? formatCurrency(wallet.balance) : "0,00"}
+                <div className="text-gh-text text-3xl font-bold">
+                  {wallet ? formatCurrency(wallet.balance) : '0,00'}
                 </div>
-                <p className="text-sm text-gh-text-secondary mt-1">
-                  créditos disponíveis
-                </p>
+                <p className="text-gh-text-secondary mt-1 text-sm">créditos disponíveis</p>
               </div>
 
               {/* Ações */}
-              <div className="p-4 space-y-2">
+              <div className="space-y-2 p-4">
                 <button
                   onClick={() => {
                     // TODO: Implementar modal de recarga
-                    alert(
-                      "Funcionalidade de recarga será implementada em breve!",
-                    );
+                    alert('Funcionalidade de recarga será implementada em breve!')
                   }}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700"
                 >
-                  <Plus className="w-5 h-5" />
+                  <Plus className="h-5 w-5" />
                   Adicionar Créditos
                 </button>
 
                 <button
                   onClick={() => setShowTransactions(true)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gh-bg text-gh-text rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                  className="bg-gh-bg text-gh-text flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 font-medium transition-colors hover:bg-gray-200"
                 >
-                  <Clock className="w-5 h-5" />
+                  <Clock className="h-5 w-5" />
                   Ver Histórico
                 </button>
               </div>
 
               {/* Informações */}
-              <div className="p-4 bg-blue-50 border-t border-gh-border">
+              <div className="border-gh-border border-t bg-blue-50 p-4">
                 <p className="text-xs text-blue-900">
-                  💡 <strong>Dica:</strong> Os créditos são usados para manter
-                  workspaces ativos e executar ações.
+                  💡 <strong>Dica:</strong> Os créditos são usados para manter workspaces ativos e
+                  executar ações.
                 </p>
               </div>
             </>
           ) : (
             <>
               {/* Histórico de Transações */}
-              <div className="p-4 border-b border-gh-border flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gh-text">
-                  Histórico
-                </h3>
+              <div className="border-gh-border flex items-center justify-between border-b p-4">
+                <h3 className="text-gh-text text-lg font-semibold">Histórico</h3>
                 <button
                   onClick={() => setShowTransactions(false)}
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-sm font-medium text-blue-600 hover:text-blue-700"
                 >
                   Voltar
                 </button>
               </div>
 
               <div className="max-h-96 overflow-y-auto">
-                {transactionsData &&
-                transactionsData.transactions.length > 0 ? (
+                {transactionsData && transactionsData.transactions.length > 0 ? (
                   <div className="divide-y divide-gray-200">
                     {transactionsData.transactions.map((transaction) => (
-                      <div
-                        key={transaction.id}
-                        className="p-4 hover:bg-gh-bg"
-                      >
+                      <div key={transaction.id} className="hover:bg-gh-bg p-4">
                         <div className="flex items-start gap-3">
                           <div
-                            className={`p-2 rounded-lg flex-shrink-0 ${
+                            className={`flex-shrink-0 rounded-lg p-2 ${
                               transaction.type === TransactionType.CREDIT
-                                ? "bg-green-100"
-                                : "bg-red-100"
+                                ? 'bg-green-100'
+                                : 'bg-red-100'
                             }`}
                           >
                             {transaction.type === TransactionType.CREDIT ? (
-                              <TrendingUp className="w-5 h-5 text-green-600" />
+                              <TrendingUp className="h-5 w-5 text-green-600" />
                             ) : (
-                              <TrendingDown className="w-5 h-5 text-red-600" />
+                              <TrendingDown className="h-5 w-5 text-red-600" />
                             )}
                           </div>
 
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gh-text">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-gh-text text-sm font-medium">
                               {getCategoryLabel(transaction.category)}
                             </p>
                             {transaction.description && (
-                              <p className="text-xs text-gh-text-secondary mt-1">
+                              <p className="text-gh-text-secondary mt-1 text-xs">
                                 {transaction.description}
                               </p>
                             )}
-                            <p className="text-xs text-gh-text-secondary mt-1">
+                            <p className="text-gh-text-secondary mt-1 text-xs">
                               {formatDate(transaction.createdAt)}
                             </p>
                           </div>
@@ -190,16 +194,14 @@ export function WalletDisplay() {
                             <p
                               className={`text-sm font-semibold ${
                                 transaction.type === TransactionType.CREDIT
-                                  ? "text-green-600"
-                                  : "text-red-600"
+                                  ? 'text-green-600'
+                                  : 'text-red-600'
                               }`}
                             >
-                              {transaction.type === TransactionType.CREDIT
-                                ? "+"
-                                : "-"}
+                              {transaction.type === TransactionType.CREDIT ? '+' : '-'}
                               {formatCurrency(transaction.amount)}
                             </p>
-                            <p className="text-xs text-gh-text-secondary mt-1">
+                            <p className="text-gh-text-secondary mt-1 text-xs">
                               Saldo: {formatCurrency(transaction.balanceAfter)}
                             </p>
                           </div>
@@ -209,34 +211,28 @@ export function WalletDisplay() {
                   </div>
                 ) : (
                   <div className="p-8 text-center">
-                    <Clock className="w-12 h-12 text-gh-text-secondary mx-auto mb-3" />
-                    <p className="text-gh-text-secondary">
-                      Nenhuma transação encontrada
-                    </p>
+                    <Clock className="text-gh-text-secondary mx-auto mb-3 h-12 w-12" />
+                    <p className="text-gh-text-secondary">Nenhuma transação encontrada</p>
                   </div>
                 )}
 
                 {/* Paginação */}
                 {transactionsData && transactionsData.totalPages > 1 && (
-                  <div className="p-4 border-t border-gh-border flex items-center justify-between">
+                  <div className="border-gh-border flex items-center justify-between border-t p-4">
                     <button
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page === 1}
-                      className="px-3 py-1 text-sm text-gh-text bg-gh-bg rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="text-gh-text bg-gh-bg rounded px-3 py-1 text-sm hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Anterior
                     </button>
-                    <span className="text-sm text-gh-text-secondary">
+                    <span className="text-gh-text-secondary text-sm">
                       Página {page} de {transactionsData.totalPages}
                     </span>
                     <button
-                      onClick={() =>
-                        setPage((p) =>
-                          Math.min(transactionsData.totalPages, p + 1),
-                        )
-                      }
+                      onClick={() => setPage((p) => Math.min(transactionsData.totalPages, p + 1))}
                       disabled={page === transactionsData.totalPages}
-                      className="px-3 py-1 text-sm text-gh-text bg-gh-bg rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="text-gh-text bg-gh-bg rounded px-3 py-1 text-sm hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Próxima
                     </button>
@@ -248,5 +244,5 @@ export function WalletDisplay() {
         </div>
       )}
     </div>
-  );
+  )
 }

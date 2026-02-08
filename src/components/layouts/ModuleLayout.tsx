@@ -12,6 +12,8 @@ import type { ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
 
+import { useAuthStore } from '@/modules/auth/store/auth.store'
+
 export interface ModuleMenuItem {
   label: string
   href: string
@@ -37,6 +39,7 @@ interface ModuleLayoutProps {
 export function ModuleLayout({ children, menuItems, menuTitle, topNav }: ModuleLayoutProps) {
   const router = useRouter()
   const pathname = usePathname()
+  const { user } = useAuthStore()
 
   const isActive = (href: string) => {
     if (href.endsWith('/') && pathname.endsWith('/')) {
@@ -84,7 +87,13 @@ export function ModuleLayout({ children, menuItems, menuTitle, topNav }: ModuleL
           <Search />
           <ThemeSwitch />
           <ConfigDrawer />
-          <ProfileDropdown />
+          <ProfileDropdown
+            user={{
+              name: user?.name || 'Usuário',
+              email: user?.email || '',
+              avatar: user?.avatar || '/avatars/default.jpg',
+            }}
+          />
         </div>
       </Header>
 
