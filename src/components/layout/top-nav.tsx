@@ -30,7 +30,7 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
 
   return (
     <>
-      <div className="lg:hidden">
+      <div className="bg- lg:hidden">
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button size="icon" variant="outline" className="md:size-7">
@@ -53,14 +53,17 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
       </div>
 
       <nav
-        className={cn('hidden items-center space-x-4 lg:flex lg:space-x-4 xl:space-x-6', className)}
+        className={cn(
+          'lg:flex-1lg:space-x-4 hidden items-center space-x-4 lg:flex xl:space-x-6',
+          className
+        )}
         {...props}
       >
         {flattenedItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
-            className={`hover:text-primary text-sm font-medium transition-colors ${isItemActive(item.href) ? '' : 'text-muted-foreground'}`}
+            className={`hover:text-primary text-sm font-bold transition-colors ${isItemActive(item.href) ? '' : 'text-muted-foreground'}`}
           >
             {item.label}
           </Link>

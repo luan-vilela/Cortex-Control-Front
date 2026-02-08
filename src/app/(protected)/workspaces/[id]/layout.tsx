@@ -87,19 +87,48 @@ const getMenuItems = (workspaceId: string): ModuleMenuGroup[] => [
   },
 ]
 
+const getNavItems = (workspaceId: string): ModuleMenuGroup[] => [
+  {
+    label: 'Configurações',
+    href: `/workspaces/${workspaceId}/settings`,
+    icon: Settings,
+  },
+  {
+    label: 'Membros',
+    href: `/workspaces/${workspaceId}/members`,
+    icon: Users,
+  },
+  {
+    label: 'Módulos',
+    href: `/workspaces/${workspaceId}/modules`,
+    icon: Package,
+  },
+  {
+    label: 'Relatórios',
+    href: `/workspaces/${workspaceId}/billing/reports`,
+    icon: BarChart3,
+  },
+  {
+    label: 'Cobrança',
+    href: `/workspaces/${workspaceId}/billing/settings`,
+    icon: CreditCard,
+  },
+]
+
 export default function WorkspaceLayout({ children }: { children: ReactNode }) {
   const params = useParams()
   const workspaceId = params.id as string
   const { data: enabledModules = [] } = useEnabledModules(workspaceId)
   const { data: workspace } = useWorkspace(workspaceId)
 
+  const navItems = getNavItems(workspaceId)
   const menuItems = getMenuItems(workspaceId)
   const title = workspace
     ? `${statusConfig[workspace.status as WorkspaceStatus]?.label || 'Workspace'} (${enabledModules.length} módulos)`
     : 'Workspace'
 
   return (
-    <ModuleLayout menuItems={menuItems} menuTitle={title}>
+    <ModuleLayout menuItems={menuItems} topNav={navItems} menuTitle={title}>
       {children}
     </ModuleLayout>
   )

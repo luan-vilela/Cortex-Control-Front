@@ -75,42 +75,12 @@ export function ModuleLayout({ children, menuItems, menuTitle, topNav }: ModuleL
 
   const isSectionItem = (item: ModuleMenuGroup): item is ModuleMenuSection => 'section' in item
 
-  // Se não há menu mas há topNav, mostrar só header com topNav
-  if ((!menuItems || menuItems.length === 0) && topNav) {
-    return (
-      <div>
-        <Header>
-          <TopNav links={topNav} />
-          <div className="ms-auto flex items-center space-x-4">
-            <Search />
-            <ThemeSwitch />
-            <ConfigDrawer />
-            <ProfileDropdown />
-          </div>
-        </Header>
-
-        <div className="mx-auto max-w-7xl px-6 py-8">
-          <main className="w-full">{children}</main>
-        </div>
-      </div>
-    )
-  }
-
-  // Se não há menu nem topNav, ocupa todo o espaço
-  if (!menuItems || menuItems.length === 0) {
-    return (
-      <div className="mx-auto max-w-7xl px-6 py-8">
-        <main className="w-full">{children}</main>
-      </div>
-    )
-  }
-
   // Layout com 2 colunas (menu + conteúdo)
   return (
     <div>
       <Header>
         <TopNav links={topNav} />
-        <div className="ms-auto flex items-center space-x-4">
+        <div className="ml-auto flex items-center space-x-4">
           <Search />
           <ThemeSwitch />
           <ConfigDrawer />
@@ -121,46 +91,51 @@ export function ModuleLayout({ children, menuItems, menuTitle, topNav }: ModuleL
       <div className="mx-auto max-w-7xl px-6 py-8">
         <div className="flex gap-6">
           {/* Sidebar Menu */}
-          <nav className="w-64 shrink-0">
-            <div className="bg-gh-bg border-gh-border sticky top-24 overflow-hidden rounded-lg border">
-              {/* Menu Title */}
-              {menuTitle && (
-                <div className="border-gh-border bg-gh-bg border-b px-4 py-3">
-                  <h3 className="text-gh-text-secondary text-xs font-semibold tracking-wide uppercase">
-                    {menuTitle}
-                  </h3>
-                </div>
-              )}
+          {menuItems && (
+            <nav className="w-64 shrink-0">
+              <div className="bg-gh-bg border-gh-border sticky top-24 overflow-hidden rounded-lg border">
+                {/* Menu Title */}
+                {menuTitle && (
+                  <div className="border-gh-border bg-gh-bg border-b px-4 py-3">
+                    <h3 className="text-gh-text-secondary text-xs font-semibold tracking-wide uppercase">
+                      {menuTitle}
+                    </h3>
+                  </div>
+                )}
 
-              {/* Menu Items */}
-              <div>
-                {menuItems.map((item, index) => {
-                  // Se é uma seção
-                  if (isSectionItem(item)) {
-                    return (
-                      <div key={`section-${index}`}>
-                        <div className="text-gh-text-secondary border-gh-border bg-gh-bg border-t px-4 py-3 text-xs font-semibold tracking-wide uppercase">
-                          {item.label}
-                        </div>
-                        {item.items.map((subItem) => (
-                          <div key={subItem.href} className="border-gh-border border-t">
-                            {renderMenuItem(subItem, isActive(subItem.href))}
+                {/* Menu Items */}
+                <div>
+                  {menuItems?.map((item, index) => {
+                    // Se é uma seção
+                    if (isSectionItem(item)) {
+                      return (
+                        <div key={`section-${index}`}>
+                          <div className="text-gh-text-secondary border-gh-border bg-gh-bg border-t px-4 py-3 text-xs font-semibold tracking-wide uppercase">
+                            {item.label}
                           </div>
-                        ))}
+                          {item.items.map((subItem) => (
+                            <div key={subItem.href} className="border-gh-border border-t">
+                              {renderMenuItem(subItem, isActive(subItem.href))}
+                            </div>
+                          ))}
+                        </div>
+                      )
+                    }
+
+                    // Se é um item regular
+                    return (
+                      <div
+                        key={item.href}
+                        className={index !== 0 ? 'border-gh-border border-t' : ''}
+                      >
+                        {renderMenuItem(item, isActive(item.href))}
                       </div>
                     )
-                  }
-
-                  // Se é um item regular
-                  return (
-                    <div key={item.href} className={index !== 0 ? 'border-gh-border border-t' : ''}>
-                      {renderMenuItem(item, isActive(item.href))}
-                    </div>
-                  )
-                })}
+                  })}
+                </div>
               </div>
-            </div>
-          </nav>
+            </nav>
+          )}
 
           {/* Main Content */}
           <main className="min-w-0 flex-1">{children}</main>

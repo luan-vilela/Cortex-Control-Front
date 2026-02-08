@@ -13,6 +13,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Table,
   TableBody,
   TableCell,
@@ -63,13 +70,13 @@ interface DataTableProps {
   selectable?: boolean
   onSelectionChange?: (selectedRows: any[]) => void
   onRowClick?: (row: any) => void
-  pagination?: PaginationConfig
   sorting?: SortingConfig
   rowActions?: RowAction[]
   striped?: boolean
   highlightRow?: (row: any) => boolean
   pageSize?: number // Default: 20
   maxPageSize?: number // Default: 100
+  stickyPagination?: boolean // Default: true - paginação sticky no bottom
 }
 
 export function DataTable({
@@ -80,20 +87,21 @@ export function DataTable({
   selectable = false,
   onSelectionChange,
   onRowClick,
-  pagination,
   sorting,
   rowActions,
   striped = false,
   highlightRow,
-  pageSize = 20,
+  pageSize = 10,
   maxPageSize = 100,
+  stickyPagination = true,
 }: DataTableProps) {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [selectAll, setSelectAll] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(pageSize)
 
   // Paginação automática (20 itens por página)
-  const effectivePageSize = pageSize > 0 && pageSize <= maxPageSize ? pageSize : 20
+  const effectivePageSize = itemsPerPage > 0 && itemsPerPage <= maxPageSize ? itemsPerPage : 20
   const totalPages = Math.ceil(data.length / effectivePageSize)
   const startIndex = (currentPage - 1) * effectivePageSize
   const endIndex = startIndex + effectivePageSize
@@ -152,139 +160,160 @@ export function DataTable({
   }
 
   return (
-    <div className="border-border overflow-hidden rounded-lg border">
-      <Table key={dataKey}>
-        <TableHeader>
-          <TableRow className="bg-muted/50 hover:bg-muted/50">
-            {selectable && (
-              <TableHead className="w-12">
-                <Checkbox
-                  checked={selectAll}
-                  onCheckedChange={handleSelectAll}
-                  aria-label="Selecionar todos"
-                />
-              </TableHead>
-            )}
-            {headers.map((header) => (
-              <TableHead
-                key={header.key}
-                className={cn(
-                  header.align === 'center' && 'text-center',
-                  header.align === 'right' && 'text-right',
-                  header.width && `w-[${header.width}]`
-                )}
-              >
-                <div className="flex items-center gap-2">
-                  <span>{header.label}</span>
-                  {header.sortable && sorting && (
-                    <button
-                      onClick={() => sorting.onSort(header.key)}
-                      className="hover:bg-muted rounded p-1 transition-colors"
-                    >
-                      {sorting.sortBy === header.key ? (
-                        sorting.sortOrder === 'asc' ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )
-                      ) : (
-                        <div className="h-4 w-4" />
-                      )}
-                    </button>
+    <div className={stickyPagination ? 'flex flex-col' : ''}>
+      <div className="border-border overflow-hidden rounded-lg border">
+        <Table key={dataKey}>
+          <TableHeader>
+            <TableRow className="bg-muted/50 hover:bg-muted/50">
+              {selectable && (
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={selectAll}
+                    onCheckedChange={handleSelectAll}
+                    aria-label="Selecionar todos"
+                  />
+                </TableHead>
+              )}
+              {headers.map((header) => (
+                <TableHead
+                  key={header.key}
+                  className={cn(
+                    header.align === 'center' && 'text-center',
+                    header.align === 'right' && 'text-right',
+                    header.width && `w-[${header.width}]`
                   )}
-                </div>
-              </TableHead>
-            ))}
-            {rowActions && rowActions.length > 0 && (
-              <TableHead className="w-12 text-right">Ações</TableHead>
-            )}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {paginatedData.map((row, index) => {
-            const visibleActions = rowActions?.filter((action) => !action.hidden?.(row)) || []
-            return (
-              <TableRow
-                key={row.id || index}
-                className={cn(
-                  striped && index % 2 === 0 && 'bg-muted/30',
-                  highlightRow?.(row) && 'bg-yellow-50 hover:bg-yellow-100',
-                  onRowClick && 'cursor-pointer'
-                )}
-                onClick={() => onRowClick?.(row)}
-              >
-                {selectable && (
-                  <TableCell className="w-12">
-                    <Checkbox
-                      checked={selectedRows.has(row.id)}
-                      onCheckedChange={() => handleSelectRow(row.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      aria-label={`Selecionar ${row.id}`}
-                    />
-                  </TableCell>
-                )}
-                {headers.map((column) => (
-                  <TableCell
-                    key={`${row.id}-${column.key}`}
-                    className={cn(
-                      column.align === 'center' && 'text-center',
-                      column.align === 'right' && 'text-right'
-                    )}
-                  >
-                    {column.render ? column.render(row[column.key], row) : row[column.key]}
-                  </TableCell>
-                ))}
-                {visibleActions.length > 0 && (
-                  <TableCell className="w-12 text-right">
-                    {visibleActions.length === 1 ? (
-                      <Button
-                        variant={visibleActions[0].variant || 'ghost'}
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          visibleActions[0].onClick(row)
-                        }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>{header.label}</span>
+                    {header.sortable && sorting && (
+                      <button
+                        onClick={() => sorting.onSort(header.key)}
+                        className="hover:bg-muted rounded p-1 transition-colors"
                       >
-                        {visibleActions[0].icon}
-                      </Button>
-                    ) : (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {visibleActions.map((action) => (
-                            <DropdownMenuItem
-                              key={action.id}
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                action.onClick(row)
-                              }}
-                            >
-                              {action.icon && <span className="mr-2">{action.icon}</span>}
-                              {action.label}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        {sorting.sortBy === header.key ? (
+                          sorting.sortOrder === 'asc' ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )
+                        ) : (
+                          <div className="h-4 w-4" />
+                        )}
+                      </button>
                     )}
-                  </TableCell>
-                )}
-              </TableRow>
-            )
-          })}
-        </TableBody>
-      </Table>
+                  </div>
+                </TableHead>
+              ))}
+              {rowActions && rowActions.length > 0 && (
+                <TableHead className="w-12 text-right">Ações</TableHead>
+              )}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedData.map((row, index) => {
+              const visibleActions = rowActions?.filter((action) => !action.hidden?.(row)) || []
+              return (
+                <TableRow
+                  key={row.id || index}
+                  className={cn(
+                    striped && index % 2 === 0 && 'bg-muted/30',
+                    highlightRow?.(row) && 'bg-yellow-50 hover:bg-yellow-100',
+                    onRowClick && 'cursor-pointer'
+                  )}
+                  onClick={() => onRowClick?.(row)}
+                >
+                  {selectable && (
+                    <TableCell className="w-12">
+                      <Checkbox
+                        checked={selectedRows.has(row.id)}
+                        onCheckedChange={() => handleSelectRow(row.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        aria-label={`Selecionar ${row.id}`}
+                      />
+                    </TableCell>
+                  )}
+                  {headers.map((column) => (
+                    <TableCell
+                      key={`${row.id}-${column.key}`}
+                      className={cn(
+                        column.align === 'center' && 'text-center',
+                        column.align === 'right' && 'text-right'
+                      )}
+                    >
+                      {column.render ? column.render(row[column.key], row) : row[column.key]}
+                    </TableCell>
+                  ))}
+                  {visibleActions.length > 0 && (
+                    <TableCell className="w-12 text-right">
+                      {visibleActions.length === 1 ? (
+                        <Button
+                          variant={visibleActions[0].variant || 'ghost'}
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            visibleActions[0].onClick(row)
+                          }}
+                        >
+                          {visibleActions[0].icon}
+                        </Button>
+                      ) : (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {visibleActions.map((action) => (
+                              <DropdownMenuItem
+                                key={action.id}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  action.onClick(row)
+                                }}
+                              >
+                                {action.icon && <span className="mr-2">{action.icon}</span>}
+                                {action.label}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </TableCell>
+                  )}
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </div>
 
-      {/* Paginação */}
+      {/* Paginação Sticky */}
       {data.length > effectivePageSize && (
-        <div className="border-border bg-muted/30 flex items-center justify-between gap-4 border-t px-4 py-3">
+        <div className={cn('border-border flex items-center justify-between gap-4 px-4 py-3')}>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground text-sm">Itens por página:</span>
+            <Select
+              value={String(itemsPerPage)}
+              onValueChange={(value) => {
+                setItemsPerPage(Number(value))
+                setCurrentPage(1)
+              }}
+            >
+              <SelectTrigger className="h-8 w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="text-muted-foreground text-sm">
-            Mostrando <span className="font-medium">{startIndex + 1}</span> a{' '}
-            <span className="font-medium">{Math.min(endIndex, data.length)}</span> de{' '}
-            <span className="font-medium">{data.length}</span> registros
+            Página <span className="font-medium">{currentPage}</span> de{' '}
+            <span className="font-medium">{totalPages}</span>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -293,7 +322,7 @@ export function DataTable({
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
             >
-              Anterior
+              ‹
             </Button>
             <div className="flex items-center gap-1">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -314,7 +343,7 @@ export function DataTable({
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
             >
-              Próxima
+              ›
             </Button>
           </div>
         </div>

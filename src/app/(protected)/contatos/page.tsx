@@ -1,133 +1,113 @@
-"use client";
+'use client'
 
-import React, { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
-import { usePersons } from "@/modules/person/hooks/usePersonQueries";
-import { useDeletePerson } from "@/modules/person/hooks/usePersonMutations";
-import { EntityType } from "@/modules/person/types/person.types";
-import { useAlerts } from "@/contexts/AlertContext";
-import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
-import { DataTable, Column, RowAction } from "@/components/DataTable";
-import { PageHeader, DataTableToolbar } from "@/components/patterns";
-import { FilterWithBadge } from "@/components/patterns/FilterWithBadge";
-import { Trash2, Edit, Plus } from "lucide-react";
-import { formatDocument } from "@/lib/masks";
-import { useBreadcrumb } from "@/modules/workspace/hooks";
+import { useState } from 'react'
+
+import { Edit, Plus, Trash2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+
+import { type Column, DataTable, type RowAction } from '@/components/DataTable'
+import { DataTableToolbar, PageHeader } from '@/components/patterns'
+import { useAlerts } from '@/contexts/AlertContext'
+import { formatDocument } from '@/lib/masks'
+import { useDeletePerson } from '@/modules/person/hooks/usePersonMutations'
+import { usePersons } from '@/modules/person/hooks/usePersonQueries'
+import { ModuleGuard } from '@/modules/workspace/components/ModuleGuard'
+import { useBreadcrumb } from '@/modules/workspace/hooks'
+import { useWorkspaceStore } from '@/modules/workspace/store/workspace.store'
 
 export default function PersonsPage() {
-  const router = useRouter();
-  const { activeWorkspace } = useWorkspaceStore();
-  const alerts = useAlerts();
+  const router = useRouter()
+  const { activeWorkspace } = useWorkspaceStore()
+  const alerts = useAlerts()
 
   useBreadcrumb([
     {
-      label: "Contatos",
-      href: "/contatos",
+      label: 'Contatos',
+      href: '/contatos',
     },
-  ]);
+  ])
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [entityTypeFilter, setEntityTypeFilter] = useState<EntityType | "">("");
-  const [selectedPersons, setSelectedPersons] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('')
 
-  const filters = useMemo(() => {
-    const f: any = {};
-    if (entityTypeFilter) f.entityType = entityTypeFilter;
-    if (searchTerm) f.search = searchTerm;
-    return f;
-  }, [entityTypeFilter, searchTerm]);
-
-  const { data, isLoading } = usePersons(activeWorkspace?.id || "", filters);
-  const deleteMutation = useDeletePerson(activeWorkspace?.id || "");
+  const { data, isLoading } = usePersons(activeWorkspace?.id || '')
+  const deleteMutation = useDeletePerson(activeWorkspace?.id || '')
 
   const handleDelete = async (personId: string, personName: string) => {
-    if (!confirm(`Tem certeza que deseja remover ${personName}?`)) return;
+    if (!confirm(`Tem certeza que deseja remover ${personName}?`)) return
 
     deleteMutation.mutate(personId, {
       onSuccess: () => {
-        alerts.success("Pessoa removida com sucesso!");
+        alerts.success('Pessoa removida com sucesso!')
       },
       onError: (error: any) => {
-        alerts.error(error.response?.data?.message || "Erro ao remover pessoa");
+        alerts.error(error.response?.data?.message || 'Erro ao remover pessoa')
       },
-    });
-  };
+    })
+  }
 
   if (!activeWorkspace) {
     return (
       <div className="flex items-center justify-center py-12">
         <p className="text-gh-text-secondary">Selecione um workspace</p>
       </div>
-    );
+    )
   }
 
   // Definir colunas
   const columns: Column[] = [
     {
-      key: "name",
-      label: "Nome",
-      render: (_, row) => (
-        <span className="font-medium text-gh-text">{row.name}</span>
-      ),
+      key: 'name',
+      label: 'Nome',
+      render: (_, row) => <span className="text-gh-text font-medium">{row.name}</span>,
     },
     {
-      key: "email",
-      label: "Email",
-      render: (email) => (
-        <span className="text-sm text-gh-text-secondary">{email || "-"}</span>
-      ),
+      key: 'email',
+      label: 'Email',
+      render: (email) => <span className="text-gh-text-secondary text-sm">{email || '-'}</span>,
     },
     {
-      key: "phones",
-      label: "Telefone",
+      key: 'phones',
+      label: 'Telefone',
       render: (phones) => {
-        const primaryPhone = phones?.find((p: any) => p.isPrimary);
-        const phone = primaryPhone || phones?.[0];
-        return (
-          <span className="text-sm text-gh-text-secondary">
-            {phone?.number || "-"}
-          </span>
-        );
+        const primaryPhone = phones?.find((p: any) => p.isPrimary)
+        const phone = primaryPhone || phones?.[0]
+        return <span className="text-gh-text-secondary text-sm">{phone?.number || '-'}</span>
       },
     },
     {
-      key: "document",
-      label: "Documento",
+      key: 'document',
+      label: 'Documento',
       render: (document) => {
-        if (!document)
-          return <span className="text-sm text-gh-text-secondary">-</span>;
-        const formatted = formatDocument(document);
-        const isCpf = document.length === 11;
-        const type = isCpf ? "CPF" : "CNPJ";
+        if (!document) return <span className="text-gh-text-secondary text-sm">-</span>
+        const formatted = formatDocument(document)
+        const isCpf = document.length === 11
+        const type = isCpf ? 'CPF' : 'CNPJ'
         return (
           <div className="text-sm">
-            <span className="text-xs font-medium text-gh-text-secondary">
-              {type}
-            </span>
+            <span className="text-gh-text-secondary text-xs font-medium">{type}</span>
             <p className="text-gh-text font-mono">{formatted}</p>
           </div>
-        );
+        )
       },
     },
-  ];
+  ]
 
   // Definir row actions
   const rowActions: RowAction[] = [
     {
-      id: "edit",
-      label: "Editar",
-      icon: <Edit className="w-4 h-4" />,
+      id: 'edit',
+      label: 'Editar',
+      icon: <Edit className="h-4 w-4" />,
       onClick: (row) => router.push(`/contatos/${row.id}`),
     },
     {
-      id: "delete",
-      label: "Deletar",
-      icon: <Trash2 className="w-4 h-4" />,
+      id: 'delete',
+      label: 'Deletar',
+      icon: <Trash2 className="h-4 w-4" />,
       onClick: (row) => handleDelete(row.id, row.name),
-      variant: "destructive",
+      variant: 'destructive',
     },
-  ];
+  ]
 
   return (
     <ModuleGuard moduleId="contacts" workspaceId={activeWorkspace?.id}>
@@ -136,9 +116,9 @@ export default function PersonsPage() {
           title="Contatos"
           description="Gerenciar pessoas, clientes, fornecedores e parceiros"
           action={{
-            label: "Novo Contato",
+            label: 'Novo Contato',
             onClick: () => router.push(`/contatos/new`),
-            icon: <Plus className="w-4 h-4" />,
+            icon: <Plus className="h-4 w-4" />,
           }}
         />
 
@@ -154,16 +134,16 @@ export default function PersonsPage() {
           data={data || []}
           isLoading={isLoading}
           selectable={false}
-          onSelectionChange={setSelectedPersons}
           onRowClick={(row) => router.push(`/contatos/${row.id}`)}
           emptyMessage={
             searchTerm
-              ? "Tente ajustar os termos de pesquisa ou limpar os filtros."
-              : "Comece criando seu primeiro contato."
+              ? 'Tente ajustar os termos de pesquisa ou limpar os filtros.'
+              : 'Comece criando seu primeiro contato.'
           }
           rowActions={rowActions}
+          pageSize={10}
         />
       </div>
     </ModuleGuard>
-  );
+  )
 }

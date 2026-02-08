@@ -1,337 +1,300 @@
-"use client";
+'use client'
 
-import { useState, useMemo } from "react";
-import { useRouter, useParams } from "next/navigation";
-import {
-  useWorkspace,
-  useEnabledModules,
-  useAvailableModules,
-  useBreadcrumb,
-} from "@/modules/workspace/hooks";
-import { workspaceService } from "@/modules/workspace/services/workspace.service";
-import { useAlerts } from "@/contexts/AlertContext";
-import { NotificationBell } from "@/components/NotificationBell";
-import { WalletDisplay } from "@/components/WalletDisplay";
-import { UserMenu } from "@/components/UserMenu";
-import * as LucideIcons from "lucide-react";
-import React from "react";
+import { useMemo, useState } from 'react'
+import React from 'react'
+
+import * as LucideIcons from 'lucide-react'
 import {
   ArrowLeft,
-  Search,
-  Filter,
-  Zap,
-  MessageSquare,
-  Wrench,
-  Info,
   ArrowUpRight,
-} from "lucide-react";
+  Filter,
+  Info,
+  MessageSquare,
+  Search,
+  Wrench,
+  Zap,
+} from 'lucide-react'
+import { useParams, useRouter } from 'next/navigation'
 
-type CategoryType =
-  | "all"
-  | "core"
-  | "communication"
-  | "automation"
-  | "integration";
+import { NotificationBell } from '@/components/NotificationBell'
+import { UserMenu } from '@/components/UserMenu'
+import { WalletDisplay } from '@/components/WalletDisplay'
+import { useAlerts } from '@/contexts/AlertContext'
+import {
+  useAvailableModules,
+  useBreadcrumb,
+  useEnabledModules,
+  useWorkspace,
+} from '@/modules/workspace/hooks'
+import { workspaceService } from '@/modules/workspace/services/workspace.service'
+
+type CategoryType = 'all' | 'core' | 'communication' | 'automation' | 'integration'
+
+type StatusFilter = 'all' | 'active' | 'inactive'
 
 export default function ModulesMarketplacePage() {
-  const router = useRouter();
-  const params = useParams();
-  const workspaceId = params.id as string;
-  const alerts = useAlerts();
+  const router = useRouter()
+  const params = useParams()
+  const workspaceId = params.id as string
+  const alerts = useAlerts()
 
   useBreadcrumb([
     {
-      label: "Workspaces",
+      label: 'Workspaces',
       href: `/workspaces/`,
     },
     {
-      label: "Gerenciar Módulos",
+      label: 'Gerenciar Módulos',
       href: `/workspaces/${workspaceId}/modules`,
     },
-  ]);
+  ])
 
-  const { data: workspace } = useWorkspace(workspaceId);
-  const { data: enabledModules = [], refetch } = useEnabledModules(workspaceId);
+  const { data: workspace } = useWorkspace(workspaceId)
+  const { data: enabledModules = [], refetch } = useEnabledModules(workspaceId)
   const {
     data: availableModules = [],
     isLoading: modulesLoading,
     refetch: refetchAvailableModules,
-  } = useAvailableModules();
+  } = useAvailableModules()
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<CategoryType>("all");
-  const [installing, setInstalling] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<CategoryType>('all')
+  const [selectedStatus, setSelectedStatus] = useState<StatusFilter>('all')
+  const [installing, setInstalling] = useState<string | null>(null)
 
-  const canManage = workspace?.isOwner || workspace?.role === "admin";
+  const canManage = workspace?.isOwner || workspace?.role === 'admin'
 
   // Filtrar módulos por busca e categoria
   const filteredModules = useMemo(() => {
-    let result = availableModules;
+    let result = availableModules
 
     // Filtro por categoria
-    if (selectedCategory !== "all") {
-      result = result.filter((m: any) => m.category === selectedCategory);
+    if (selectedCategory !== 'all') {
+      result = result.filter((m: any) => m.category === selectedCategory)
+    }
+
+    // Filtro por status
+    if (selectedStatus !== 'all') {
+      const isActive = (m: any) => enabledModules.some((em: any) => em.id === m.id)
+      result = result.filter((m: any) => (selectedStatus === 'active' ? isActive(m) : !isActive(m)))
     }
 
     // Filtro por busca
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+      const query = searchQuery.toLowerCase()
       result = result.filter(
         (m: any) =>
           m.name.toLowerCase().includes(query) ||
           m.description.toLowerCase().includes(query) ||
-          m.id.toLowerCase().includes(query),
-      );
+          m.id.toLowerCase().includes(query)
+      )
     }
 
-    return result;
-  }, [searchQuery, selectedCategory, availableModules]);
+    return result
+  }, [searchQuery, selectedCategory, selectedStatus, availableModules, enabledModules])
 
   const handleToggleModule = async (moduleId: string, isEnabled: boolean) => {
     if (!canManage) {
-      alerts.error("Você não tem permissão para gerenciar módulos");
-      return;
+      alerts.error('Você não tem permissão para gerenciar módulos')
+      return
     }
 
-    const selectedModule = availableModules.find((m: any) => m.id === moduleId);
-    const required = selectedModule?.required;
+    const selectedModule = availableModules.find((m: any) => m.id === moduleId)
+    const required = selectedModule?.required
     if (required && isEnabled) {
-      alerts.error(`${moduleId} é um módulo obrigatório`);
-      return;
+      alerts.error(`${moduleId} é um módulo obrigatório`)
+      return
     }
 
-    setInstalling(moduleId);
+    setInstalling(moduleId)
     try {
       // Extrair apenas os IDs dos módulos habilitados
-      const enabledModuleIds = enabledModules.map((m: any) => m.id);
+      const enabledModuleIds = enabledModules.map((m: any) => m.id)
       const newModules = isEnabled
         ? enabledModuleIds.filter((id: string) => id !== moduleId)
-        : [...enabledModuleIds, moduleId];
+        : [...enabledModuleIds, moduleId]
 
-      await workspaceService.updateEnabledModules(workspaceId, newModules);
-      await refetch();
-      await refetchAvailableModules();
-      alerts.success(
-        `Módulo ${isEnabled ? "desinstalado" : "instalado"} com sucesso`,
-      );
+      await workspaceService.updateEnabledModules(workspaceId, newModules)
+      await refetch()
+      await refetchAvailableModules()
+      alerts.success(`Módulo ${isEnabled ? 'desinstalado' : 'instalado'} com sucesso`)
     } catch (error: any) {
-      console.error("Erro ao atualizar módulos:", error);
-      alerts.error(error.response?.data?.message || "Erro ao atualizar módulo");
+      console.error('Erro ao atualizar módulos:', error)
+      alerts.error(error.response?.data?.message || 'Erro ao atualizar módulo')
     } finally {
-      setInstalling(null);
+      setInstalling(null)
     }
-  };
+  }
 
   const ModuleCard = ({ module }: { module: any }) => {
-    const isEnabled = enabledModules.some((m: any) => m.id === module.id);
-    const required = module.required;
+    const isEnabled = enabledModules.some((m: any) => m.id === module.id)
+    const required = module.required
     const IconComponent =
-      LucideIcons[module.icon as keyof typeof LucideIcons] ||
-      LucideIcons.Package;
-    const isLoading = installing === module.id;
+      LucideIcons[module.icon as keyof typeof LucideIcons] || LucideIcons.Package
+    const isLoading = installing === module.id
 
     return (
-      <div className="bg-white border border-gh-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
-        {/* Cabeçalho com ícone e categoria */}
-        <div
-          className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 flex items-start justify-between group cursor-pointer hover:from-blue-100 hover:to-blue-200 transition-colors"
-          onClick={() =>
-            router.push(`/workspaces/${workspaceId}/modules/${module.id}`)
-          }
-        >
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-white rounded-lg text-blue-600">
-              {React.createElement(IconComponent as React.ElementType, {
-                className: "w-6 h-6",
-              })}
-            </div>
-            <div>
-              <h3 className="font-bold text-gray-900">{module.name}</h3>
-              <span className="inline-block text-xs font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded mt-1 capitalize">
-                {module.category === "communication"
-                  ? "Comunicação"
-                  : module.category === "automation"
-                    ? "Automação"
-                    : module.category === "core"
-                      ? "Principal"
-                      : "Integração"}
-              </span>
-            </div>
+      <div className="border-gh-border overflow-hidden rounded-lg border bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+        {/* Header com Ícone e Botão */}
+        <div className="border-gh-border flex items-start justify-between border-b p-6">
+          <div className="bg-gh-bg text-gh-text rounded-lg p-3">
+            {React.createElement(IconComponent as React.ElementType, {
+              className: 'w-6 h-6',
+            })}
           </div>
-
-          <div className="flex items-center gap-2">
-            {isEnabled && (
-              <div className="flex items-center gap-1 text-green-600 text-xs font-medium">
-                <div className="w-2 h-2 bg-green-600 rounded-full" />
-                Instalado
-              </div>
+          <button
+            onClick={() => handleToggleModule(module.id, isEnabled)}
+            disabled={!canManage || isLoading || required}
+            className={`flex items-center justify-center gap-2 rounded-lg border px-4 py-1.5 text-sm font-medium transition-colors ${
+              required
+                ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400'
+                : isEnabled
+                  ? 'border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100'
+                  : 'text-gh-text border-gh-border hover:bg-gh-bg bg-white'
+            }`}
+          >
+            {isLoading && (
+              <div className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
             )}
-            <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
-          </div>
+            {required ? 'Obrigatório' : isEnabled ? 'Ativo' : 'Desativado'}
+          </button>
         </div>
 
         {/* Conteúdo */}
-        <div className="flex flex-col p-4 justify-between h-full">
-          <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-            {module.description}
-          </p>
+        <div className="space-y-4 p-6">
+          <div
+            className="group cursor-pointer"
+            onClick={() => router.push(`/workspaces/${workspaceId}/modules/${module.id}`)}
+          >
+            <h3 className="text-gh-text text-base font-semibold transition-colors group-hover:text-blue-600">
+              {module.name}
+            </h3>
+            <p className="text-gh-text-secondary mt-2 text-sm leading-relaxed">
+              {module.description}
+            </p>
+          </div>
 
           {/* Dependências */}
           {module.dependencies && module.dependencies.length > 0 && (
-            <div className="mb-4 pb-4 border-b border-gray-200">
-              <p className="text-xs font-medium text-gray-600 mb-2">
+            <div className="space-y-2">
+              <p className="text-gh-text-secondary text-xs font-semibold uppercase">
                 Dependências:
               </p>
               <div className="flex flex-wrap gap-2">
                 {module.dependencies.map((depId: string) => {
-                  const depModule = availableModules.find(
-                    (m: any) => m.id === depId,
-                  );
+                  const depModule = availableModules.find((m: any) => m.id === depId)
                   const DepIconComponent =
-                    LucideIcons[depModule?.icon as keyof typeof LucideIcons] ||
-                    LucideIcons.Package;
+                    LucideIcons[depModule?.icon as keyof typeof LucideIcons] || LucideIcons.Package
                   return (
-                    <div
-                      key={depId}
-                      className="relative group cursor-help"
-                      title={depModule?.name}
-                    >
-                      <div className="p-2 bg-gray-100 rounded-lg text-gray-600 hover:bg-gray-200 transition-colors">
-                        {React.createElement(
-                          DepIconComponent as React.ElementType,
-                          {
-                            className: "w-4 h-4",
-                          },
-                        )}
+                    <div key={depId} className="group relative" title={depModule?.name}>
+                      <div className="bg-gh-bg text-gh-text hover:bg-gh-hover cursor-help rounded-lg p-2 transition-colors">
+                        {React.createElement(DepIconComponent as React.ElementType, {
+                          className: 'w-4 h-4',
+                        })}
                       </div>
                       {/* Tooltip */}
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                      <div className="bg-gh-text pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 transform rounded px-2 py-1 text-xs whitespace-nowrap text-white opacity-0 transition-opacity group-hover:opacity-100">
                         {depModule?.name || depId}
                       </div>
                     </div>
-                  );
+                  )
                 })}
               </div>
             </div>
           )}
 
-          {/* Sem dependências */}
-          {module.dependencies && module.dependencies.length === 0 && (
-            <div className="mb-4 pb-4 border-b border-gray-200">
-              <span className="text-xs font-medium px-2 py-1 bg-blue-50 text-blue-600 rounded">
-                Sem dependências
-              </span>
-            </div>
-          )}
-
-          {/* Badges de features */}
-          <div className="mb-4 flex flex-wrap gap-2">
+          {/* Badges de Status */}
+          <div className="flex flex-wrap gap-2 pt-2">
             {required && (
-              <span className="text-xs font-medium px-2 py-1 bg-red-50 text-red-600 rounded">
+              <span className="rounded bg-red-50 px-2 py-1 text-xs font-medium text-red-600">
                 Obrigatório
               </span>
             )}
             {isEnabled && (
-              <span className="text-xs font-medium px-2 py-1 bg-green-50 text-green-600 rounded">
+              <span className="rounded bg-green-50 px-2 py-1 text-xs font-medium text-green-600">
                 Ativo
               </span>
             )}
           </div>
-
-          {/* Botão de ação */}
-          <button
-            onClick={() => handleToggleModule(module.id, isEnabled)}
-            disabled={!canManage || isLoading || required}
-            className={`w-full py-2 px-3 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2 ${
-              required
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : isEnabled
-                  ? "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
-            }`}
-          >
-            {isLoading && (
-              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            )}
-            {required ? "Obrigatório" : isEnabled ? "Desinstalar" : "Instalar"}
-          </button>
         </div>
       </div>
-    );
-  };
+    )
+  }
 
   const categoryOptions: {
-    value: CategoryType;
-    label: string;
-    icon: React.ReactNode;
+    value: CategoryType
+    label: string
+    icon: React.ReactNode
   }[] = [
-    { value: "all", label: "Todos", icon: null },
+    { value: 'all', label: 'Todos', icon: null },
     {
-      value: "core",
-      label: "Principais",
-      icon: <Wrench className="w-4 h-4" />,
+      value: 'core',
+      label: 'Principais',
+      icon: <Wrench className="h-4 w-4" />,
     },
     {
-      value: "communication",
-      label: "Comunicação",
-      icon: <MessageSquare className="w-4 h-4" />,
+      value: 'communication',
+      label: 'Comunicação',
+      icon: <MessageSquare className="h-4 w-4" />,
     },
     {
-      value: "automation",
-      label: "Automação",
-      icon: <Zap className="w-4 h-4" />,
+      value: 'automation',
+      label: 'Automação',
+      icon: <Zap className="h-4 w-4" />,
     },
-  ];
+  ]
+
+  const statusOptions: { value: StatusFilter; label: string }[] = [
+    { value: 'all', label: 'Todos' },
+    { value: 'active', label: 'Ativos' },
+    { value: 'inactive', label: 'Desativados' },
+  ]
 
   return (
-    <div className="min-h-screen bg-gh-bg">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="bg-gh-bg min-h-screen">
+      <div className="mx-auto max-w-7xl px-4 py-8">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              Marketplace de Módulos
-            </h2>
-            <p className="text-gray-600 mt-1">
-              Gerencie os módulos disponíveis para o seu workspace
-            </p>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-gh-text text-3xl font-bold">Marketplace de Módulos</h1>
+          <p className="text-gh-text-secondary mt-1">
+            Integre novos serviços e expanda as funcionalidades do seu workspace
+          </p>
         </div>
 
         {/* Content */}
-        <div className="max-w-7xl mx-auto py-8">
+        <div className="space-y-8">
           {!canManage && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
               <p className="text-sm text-yellow-800">
-                Você não tem permissão para instalar/desinstalar módulos. Apenas
-                owner ou admin podem gerenciar módulos.
+                Você não tem permissão para instalar/desinstalar módulos. Apenas owner ou admin
+                podem gerenciar módulos.
               </p>
             </div>
           )}
 
           {/* Barra de Pesquisa */}
-          <div className="mb-8">
-            <div className="relative mb-6">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="text-gh-text-secondary absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 transform" />
               <input
                 type="text"
-                placeholder="Pesquise módulos pelo nome ou descrição..."
+                placeholder="Pesquisar módulos..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gh-border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                className="border-gh-border text-gh-text placeholder:text-gh-text-secondary w-full rounded-lg border bg-white py-2.5 pr-4 pl-10 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
 
             {/* Filtros por Categoria */}
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex flex-wrap gap-2">
               {categoryOptions.map((cat) => (
                 <button
                   key={cat.value}
                   onClick={() => setSelectedCategory(cat.value)}
-                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2 ${
+                  className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                     selectedCategory === cat.value
-                      ? "bg-blue-600 text-white"
-                      : "bg-white border border-gh-border text-gray-700 hover:bg-gray-50"
+                      ? 'bg-blue-600 text-white'
+                      : 'border-gh-border text-gh-text hover:bg-gh-hover border bg-white'
                   }`}
                 >
                   {cat.icon}
@@ -339,61 +302,66 @@ export default function ModulesMarketplacePage() {
                 </button>
               ))}
             </div>
+
+            {/* Filtros por Status */}
+            <div className="flex flex-wrap gap-2">
+              {statusOptions.map((status) => (
+                <button
+                  key={status.value}
+                  onClick={() => setSelectedStatus(status.value)}
+                  className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                    selectedStatus === status.value
+                      ? 'bg-green-600 text-white'
+                      : 'border-gh-border text-gh-text hover:bg-gh-hover border bg-white'
+                  }`}
+                >
+                  {status.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Informações de Resultado */}
-          <div className="mb-6">
-            <p className="text-sm text-gray-600">
+          <div>
+            <p className="text-gh-text-secondary text-sm">
               {filteredModules.length === 0
-                ? "Nenhum módulo encontrado com esses filtros"
-                : `${filteredModules.length} módulo${filteredModules.length !== 1 ? "s" : ""} disponível${filteredModules.length !== 1 ? "s" : ""}`}
+                ? 'Nenhum módulo encontrado com esses filtros'
+                : `${filteredModules.length} módulo${filteredModules.length !== 1 ? 's' : ''} encontrado${filteredModules.length !== 1 ? 's' : ''}`}
             </p>
           </div>
 
           {/* Grid de Módulos */}
           {modulesLoading ? (
             <div className="flex items-center justify-center py-16">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gh-hover"></div>
+              <div className="border-gh-hover h-12 w-12 animate-spin rounded-full border-b-2"></div>
             </div>
           ) : filteredModules.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredModules.map((module: any) => (
                 <ModuleCard key={module.id} module={module} />
               ))}
             </div>
           ) : (
-            <div className="text-center py-16">
-              <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Nenhum módulo encontrado
-              </h3>
-              <p className="text-gray-600 mb-6">
+            <div className="py-16 text-center">
+              <Search className="text-gh-text-secondary mx-auto mb-4 h-16 w-16" />
+              <h3 className="text-gh-text mb-2 text-xl font-semibold">Nenhum módulo encontrado</h3>
+              <p className="text-gh-text-secondary mb-6">
                 Tente ajustar seus filtros ou termos de busca
               </p>
               <button
                 onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCategory("all");
+                  setSearchQuery('')
+                  setSelectedCategory('all')
+                  setSelectedStatus('all')
                 }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
               >
                 Limpar Filtros
               </button>
             </div>
           )}
-
-          {/* Info Footer */}
-          <div className="mt-12 bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <h3 className="font-semibold text-gray-900 mb-2">
-              💡 Dica: Módulos Obrigatórios
-            </h3>
-            <p className="text-sm text-gray-600">
-              Alguns módulos são obrigatórios e não podem ser desinstalados.
-              Eles fazem parte da funcionalidade essencial do seu workspace.
-            </p>
-          </div>
         </div>
       </div>
     </div>
-  );
+  )
 }
