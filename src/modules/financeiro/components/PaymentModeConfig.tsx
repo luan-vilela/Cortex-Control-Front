@@ -34,47 +34,51 @@ export function PaymentModeConfig({ config, onChange }: PaymentModeConfigProps) 
         value={config?.mode || PaymentMode.CASH}
         onValueChange={(value) => handleModeChange(value as PaymentMode)}
       >
-        {/* À Vista */}
-        <label className="flex cursor-pointer gap-3 rounded-lg border border-input p-3 transition-colors hover:bg-accent has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10 dark:has-[[data-state=checked]]:bg-primary/20">
-          <RadioGroupItem value={PaymentMode.CASH} id="payment-cash" className="mt-1" />
-          <div className="flex-1">
-            <p className="font-medium text-foreground">À Vista</p>
-            <p className="text-xs text-muted-foreground">Pagamento único</p>
-          </div>
-        </label>
+        <div className="grid grid-cols-2 gap-3">
+          {/* À Vista */}
+          <label className="border-input hover:bg-accent has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10 dark:has-[[data-state=checked]]:bg-primary/20 flex cursor-pointer gap-3 rounded-lg border p-3 transition-colors">
+            <RadioGroupItem value={PaymentMode.CASH} id="payment-cash" className="mt-1" />
+            <div className="flex-1">
+              <p className="text-foreground font-medium">À Vista</p>
+              <p className="text-muted-foreground text-xs">Pagamento único</p>
+            </div>
+          </label>
 
-        {/* Parcelado */}
-        <label className="flex cursor-pointer gap-3 rounded-lg border border-input p-3 transition-colors hover:bg-accent has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10 dark:has-[[data-state=checked]]:bg-primary/20">
-          <RadioGroupItem value={PaymentMode.INSTALLMENT} id="payment-installment" className="mt-1" />
-          <div className="flex-1">
-            <p className="font-medium text-foreground">Parcelado</p>
-            <p className="text-xs text-muted-foreground">Múltiplas parcelas</p>
-          </div>
-        </label>
+          {/* Parcelado */}
+          <label className="border-input hover:bg-accent has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10 dark:has-[[data-state=checked]]:bg-primary/20 flex cursor-pointer gap-3 rounded-lg border p-3 transition-colors">
+            <RadioGroupItem
+              value={PaymentMode.INSTALLMENT}
+              id="payment-installment"
+              className="mt-1"
+            />
+            <div className="flex-1">
+              <p className="text-foreground font-medium">Parcelado</p>
+              <p className="text-muted-foreground text-xs">Múltiplas parcelas</p>
+            </div>
+          </label>
+        </div>
       </RadioGroup>
 
-      {/* Campo de Parcelas */}
+      {/* Campo de Parcelas - Ocupa coluna cheia */}
       {config?.mode === PaymentMode.INSTALLMENT && (
-        <div className="border-t border-border pt-4">
-          <label className="mb-2 block">
-            <p className="mb-2 text-sm font-medium text-foreground">Número de Parcelas</p>
-            <Input
-              type="number"
-              min="1"
-              max="365"
-              value={(config as InstallmentPaymentConfig).numberOfInstallments || 12}
-              onChange={(e) => {
-                const installments = Math.max(1, Math.min(365, parseInt(e.target.value) || 12))
-                const newConfig: InstallmentPaymentConfig = {
-                  ...config,
-                  mode: PaymentMode.INSTALLMENT,
-                  numberOfInstallments: installments,
-                }
-                onChange(newConfig)
-              }}
-              placeholder="Digite o número de parcelas"
-            />
-          </label>
+        <div className="border-border space-y-2 border-t pt-3">
+          <label className="text-foreground text-sm font-medium">Número de Parcelas</label>
+          <Input
+            type="number"
+            min="1"
+            max="365"
+            value={(config as InstallmentPaymentConfig).numberOfInstallments || 12}
+            onChange={(e) => {
+              const installments = Math.max(1, Math.min(365, parseInt(e.target.value) || 12))
+              const newConfig: InstallmentPaymentConfig = {
+                ...config,
+                mode: PaymentMode.INSTALLMENT,
+                numberOfInstallments: installments,
+              }
+              onChange(newConfig)
+            }}
+            placeholder="Digite o número de parcelas"
+          />
         </div>
       )}
     </div>
