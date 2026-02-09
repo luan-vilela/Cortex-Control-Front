@@ -33,23 +33,8 @@ export default function NewTransactionPage() {
 
   return (
     <ModuleGuard moduleId="finance" workspaceId={activeWorkspace?.id}>
-      <div className="from-gh-bg via-gh-bg to-gh-hover min-h-screen bg-gradient-to-br p-6">
-        <div className="mx-auto max-w-4xl">
-          {/* Header com Voltar */}
-          <div className="mb-8">
-            <button
-              onClick={() => router.back()}
-              className="mb-4 flex items-center gap-2 text-blue-600 transition-colors hover:text-blue-700"
-            >
-              <ArrowLeft className="h-5 w-5" />
-              <span className="font-medium">Voltar</span>
-            </button>
-            <div>
-              <h1 className="text-gh-text text-3xl font-bold">Nova Transação</h1>
-              <p className="text-gh-text-secondary mt-1">Preencha os detalhes da transação</p>
-            </div>
-          </div>
-
+      <div className="min-h-screen p-6">
+        <div className="mx-auto w-full">
           {/* Formulário */}
           <div className="overflow-hidden rounded-lg bg-white shadow-lg">
             <TransactionForm

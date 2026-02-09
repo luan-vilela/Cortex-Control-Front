@@ -13,7 +13,7 @@ import {
 
 import { useState } from 'react'
 
-import { ChevronDown, ChevronUp, TrendingDown, TrendingUp } from 'lucide-react'
+import { TrendingDown, TrendingUp } from 'lucide-react'
 
 import { FormInput } from '@/components/FormInput'
 import { FormTextarea } from '@/components/FormTextarea'
@@ -53,42 +53,28 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
     notes: '',
   })
 
-  const [showAdvanced, setShowAdvanced] = useState(false)
   const [partyType, setPartyType] = useState<TransactionActorType>(TransactionActorType.INCOME)
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig>({
     mode: PaymentMode.CASH,
   })
-  const [recurrenceConfig, setRecurrenceConfig] = useState<RecurrenceConfig | undefined>()
-  const [interest, setInterest] = useState<InterestConfig | undefined>()
+  const [recurrenceConfig, setRecurrenceConfig] = useState<RecurrenceConfig | undefined>(undefined)
+  const [interest, setInterest] = useState<InterestConfig | undefined>(undefined)
 
   const { mutate: createTransaction, isPending } = useCreateTransaction(workspaceId)
 
-  /**
-   * Converte string de data (YYYY-MM-DD) para Date em timezone local
-   * Evita problema onde new Date("2026-02-08") cria data em UTC
-   */
   const parseLocalDateString = (dateStr: string): Date => {
-    console.log('[TransactionForm] parseLocalDateString - input:', dateStr)
     const [year, month, day] = dateStr.split('-').map(Number)
     const date = new Date(year, month - 1, day)
-    console.log('[TransactionForm] parseLocalDateString - output:', date)
-    console.log('[TransactionForm] parseLocalDateString - toString():', date.toString())
     return date
   }
-  /**
-   * Converte Date para string ISO local (YYYY-MM-DD)
-   * IMPORTANTE: Usa getFullYear/getMonth/getDate (local) não UTC!
-   * Isso preserva a data local sem conversão para UTC
-   */
+
   const formatDateToLocalISO = (date: Date): string => {
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
-    const result = `${year}-${month}-${day}`
-    console.log('[TransactionForm] formatDateToLocalISO - input:', date)
-    console.log('[TransactionForm] formatDateToLocalISO - output:', result)
-    return result
+    return `${year}-${month}-${day}`
   }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -102,17 +88,14 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
       return
     }
 
-    console.log('[TransactionForm] handleSubmit - formData.dueDate:', formData.dueDate)
-
     const payload: CreateTransactionPayload = {
       sourceType: TransactionSourceType.MANUAL,
       sourceId: 'manual-' + Date.now(),
       amount: parseFloat(formData.amount),
       description: formData.description,
-      dueDate: formData.dueDate, // Send as YYYY-MM-DD string, backend parses correctly
+      dueDate: formData.dueDate,
       notes: formData.notes || undefined,
       paymentConfig,
-      // Adiciona o workspace como ator com o tipo selecionado (INCOME/EXPENSE)
       actors: [
         {
           workspaceId,
@@ -133,163 +116,167 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
         setRecurrenceConfig(undefined)
         setInterest(undefined)
         setPartyType(TransactionActorType.INCOME)
-        setShowAdvanced(false)
         onSuccess?.()
       },
     })
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 px-4 py-6">
-      {/* Tipo de Transação - RadioGroup Cards em Linha */}
-      <div className="space-y-3">
-        <h3 className="text-gh-text text-lg font-semibold">Tipo de Transação</h3>
-        <RadioGroup
-          value={partyType}
-          onValueChange={(value) => setPartyType(value as TransactionActorType)}
-          className="grid max-w-2xl grid-cols-2 gap-4"
-        >
-          <FieldLabel htmlFor="income-type" className="cursor-pointer">
-            <Field orientation="horizontal" className="flex flex-col">
-              <div className="flex w-full items-start justify-between gap-4">
-                <FieldContent>
-                  <FieldTitle className="flex items-center gap-3">
-                    <TrendingUp className="h-5 w-5 text-green-600" />
-                    Entrada
-                  </FieldTitle>
-                  <FieldDescription>Vendas, serviços, investimentos</FieldDescription>
-                </FieldContent>
-                <RadioGroupItem
-                  value={TransactionActorType.INCOME}
-                  id="income-type"
-                  className="mt-1"
-                />
-              </div>
-            </Field>
-          </FieldLabel>
-
-          <FieldLabel htmlFor="expense-type" className="cursor-pointer">
-            <Field orientation="horizontal" className="flex flex-col">
-              <div className="flex w-full items-start justify-between gap-4">
-                <FieldContent>
-                  <FieldTitle className="flex items-center gap-3">
-                    <TrendingDown className="h-5 w-5 text-red-600" />
-                    Saída
-                  </FieldTitle>
-                  <FieldDescription>Despesas, custos, pagamentos</FieldDescription>
-                </FieldContent>
-                <RadioGroupItem
-                  value={TransactionActorType.EXPENSE}
-                  id="expense-type"
-                  className="mt-1"
-                />
-              </div>
-            </Field>
-          </FieldLabel>
-        </RadioGroup>
-      </div>
-
-      {/* Descrição */}
-      <FormInput
-        type="text"
-        label="Descrição"
-        placeholder="Ex: Serviço de consultoria, Venda de produtos..."
-        value={formData.description}
-        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-      />
-
-      {/* Valor e Data */}
-      <div className="grid grid-cols-2 gap-3">
-        <FormInput
-          type="number"
-          label="Valor"
-          step="0.01"
-          min="0"
-          placeholder="0,00"
-          value={formData.amount}
-          onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-        />
-        <div className="space-y-2">
-          <label className="text-gh-text text-sm font-medium">Vencimento</label>
-          <DatePicker
-            value={parseLocalDateString(formData.dueDate)}
-            onValueChange={(date) => {
-              if (date) {
-                const dateString = formatDateToLocalISO(date)
-                console.log('[TransactionForm] DatePicker onValueChange:', date)
-                console.log('[TransactionForm] DatePicker converted to string:', dateString)
-                setFormData({
-                  ...formData,
-                  dueDate: dateString,
-                })
-              }
-            }}
-            placeholder="Selecionar data"
-          />
+    <>
+      {/* Header com Título e Botões */}
+      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between px-6">
+        <div className="flex-1">
+          <h2 className="text-gh-text text-xl sm:text-2xl font-bold mb-1">
+            Nova Transação
+          </h2>
+          <p className="text-gh-text-secondary text-xs sm:text-sm">
+            Preencha os detalhes da transação
+          </p>
+        </div>
+        <div className="flex gap-2 w-full md:w-auto">
+          {onCancel && (
+            <Button
+              type="button"
+              onClick={onCancel}
+              variant="secondary"
+              size="sm"
+              className="flex-1 md:flex-none"
+            >
+              Descartar
+            </Button>
+          )}
+          <Button
+            form="transaction-form"
+            type="submit"
+            disabled={isPending}
+            size="sm"
+            className="flex-1 md:flex-none"
+          >
+            {isPending ? 'Salvando...' : 'Criar Transação'}
+          </Button>
         </div>
       </div>
 
-      {/* Notas */}
-      <FormTextarea
-        label="Notas (opcional)"
-        placeholder="Adicione observações sobre essa transação..."
-        value={formData.notes}
-        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-        rows={2}
-      />
+      {/* Form em Grid */}
+      <form id="transaction-form" onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-6 py-6">
+        {/* Coluna Esquerda (2/3) */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Tipo de Transação */}
+          <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+            <h3 className="text-gh-text font-semibold">Tipo de Transação</h3>
+            <RadioGroup
+              value={partyType}
+              onValueChange={(value) => setPartyType(value as TransactionActorType)}
+              className="grid grid-cols-2 gap-4"
+            >
+              <FieldLabel htmlFor="income-type" className="cursor-pointer">
+                <Field orientation="horizontal" className="flex flex-col">
+                  <div className="flex w-full items-start justify-between gap-4">
+                    <FieldContent>
+                      <FieldTitle className="flex items-center gap-3">
+                        <TrendingUp className="h-5 w-5 text-green-600" />
+                        Entrada
+                      </FieldTitle>
+                      <FieldDescription>Vendas, serviços, investimentos</FieldDescription>
+                    </FieldContent>
+                    <RadioGroupItem
+                      value={TransactionActorType.INCOME}
+                      id="income-type"
+                      className="mt-1"
+                    />
+                  </div>
+                </Field>
+              </FieldLabel>
 
-      {/* Configurações Avançadas */}
-      <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
-        <button
-          type="button"
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className="group flex w-full items-center justify-between rounded-lg p-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-900"
-        >
-          <span className="text-gh-text text-sm font-medium group-hover:text-blue-600">
-            Configurações Avançadas
-          </span>
-          {showAdvanced ? (
-            <ChevronUp className="text-gh-text-secondary h-4 w-4" />
-          ) : (
-            <ChevronDown className="text-gh-text-secondary h-4 w-4" />
-          )}
-        </button>
-
-        {showAdvanced && (
-          <div className="mt-4 space-y-4 rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
-            {/* Modo de Pagamento */}
-            <div>
-              <PaymentModeConfig config={paymentConfig} onChange={setPaymentConfig} />
-            </div>
-
-            {/* Recorrência */}
-            <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
-              <RecurrenceConfigComponent config={recurrenceConfig} onChange={setRecurrenceConfig} />
-            </div>
-
-            {/* Juros */}
-            <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
-              <InterestConfigComponent interest={interest} onChange={setInterest} />
-            </div>
+              <FieldLabel htmlFor="expense-type" className="cursor-pointer">
+                <Field orientation="horizontal" className="flex flex-col">
+                  <div className="flex w-full items-start justify-between gap-4">
+                    <FieldContent>
+                      <FieldTitle className="flex items-center gap-3">
+                        <TrendingDown className="h-5 w-5 text-red-600" />
+                        Saída
+                      </FieldTitle>
+                      <FieldDescription>Despesas, custos, pagamentos</FieldDescription>
+                    </FieldContent>
+                    <RadioGroupItem
+                      value={TransactionActorType.EXPENSE}
+                      id="expense-type"
+                      className="mt-1"
+                    />
+                  </div>
+                </Field>
+              </FieldLabel>
+            </RadioGroup>
           </div>
-        )}
-      </div>
 
-      {/* Botões */}
-      <div className="flex gap-3 border-t border-gray-200 pt-4 dark:border-gray-700">
-        <Button
-          type="submit"
-          disabled={isPending}
-          className="flex-1 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-        >
-          {isPending ? 'Salvando...' : 'Criar Transação'}
-        </Button>
-        {onCancel && (
-          <Button type="button" onClick={onCancel} variant="outline" className="flex-1">
-            Cancelar
-          </Button>
-        )}
-      </div>
-    </form>
+          {/* Informações */}
+          <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+            <h3 className="text-gh-text font-semibold">Informações</h3>
+            <FormInput
+              type="text"
+              label="Descrição"
+              placeholder="Ex: Serviço de consultoria, Venda de produtos..."
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <FormInput
+                type="number"
+                label="Valor"
+                step="0.01"
+                min="0"
+                placeholder="0,00"
+                value={formData.amount}
+                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+              />
+              <div className="space-y-2">
+                <label className="text-gh-text text-sm font-medium">Vencimento</label>
+                <DatePicker
+                  value={parseLocalDateString(formData.dueDate)}
+                  onValueChange={(date) => {
+                    if (date) {
+                      const dateString = formatDateToLocalISO(date)
+                      setFormData({
+                        ...formData,
+                        dueDate: dateString,
+                      })
+                    }
+                  }}
+                  placeholder="Selecionar data"
+                />
+              </div>
+            </div>
+            <FormTextarea
+              label="Notas (opcional)"
+              placeholder="Adicione observações sobre essa transação..."
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              rows={2}
+            />
+          </div>
+        </div>
+
+        {/* Coluna Direita (1/3) */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Modo de Pagamento */}
+          <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+            <h3 className="text-gh-text font-semibold">Pagamento</h3>
+            <PaymentModeConfig config={paymentConfig} onChange={setPaymentConfig} />
+          </div>
+
+          {/* Recorrência */}
+          <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+            <h3 className="text-gh-text font-semibold">Recorrência</h3>
+            <RecurrenceConfigComponent config={recurrenceConfig} onChange={setRecurrenceConfig} />
+          </div>
+
+          {/* Juros/Taxas */}
+          <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+            <h3 className="text-gh-text font-semibold">Juros/Taxas</h3>
+            <InterestConfigComponent interest={interest} onChange={setInterest} />
+          </div>
+        </div>
+      </form>
+    </>
   )
 }

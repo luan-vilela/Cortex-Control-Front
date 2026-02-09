@@ -321,7 +321,7 @@ export default function FinanceiroPage() {
               : 'Nenhuma transação encontrada'
           }
           rowActions={rowActions}
-          pageSize={20}
+          pageSize={10}
           maxPageSize={100}
         />
       </div>
