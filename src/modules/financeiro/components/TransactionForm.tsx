@@ -62,19 +62,51 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
 
   const { mutate: createTransaction, isPending } = useCreateTransaction(workspaceId)
 
+  /**
+   * Handler para mudanças no modo de pagamento
+   * Se mudar para Parcelado, remove recorrência
+   */
+  const handlePaymentConfigChange = (config: PaymentConfig) => {
+    setPaymentConfig(config)
+    // Se for Parcelado, desabilita recorrência
+    if (config.mode === PaymentMode.INSTALLMENT) {
+      setRecurrenceConfig(undefined)
+    }
+  }
+
+  /**
+   * Handler para mudanças em recorrência
+   * Se ativar recorrência (config !== undefined), muda pagamento para À Vista
+   */
+  const handleRecurrenceConfigChange = (config: RecurrenceConfig | undefined) => {
+    setRecurrenceConfig(config)
+    // Se ativar recorrência, muda para À Vista
+    if (config !== undefined) {
+      setPaymentConfig({ mode: PaymentMode.CASH })
+    }
+  }
+
+  /**
+   * Converte string de data (YYYY-MM-DD) para Date em timezone local
+   * Evita problema onde new Date("2026-02-08") cria data em UTC
+   */
   const parseLocalDateString = (dateStr: string): Date => {
     const [year, month, day] = dateStr.split('-').map(Number)
     const date = new Date(year, month - 1, day)
     return date
   }
-
+  /**
+   * Converte Date para string ISO local (YYYY-MM-DD)
+   * IMPORTANTE: Usa getFullYear/getMonth/getDate (local) não UTC!
+   * Isso preserva a data local sem conversão para UTC
+   */
   const formatDateToLocalISO = (date: Date): string => {
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
+    const result = `${year}-${month}-${day}`
+    return result
   }
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -93,9 +125,10 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
       sourceId: 'manual-' + Date.now(),
       amount: parseFloat(formData.amount),
       description: formData.description,
-      dueDate: formData.dueDate,
+      dueDate: formData.dueDate, // Send as YYYY-MM-DD string, backend parses correctly
       notes: formData.notes || undefined,
       paymentConfig,
+      // Adiciona o workspace como ator com o tipo selecionado (INCOME/EXPENSE)
       actors: [
         {
           workspaceId,
@@ -124,43 +157,36 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
   return (
     <>
       {/* Header com Título e Botões */}
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between px-6">
-        <div className="flex-1">
-          <h2 className="text-gh-text text-xl sm:text-2xl font-bold mb-1">
-            Nova Transação
-          </h2>
-          <p className="text-gh-text-secondary text-xs sm:text-sm">
-            Preencha os detalhes da transação
-          </p>
+      <div className="mb-6 flex items-center justify-between px-4 py-4">
+        <div>
+          <h1 className="text-gh-text text-2xl font-bold">Nova Transação</h1>
+          <p className="text-gh-text-secondary text-sm">Preencha os detalhes da transação</p>
         </div>
-        <div className="flex gap-2 w-full md:w-auto">
+        <div className="flex gap-3">
           {onCancel && (
-            <Button
-              type="button"
-              onClick={onCancel}
-              variant="secondary"
-              size="sm"
-              className="flex-1 md:flex-none"
-            >
-              Descartar
+            <Button type="button" onClick={onCancel} variant="outline">
+              Cancelar
             </Button>
           )}
           <Button
             form="transaction-form"
             type="submit"
             disabled={isPending}
-            size="sm"
-            className="flex-1 md:flex-none"
+            className="bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
           >
             {isPending ? 'Salvando...' : 'Criar Transação'}
           </Button>
         </div>
       </div>
 
-      {/* Form em Grid */}
-      <form id="transaction-form" onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-6 py-6">
+      {/* Form em Grid 2 Colunas */}
+      <form
+        id="transaction-form"
+        onSubmit={handleSubmit}
+        className="grid grid-cols-3 gap-6 px-4 py-6"
+      >
         {/* Coluna Esquerda (2/3) */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="col-span-2 space-y-6">
           {/* Tipo de Transação */}
           <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
             <h3 className="text-gh-text font-semibold">Tipo de Transação</h3>
@@ -210,7 +236,7 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
           </div>
 
           {/* Informações */}
-          <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+          <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
             <h3 className="text-gh-text font-semibold">Informações</h3>
             <FormInput
               type="text"
@@ -254,20 +280,30 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
               rows={2}
             />
           </div>
+
+          {/* Pagamento */}
+          <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+            <h3 className="text-gh-text font-semibold">Pagamento</h3>
+            <PaymentModeConfig config={paymentConfig} onChange={handlePaymentConfigChange} />
+          </div>
         </div>
 
         {/* Coluna Direita (1/3) */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Modo de Pagamento */}
-          <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
-            <h3 className="text-gh-text font-semibold">Pagamento</h3>
-            <PaymentModeConfig config={paymentConfig} onChange={setPaymentConfig} />
-          </div>
-
-          {/* Recorrência */}
-          <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+        <div className="col-span-1 space-y-6">
+          {/* Recorrência - Desabilitada se Parcelado */}
+          <div
+            className={`space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800 ${paymentConfig?.mode === PaymentMode.INSTALLMENT ? 'pointer-events-none opacity-50' : ''}`}
+          >
             <h3 className="text-gh-text font-semibold">Recorrência</h3>
-            <RecurrenceConfigComponent config={recurrenceConfig} onChange={setRecurrenceConfig} />
+            <RecurrenceConfigComponent
+              config={recurrenceConfig}
+              onChange={handleRecurrenceConfigChange}
+            />
+            {paymentConfig?.mode === PaymentMode.INSTALLMENT && (
+              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                Recorrência não disponível para pagamentos parcelados
+              </p>
+            )}
           </div>
 
           {/* Juros/Taxas */}

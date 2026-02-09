@@ -1,163 +1,160 @@
-"use client";
+'use client'
 
-import { InterestConfig, InterestType } from "../types";
-import { useState } from "react";
+import type { InterestConfig } from '../types'
+import { InterestType } from '../types'
+
+import { useState } from 'react'
+
+import { Input } from '@/components/ui/input'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
 interface InterestConfigComponentProps {
-  interest?: InterestConfig;
-  onChange: (interest: InterestConfig | undefined) => void;
+  interest?: InterestConfig
+  onChange: (interest: InterestConfig | undefined) => void
 }
 
-export function InterestConfigComponent({
-  interest,
-  onChange,
-}: InterestConfigComponentProps) {
-  const [type, setType] = useState<InterestType>(
-    interest?.type || InterestType.PERCENTAGE,
-  );
+export function InterestConfigComponent({ interest, onChange }: InterestConfigComponentProps) {
+  const [type, setType] = useState<InterestType>(interest?.type || InterestType.PERCENTAGE)
+
+  const handleEnableInterest = () => {
+    const newConfig: InterestConfig = {
+      type: InterestType.PERCENTAGE,
+      percentage: 1,
+    }
+    onChange(newConfig)
+    setType(InterestType.PERCENTAGE)
+  }
+
+  const handleDisableInterest = () => {
+    onChange(undefined)
+  }
 
   return (
     <div className="space-y-3">
-      {/* Sem Taxas */}
-      <label className="flex items-start gap-3 p-3 border border-gh-border rounded-lg cursor-pointer hover:bg-gh-hover has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-950 transition-colors">
-        <input
-          type="radio"
-          name="interestType"
-          value="none"
-          checked={interest === undefined}
-          onChange={() => onChange(undefined)}
-          className="w-4 h-4 mt-1"
-        />
-        <div className="flex-1">
-          <p className="font-medium text-gh-text">Sem Taxas ou Juros</p>
-          <p className="text-xs text-gh-text-secondary">Transação sem adicionais</p>
+      <RadioGroup
+        value={interest ? 'with' : 'without'}
+        onValueChange={(value) => {
+          if (value === 'without') {
+            handleDisableInterest()
+          } else {
+            handleEnableInterest()
+          }
+        }}
+      >
+        {/* Opção 1: Sem Taxas ou Juros */}
+        <label className="border-input hover:bg-accent has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10 dark:has-[[data-state=checked]]:bg-primary/20 flex cursor-pointer gap-3 rounded-lg border p-3 transition-colors">
+          <RadioGroupItem value="without" id="interest-without" className="mt-1" />
+          <div className="flex-1">
+            <p className="text-foreground font-medium">Sem Taxas ou Juros</p>
+            <p className="text-muted-foreground text-xs">Nenhuma taxa adicional</p>
+          </div>
+        </label>
+
+        {/* Opção 2: Com Taxas ou Juros */}
+        <label className="border-input hover:bg-accent has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10 dark:has-[[data-state=checked]]:bg-primary/20 flex cursor-pointer gap-3 rounded-lg border p-3 transition-colors">
+          <RadioGroupItem value="with" id="interest-with" className="mt-1" />
+          <div className="flex-1">
+            <p className="text-foreground font-medium">Com Taxas ou Juros</p>
+            <p className="text-muted-foreground text-xs">Adicionar juros ou taxas</p>
+          </div>
+        </label>
+      </RadioGroup>
+
+      {/* Opções de Taxas - Aparecem quando "Com Taxas ou Juros" selecionado */}
+      {interest && (
+        <div className="border-border space-y-3 border-t pt-4">
+          {/* Tipo: Percentual ou Valor Fixo */}
+          <div className="flex gap-2">
+            <label className="border-input hover:bg-accent flex flex-1 cursor-pointer items-center gap-2 rounded border p-2 transition-colors">
+              <input
+                type="radio"
+                name="chargeType"
+                value="percentage"
+                checked={type === InterestType.PERCENTAGE}
+                onChange={() => {
+                  setType(InterestType.PERCENTAGE)
+                  onChange({
+                    type: InterestType.PERCENTAGE,
+                    percentage: interest.percentage || 1,
+                  })
+                }}
+                className="h-3 w-3"
+              />
+              <span className="text-foreground text-xs font-medium">Percentual (%)</span>
+            </label>
+
+            <label className="border-input hover:bg-accent flex flex-1 cursor-pointer items-center gap-2 rounded border p-2 transition-colors">
+              <input
+                type="radio"
+                name="chargeType"
+                value="flat"
+                checked={type === InterestType.FLAT}
+                onChange={() => {
+                  setType(InterestType.FLAT)
+                  onChange({
+                    type: InterestType.FLAT,
+                    flatAmount: interest.flatAmount || 0,
+                  })
+                }}
+                className="h-3 w-3"
+              />
+              <span className="text-foreground text-xs font-medium">Valor Fixo (R$)</span>
+            </label>
+          </div>
+
+          {/* Campo de Valor */}
+          <div className="space-y-2">
+            <label className="text-muted-foreground text-xs font-medium">
+              {type === InterestType.PERCENTAGE ? 'Taxa (%)' : 'Valor (R$)'}
+            </label>
+            <Input
+              type="number"
+              step="0.01"
+              min="0"
+              value={
+                type === InterestType.PERCENTAGE
+                  ? interest.percentage || 0
+                  : interest.flatAmount || 0
+              }
+              onChange={(e) => {
+                const value = parseFloat(e.target.value) || 0
+                if (type === InterestType.PERCENTAGE) {
+                  onChange({
+                    type,
+                    percentage: value,
+                    description: interest.description,
+                  })
+                } else {
+                  onChange({
+                    type,
+                    flatAmount: value,
+                    description: interest.description,
+                  })
+                }
+              }}
+              placeholder="0"
+            />
+          </div>
+
+          {/* Campo de Descrição */}
+          <div className="space-y-2">
+            <label className="text-muted-foreground text-xs font-medium">
+              Descrição (opcional)
+            </label>
+            <Input
+              type="text"
+              value={interest.description || ''}
+              onChange={(e) =>
+                onChange({
+                  ...interest,
+                  description: e.target.value,
+                })
+              }
+              placeholder="Ex: Taxa de administração"
+            />
+          </div>
         </div>
-      </label>
-
-      {/* Com Juros/Taxas */}
-      <label className="flex items-start gap-3 p-3 border border-gh-border rounded-lg cursor-pointer hover:bg-gh-hover has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-950 transition-colors">
-        <input
-          type="radio"
-          name="interestType"
-          value="with-tax"
-          checked={interest !== undefined}
-          onChange={() => {
-            if (!interest) {
-              onChange({ type: InterestType.PERCENTAGE, description: "" });
-            }
-          }}
-          className="w-4 h-4 mt-1"
-        />
-        <div className="flex-1">
-          <p className="font-medium text-gh-text">Com Taxas ou Juros</p>
-          <p className="text-xs text-gh-text-secondary">
-            {interest
-              ? type === InterestType.PERCENTAGE
-                ? `${interest.percentage}%`
-                : `R$ ${interest.flatAmount}`
-              : "Adicionar taxa"}
-          </p>
-
-          {interest && (
-            <div className="mt-3 space-y-3">
-              {/* Tipo de juros */}
-              <div>
-                <label className="text-xs font-medium text-gh-text-secondary">
-                  Tipo de Juros
-                </label>
-                <div className="space-y-2 mt-2">
-                  {[InterestType.PERCENTAGE, InterestType.FLAT].map((t) => (
-                    <label
-                      key={t}
-                      className="flex items-center gap-3 p-2 border border-gh-border rounded cursor-pointer hover:bg-gh-hover"
-                    >
-                      <input
-                        type="radio"
-                        name="interestType"
-                        value={t}
-                        checked={type === t}
-                        onChange={() => {
-                          setType(t);
-                          onChange(
-                            interest
-                              ? { ...interest, type: t }
-                              : { type: t, description: "" },
-                          );
-                        }}
-                        className="w-4 h-4"
-                      />
-                      <span className="text-sm text-gh-text">
-                        {t === InterestType.PERCENTAGE
-                          ? "Percentual (%)"
-                          : "Valor Fixo (R$)"}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Valor */}
-              <div>
-                <label className="text-xs font-medium text-gh-text-secondary">
-                  {type === InterestType.PERCENTAGE ? "Percentual" : "Valor"}
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={
-                    type === InterestType.PERCENTAGE
-                      ? interest?.percentage || ""
-                      : interest?.flatAmount || ""
-                  }
-                  onChange={(e) => {
-                    const value = e.target.value
-                      ? parseFloat(e.target.value)
-                      : undefined;
-                    onChange({
-                      type,
-                      percentage:
-                        type === InterestType.PERCENTAGE ? value : undefined,
-                      flatAmount: type === InterestType.FLAT ? value : undefined,
-                      description: interest?.description,
-                    });
-                  }}
-                  className="w-full mt-1 px-3 py-2 text-sm border border-gh-border rounded bg-white dark:bg-gh-bg text-gh-text"
-                  placeholder={
-                    type === InterestType.PERCENTAGE ? "Ex: 5.00" : "Ex: 150.00"
-                  }
-                />
-              </div>
-
-              {/* Descrição */}
-              <div>
-                <label className="text-xs font-medium text-gh-text-secondary">
-                  Descrição (opcional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="ex: Taxa de juros mensal"
-                  value={interest?.description || ""}
-                  onChange={(e) =>
-                    onChange({
-                      type,
-                      percentage:
-                        type === InterestType.PERCENTAGE
-                          ? interest?.percentage
-                          : undefined,
-                      flatAmount:
-                        type === InterestType.FLAT
-                          ? interest?.flatAmount
-                          : undefined,
-                      description: e.target.value,
-                    })
-                  }
-                  className="w-full mt-1 px-3 py-2 text-sm border border-gh-border rounded bg-white dark:bg-gh-bg text-gh-text"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </label>
+      )}
     </div>
-  );
+  )
 }

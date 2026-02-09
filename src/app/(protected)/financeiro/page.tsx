@@ -143,11 +143,10 @@ export default function FinanceiroPage() {
         if (row.status !== TransactionStatus.PAID) {
           updateTransaction({
             transactionId: row.id,
-            payload: { isPaid: true, paidDate: new Date() },
+            payload: { status: TransactionStatus.PAID, paidDate: new Date() },
           })
         }
       },
-      visible: (row) => row.status !== TransactionStatus.PAID,
     },
     {
       id: 'delete',

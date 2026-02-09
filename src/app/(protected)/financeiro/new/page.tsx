@@ -1,6 +1,5 @@
 'use client'
 
-import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 import { TransactionForm } from '@/modules/financeiro/components'

@@ -1,29 +1,17 @@
 'use client'
 
-import {
-  CashPaymentConfig,
-  InstallmentPaymentConfig,
-  InstallmentPlanType,
-  PaymentMode,
-} from '../types'
-
-import { useState } from 'react'
+import type { CashPaymentConfig, InstallmentPaymentConfig } from '../types'
+import { InstallmentPlanType, PaymentMode } from '../types'
 
 import { Input } from '@/components/ui/input'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
 interface PaymentModeConfigProps {
   config?: CashPaymentConfig | InstallmentPaymentConfig
   onChange: (config: CashPaymentConfig | InstallmentPaymentConfig) => void
 }
 
-const PAYMENT_MODE_LABELS: Record<PaymentMode, string> = {
-  [PaymentMode.CASH]: 'À Vista',
-  [PaymentMode.INSTALLMENT]: 'Parcelado',
-}
-
 export function PaymentModeConfig({ config, onChange }: PaymentModeConfigProps) {
-  const [expanded, setExpanded] = useState(false)
-
   const handleModeChange = (mode: PaymentMode) => {
     if (mode === PaymentMode.CASH) {
       const newConfig: CashPaymentConfig = { mode: PaymentMode.CASH }
@@ -42,46 +30,34 @@ export function PaymentModeConfig({ config, onChange }: PaymentModeConfigProps) 
 
   return (
     <div className="space-y-3">
-      <h3 className="text-gh-text text-sm font-medium">Modo de Pagamento</h3>
-      <div className="grid grid-cols-2 gap-3">
+      <RadioGroup
+        value={config?.mode || PaymentMode.CASH}
+        onValueChange={(value) => handleModeChange(value as PaymentMode)}
+      >
         {/* À Vista */}
-        <label className="border-gh-border hover:bg-gh-hover flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-950">
-          <input
-            type="radio"
-            name="paymentMode"
-            value={PaymentMode.CASH}
-            checked={config?.mode === PaymentMode.CASH}
-            onChange={() => handleModeChange(PaymentMode.CASH)}
-            className="h-4 w-4"
-          />
-          <div>
-            <p className="text-gh-text text-sm font-medium">À Vista</p>
-            <p className="text-gh-text-secondary text-xs">Pagamento único</p>
+        <label className="flex cursor-pointer gap-3 rounded-lg border border-input p-3 transition-colors hover:bg-accent has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10 dark:has-[[data-state=checked]]:bg-primary/20">
+          <RadioGroupItem value={PaymentMode.CASH} id="payment-cash" className="mt-1" />
+          <div className="flex-1">
+            <p className="font-medium text-foreground">À Vista</p>
+            <p className="text-xs text-muted-foreground">Pagamento único</p>
           </div>
         </label>
 
         {/* Parcelado */}
-        <label className="border-gh-border hover:bg-gh-hover flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-950">
-          <input
-            type="radio"
-            name="paymentMode"
-            value={PaymentMode.INSTALLMENT}
-            checked={config?.mode === PaymentMode.INSTALLMENT}
-            onChange={() => handleModeChange(PaymentMode.INSTALLMENT)}
-            className="h-4 w-4"
-          />
-          <div>
-            <p className="text-gh-text text-sm font-medium">Parcelado</p>
-            <p className="text-gh-text-secondary text-xs">Múltiplas parcelas</p>
+        <label className="flex cursor-pointer gap-3 rounded-lg border border-input p-3 transition-colors hover:bg-accent has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10 dark:has-[[data-state=checked]]:bg-primary/20">
+          <RadioGroupItem value={PaymentMode.INSTALLMENT} id="payment-installment" className="mt-1" />
+          <div className="flex-1">
+            <p className="font-medium text-foreground">Parcelado</p>
+            <p className="text-xs text-muted-foreground">Múltiplas parcelas</p>
           </div>
         </label>
-      </div>
+      </RadioGroup>
 
       {/* Campo de Parcelas */}
       {config?.mode === PaymentMode.INSTALLMENT && (
-        <div className="border-gh-border mt-4 border-t pt-4">
+        <div className="border-t border-border pt-4">
           <label className="mb-2 block">
-            <p className="text-gh-text mb-2 text-sm font-medium">Número de Parcelas</p>
+            <p className="mb-2 text-sm font-medium text-foreground">Número de Parcelas</p>
             <Input
               type="number"
               min="1"
@@ -96,7 +72,6 @@ export function PaymentModeConfig({ config, onChange }: PaymentModeConfigProps) 
                 }
                 onChange(newConfig)
               }}
-              className="w-full"
               placeholder="Digite o número de parcelas"
             />
           </label>
