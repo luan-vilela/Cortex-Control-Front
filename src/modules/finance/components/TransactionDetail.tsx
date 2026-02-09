@@ -1,34 +1,28 @@
-"use client";
+'use client'
 
-import { FinanceiroTransaction, TransactionActorType } from "../types";
-import { SourceBadge } from "./SourceBadge";
-import { StatusBadge } from "./StatusBadge";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { FinanceiroTransaction, TransactionActorType } from '../types'
+
+import { formatCurrency, formatDate } from '@/lib/utils'
+
+import { SourceBadge } from './SourceBadge'
+import { StatusBadge } from './StatusBadge'
 
 const partyTypeLabels: Record<TransactionActorType, string> = {
-  [TransactionActorType.INCOME]: "Entrada",
-  [TransactionActorType.EXPENSE]: "Saída",
-};
+  [TransactionActorType.INCOME]: 'Entrada',
+  [TransactionActorType.EXPENSE]: 'Saída',
+}
 
-export function TransactionDetail({
-  transaction,
-}: {
-  transaction: FinanceiroTransaction;
-}) {
+export function TransactionDetail({ transaction }: { transaction: FinanceiroTransaction }) {
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gh-text">
-            {transaction.description}
-          </h1>
-          <p className="text-sm text-gh-text-secondary mt-1">
-            Transação #{transaction.id}
-          </p>
+          <h1 className="text-gh-text text-2xl font-bold">{transaction.description}</h1>
+          <p className="text-gh-text-secondary mt-1 text-sm">Transação #{transaction.id}</p>
         </div>
         <div className="text-right">
-          <p className="text-3xl font-bold text-gh-text">
+          <p className="text-gh-text text-3xl font-bold">
             {formatCurrency(Number(transaction.amount))}
           </p>
           <div className="mt-2">
@@ -38,41 +32,36 @@ export function TransactionDetail({
       </div>
 
       {/* Main Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-4 border border-gh-border rounded-lg bg-gh-card">
-          <p className="text-xs font-medium text-gh-text-secondary uppercase mb-2">
-            Origem
-          </p>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="border-gh-border bg-gh-card rounded-lg border p-4">
+          <p className="text-gh-text-secondary mb-2 text-xs font-medium uppercase">Origem</p>
           <div className="mb-3">
             <SourceBadge sourceType={transaction.sourceType} showIcon={true} />
           </div>
-          <p className="text-sm text-gh-text">
+          <p className="text-gh-text text-sm">
             <span className="font-medium">ID:</span> {transaction.sourceId}
           </p>
           {transaction.sourceMetadata?.orderNumber && (
-            <p className="text-sm text-gh-text mt-2">
-              <span className="font-medium">Número:</span>{" "}
-              {transaction.sourceMetadata.orderNumber}
+            <p className="text-gh-text mt-2 text-sm">
+              <span className="font-medium">Número:</span> {transaction.sourceMetadata.orderNumber}
             </p>
           )}
         </div>
 
-        <div className="p-4 border border-gh-border rounded-lg bg-gh-card">
-          <p className="text-xs font-medium text-gh-text-secondary uppercase mb-3">
-            Datas
-          </p>
+        <div className="border-gh-border bg-gh-card rounded-lg border p-4">
+          <p className="text-gh-text-secondary mb-3 text-xs font-medium uppercase">Datas</p>
           <div className="space-y-2">
-            <p className="text-sm text-gh-text">
-              <span className="font-medium">Vencimento:</span>{" "}
+            <p className="text-gh-text text-sm">
+              <span className="font-medium">Vencimento:</span>{' '}
               {formatDate(new Date(transaction.dueDate))}
             </p>
             {transaction.paidDate && (
-              <p className="text-sm text-gh-text">
-                <span className="font-medium">Pagamento:</span>{" "}
+              <p className="text-gh-text text-sm">
+                <span className="font-medium">Pagamento:</span>{' '}
                 {formatDate(new Date(transaction.paidDate))}
               </p>
             )}
-            <p className="text-xs text-gh-text-secondary mt-3">
+            <p className="text-gh-text-secondary mt-3 text-xs">
               Criado em {formatDate(new Date(transaction.createdAt))}
             </p>
           </div>
@@ -80,26 +69,26 @@ export function TransactionDetail({
       </div>
 
       {/* Parties */}
-      <div className="p-4 border border-gh-border rounded-lg bg-gh-card">
-        <p className="text-xs font-medium text-gh-text-secondary uppercase mb-4">
-          Parties ({transaction.parties.length})
+      <div className="border-gh-border bg-gh-card rounded-lg border p-4">
+        <p className="text-gh-text-secondary mb-4 text-xs font-medium uppercase">
+          Envolvidos ({transaction.parties.length})
         </p>
         <div className="space-y-3">
           {transaction.parties.map((party) => (
             <div
               key={party.id}
-              className="flex items-center justify-between p-3 border border-gh-border rounded bg-white dark:bg-gh-card"
+              className="border-gh-border dark:bg-gh-card flex items-center justify-between rounded border bg-white p-3"
             >
               <div>
-                <p className="text-sm font-medium text-gh-text">
-                  {party.workspaceId}
+                <p className="text-gh-text text-sm font-medium">
+                  {party.partyMetadata?.name || 'Sistema'}
                 </p>
-                <p className="text-xs text-gh-text-secondary mt-1">
+                <p className="text-gh-text-secondary mt-1 text-xs">
                   {partyTypeLabels[party.partyType]}
                 </p>
               </div>
               {party.partyStatus && (
-                <div className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700">
+                <div className="rounded bg-blue-100 px-2 py-1 text-xs text-blue-700">
                   {party.partyStatus}
                 </div>
               )}
@@ -110,15 +99,11 @@ export function TransactionDetail({
 
       {/* Notas */}
       {transaction.notes && (
-        <div className="p-4 border border-gh-border rounded-lg bg-gh-card">
-          <p className="text-xs font-medium text-gh-text-secondary uppercase mb-3">
-            Notas
-          </p>
-          <p className="text-sm text-gh-text whitespace-pre-wrap">
-            {transaction.notes}
-          </p>
+        <div className="border-gh-border bg-gh-card rounded-lg border p-4">
+          <p className="text-gh-text-secondary mb-3 text-xs font-medium uppercase">Notas</p>
+          <p className="text-gh-text text-sm whitespace-pre-wrap">{transaction.notes}</p>
         </div>
       )}
     </div>
-  );
+  )
 }

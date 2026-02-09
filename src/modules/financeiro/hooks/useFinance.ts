@@ -1,19 +1,21 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAlerts } from "@/contexts/AlertContext";
-import { financeService } from "../finance.service";
+import { financeService } from '../finance.service'
 import {
-  FinanceiroTransaction,
-  CreateTransactionPayload,
-  UpdateTransactionPayload,
-  GetTransactionsFilters,
-  GetTransactionsResponse,
-  TransactionParty,
-} from "../types";
+  type CreateTransactionPayload,
+  type FinanceiroTransaction,
+  type GetTransactionsFilters,
+  type GetTransactionsResponse,
+  type TransactionParty,
+  type UpdateTransactionPayload,
+} from '../types'
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+
+import { useAlerts } from '@/contexts/AlertContext'
 
 // Query key factory
 export const financeQueryKeys = {
-  all: ["finance"],
-  transactions: () => [...financeQueryKeys.all, "transactions"],
+  all: ['finance'],
+  transactions: () => [...financeQueryKeys.all, 'transactions'],
   transaction: (workspaceId: string, transactionId: number) => [
     ...financeQueryKeys.transactions(),
     workspaceId,
@@ -24,12 +26,8 @@ export const financeQueryKeys = {
     workspaceId,
     filters,
   ],
-  actors: (transactionId: number) => [
-    ...financeQueryKeys.all,
-    "actors",
-    transactionId,
-  ],
-};
+  actors: (transactionId: number) => [...financeQueryKeys.all, 'actors', transactionId],
+}
 
 /**
  * Hook para listar transações
@@ -37,39 +35,34 @@ export const financeQueryKeys = {
 export function useTransactions(
   workspaceId: string,
   filters?: GetTransactionsFilters,
-  enabled = true,
+  enabled = true
 ) {
   return useQuery<GetTransactionsResponse>({
     queryKey: financeQueryKeys.transactionList(workspaceId, filters),
     queryFn: () => financeService.getTransactions(workspaceId, filters),
     enabled: enabled && !!workspaceId,
     staleTime: 5 * 60 * 1000, // 5 minutos
-  });
+  })
 }
 
 /**
  * Hook para obter detalhes de uma transação
  */
-export function useTransactionDetail(
-  workspaceId: string,
-  transactionId: number,
-  enabled = true,
-) {
+export function useTransactionDetail(workspaceId: string, transactionId: number, enabled = true) {
   return useQuery<FinanceiroTransaction>({
     queryKey: financeQueryKeys.transaction(workspaceId, transactionId),
-    queryFn: () =>
-      financeService.getTransactionDetail(workspaceId, transactionId),
+    queryFn: () => financeService.getTransactionDetail(workspaceId, transactionId),
     enabled: enabled && !!workspaceId && !!transactionId,
     staleTime: 5 * 60 * 1000,
-  });
+  })
 }
 
 /**
  * Hook para criar transação
  */
 export function useCreateTransaction(workspaceId: string) {
-  const queryClient = useQueryClient();
-  const { addAlert } = useAlerts();
+  const queryClient = useQueryClient()
+  const { addAlert } = useAlerts()
 
   return useMutation({
     mutationFn: (payload: CreateTransactionPayload) =>
@@ -78,36 +71,61 @@ export function useCreateTransaction(workspaceId: string) {
       // Invalida o cache de transações
       queryClient.invalidateQueries({
         queryKey: financeQueryKeys.transactionList(workspaceId),
-      });
+      })
 
-      addAlert(
-        "success",
-        `Transação ${data.id} criada com sucesso`,
-        "Transação criada",
-        3000,
-      );
+      addAlert('success', `Transação ${data.id} criada com sucesso`, 'Transação criada', 3000)
     },
     onError: (error: any) => {
       addAlert(
-        "error",
-        error?.response?.data?.message ||
-          "Erro ao criar transação. Tente novamente.",
-        "Erro ao criar transação",
-        5000,
-      );
+        'error',
+        error?.response?.data?.message || 'Erro ao criar transação. Tente novamente.',
+        'Erro ao criar transação',
+        5000
+      )
     },
-  });
+  })
+}
+
+/**
+ * Hook para atualizar transação (genérico, sem ID fixo)
+ */
+export function useUpdateTransactionGeneric(workspaceId: string) {
+  const queryClient = useQueryClient()
+  const { addAlert } = useAlerts()
+
+  return useMutation({
+    mutationFn: ({
+      transactionId,
+      payload,
+    }: {
+      transactionId: number
+      payload: UpdateTransactionPayload
+    }) => financeService.updateTransaction(workspaceId, transactionId, payload),
+    onSuccess: () => {
+      // Invalida a lista de transações
+      queryClient.invalidateQueries({
+        queryKey: financeQueryKeys.transactionList(workspaceId),
+      })
+
+      addAlert('success', 'Transação atualizada com sucesso', 'Transação atualizada', 3000)
+    },
+    onError: (error: any) => {
+      addAlert(
+        'error',
+        error?.response?.data?.message || 'Erro ao atualizar transação. Tente novamente.',
+        'Erro ao atualizar transação',
+        5000
+      )
+    },
+  })
 }
 
 /**
  * Hook para atualizar transação
  */
-export function useUpdateTransaction(
-  workspaceId: string,
-  transactionId: number,
-) {
-  const queryClient = useQueryClient();
-  const { addAlert } = useAlerts();
+export function useUpdateTransaction(workspaceId: string, transactionId: number) {
+  const queryClient = useQueryClient()
+  const { addAlert } = useAlerts()
 
   return useMutation({
     mutationFn: (payload: UpdateTransactionPayload) =>
@@ -116,36 +134,30 @@ export function useUpdateTransaction(
       // Invalida caches relevantes
       queryClient.invalidateQueries({
         queryKey: financeQueryKeys.transaction(workspaceId, transactionId),
-      });
+      })
       queryClient.invalidateQueries({
         queryKey: financeQueryKeys.transactionList(workspaceId),
-      });
+      })
 
-      addAlert(
-        "success",
-        "Transação atualizada com sucesso",
-        "Transação atualizada",
-        3000,
-      );
+      addAlert('success', 'Transação atualizada com sucesso', 'Transação atualizada', 3000)
     },
     onError: (error: any) => {
       addAlert(
-        "error",
-        error?.response?.data?.message ||
-          "Erro ao atualizar transação. Tente novamente.",
-        "Erro ao atualizar transação",
-        5000,
-      );
+        'error',
+        error?.response?.data?.message || 'Erro ao atualizar transação. Tente novamente.',
+        'Erro ao atualizar transação',
+        5000
+      )
     },
-  });
+  })
 }
 
 /**
  * Hook para deletar transação
  */
 export function useDeleteTransaction(workspaceId: string) {
-  const queryClient = useQueryClient();
-  const { addAlert } = useAlerts();
+  const queryClient = useQueryClient()
+  const { addAlert } = useAlerts()
 
   return useMutation({
     mutationFn: (transactionId: number) =>
@@ -154,25 +166,19 @@ export function useDeleteTransaction(workspaceId: string) {
       // Invalida o cache de transações
       queryClient.invalidateQueries({
         queryKey: financeQueryKeys.transactionList(workspaceId),
-      });
+      })
 
-      addAlert(
-        "success",
-        "Transação deletada com sucesso",
-        "Transação deletada",
-        3000,
-      );
+      addAlert('success', 'Transação deletada com sucesso', 'Transação deletada', 3000)
     },
     onError: (error: any) => {
       addAlert(
-        "error",
-        error?.response?.data?.message ||
-          "Erro ao deletar transação. Tente novamente.",
-        "Erro ao deletar transação",
-        5000,
-      );
+        'error',
+        error?.response?.data?.message || 'Erro ao deletar transação. Tente novamente.',
+        'Erro ao deletar transação',
+        5000
+      )
     },
-  });
+  })
 }
 
 /**
@@ -183,18 +189,15 @@ export function useTransactionActors(transactionId: number, enabled = true) {
     queryKey: financeQueryKeys.actors(transactionId),
     queryFn: () => financeService.getTransactionActors(transactionId),
     enabled: enabled && !!transactionId,
-  });
+  })
 }
 
 /**
  * Hook para adicionar ator a transação
  */
-export function useAddActorToTransaction(
-  workspaceId: string,
-  transactionId: number,
-) {
-  const queryClient = useQueryClient();
-  const { addAlert } = useAlerts();
+export function useAddActorToTransaction(workspaceId: string, transactionId: number) {
+  const queryClient = useQueryClient()
+  const { addAlert } = useAlerts()
 
   return useMutation({
     mutationFn: (payload: { workspaceId: string; actorType: string }) =>
@@ -205,23 +208,17 @@ export function useAddActorToTransaction(
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: financeQueryKeys.actors(transactionId),
-      });
+      })
 
-      addAlert(
-        "success",
-        "Ator adicionado à transação com sucesso",
-        "Ator adicionado",
-        3000,
-      );
+      addAlert('success', 'Ator adicionado à transação com sucesso', 'Ator adicionado', 3000)
     },
     onError: (error: any) => {
       addAlert(
-        "error",
-        error?.response?.data?.message ||
-          "Erro ao adicionar ator. Tente novamente.",
-        "Erro ao adicionar ator",
-        5000,
-      );
+        'error',
+        error?.response?.data?.message || 'Erro ao adicionar ator. Tente novamente.',
+        'Erro ao adicionar ator',
+        5000
+      )
     },
-  });
+  })
 }

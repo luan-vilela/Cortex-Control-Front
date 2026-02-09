@@ -1,47 +1,45 @@
-"use client";
+'use client'
 
-import { useParams, useRouter } from "next/navigation";
-import { useActiveWorkspace } from "@/modules/workspace/hooks/useActiveWorkspace";
-import { useModuleConfig, useBreadcrumb } from "@/modules/workspace/hooks";
+import { useState } from 'react'
+
+import { ArrowLeft, DollarSign, Trash2 } from 'lucide-react'
+import { useParams, useRouter } from 'next/navigation'
+
+import { Button } from '@/components/ui/button'
+import { TransactionDetail } from '@/modules/financeiro/components'
 import {
+  useDeleteTransaction,
   useTransactionDetail,
   useUpdateTransaction,
-  useDeleteTransaction,
-} from "@/modules/finance/hooks/useFinance";
-import { TransactionDetail } from "@/modules/finance/components";
-import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Trash2, DollarSign } from "lucide-react";
-import { TransactionStatus } from "@/modules/finance/types";
-import { useState } from "react";
+} from '@/modules/financeiro/hooks/useFinance'
+import { TransactionStatus } from '@/modules/financeiro/types'
+import { ModuleGuard } from '@/modules/workspace/components/ModuleGuard'
+import { useBreadcrumb, useModuleConfig } from '@/modules/workspace/hooks'
+import { useActiveWorkspace } from '@/modules/workspace/hooks/useActiveWorkspace'
 
 export default function TransactionDetailPage() {
-  const router = useRouter();
-  const params = useParams();
-  const { activeWorkspace } = useActiveWorkspace();
-  const { moduleRoutes } = useModuleConfig();
-  const [isChangingStatus, setIsChangingStatus] = useState(false);
+  const router = useRouter()
+  const params = useParams()
+  const { activeWorkspace } = useActiveWorkspace()
+  const { moduleRoutes } = useModuleConfig()
+  const [isChangingStatus, setIsChangingStatus] = useState(false)
 
-  const transactionId = parseInt(params.transactionId as string, 10);
-  const workspaceId = activeWorkspace?.id || "";
+  const transactionId = parseInt(params.transactionId as string, 10)
+  const workspaceId = activeWorkspace?.id || ''
 
   const {
     data: transaction,
     isLoading,
     error,
-  } = useTransactionDetail(
-    workspaceId,
-    transactionId,
-    !!workspaceId && !isNaN(transactionId),
-  );
+  } = useTransactionDetail(workspaceId, transactionId, !!workspaceId && !isNaN(transactionId))
 
   // Atualizar breadcrumb quando transação carrega
   useBreadcrumb(
     transaction
       ? [
           {
-            label: "Finanças",
-            href: "/finance",
+            label: 'Finanças',
+            href: '/finance',
             icon: DollarSign,
           },
           {
@@ -50,48 +48,43 @@ export default function TransactionDetailPage() {
         ]
       : [
           {
-            label: "Finanças",
-            href: "/finance",
+            label: 'Finanças',
+            href: '/finance',
             icon: DollarSign,
           },
-        ],
-  );
+        ]
+  )
 
-  const { mutate: updateTransaction } = useUpdateTransaction(
-    workspaceId,
-    transactionId,
-  );
+  const { mutate: updateTransaction } = useUpdateTransaction(workspaceId, transactionId)
 
-  const { mutate: deleteTransaction } = useDeleteTransaction(workspaceId);
+  const { mutate: deleteTransaction } = useDeleteTransaction(workspaceId)
 
   if (!workspaceId) {
     return (
-      <div className="text-center py-12">
+      <div className="py-12 text-center">
         <p className="text-gh-text-secondary">Workspace não disponível</p>
       </div>
-    );
+    )
   }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gh-bg via-gh-bg to-gh-hover p-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="h-96 bg-gh-card border border-gh-border rounded-lg animate-pulse" />
+      <div className="from-gh-bg via-gh-bg to-gh-hover min-h-screen bg-gradient-to-br p-6">
+        <div className="mx-auto max-w-4xl">
+          <div className="bg-gh-card border-gh-border h-96 animate-pulse rounded-lg border" />
         </div>
       </div>
-    );
+    )
   }
 
   if (!transaction) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gh-bg via-gh-bg to-gh-hover p-6">
-        <div className="max-w-4xl mx-auto text-center py-12">
-          <p className="text-gh-text-secondary mb-2">
-            Transação não encontrada
-          </p>
+      <div className="from-gh-bg via-gh-bg to-gh-hover min-h-screen bg-gradient-to-br p-6">
+        <div className="mx-auto max-w-4xl py-12 text-center">
+          <p className="text-gh-text-secondary mb-2">Transação não encontrada</p>
           {error && (
-            <p className="text-red-600 text-sm mb-4">
-              {(error as any)?.message || "Erro ao carregar transação"}
+            <p className="mb-4 text-sm text-red-600">
+              {(error as any)?.message || 'Erro ao carregar transação'}
             </p>
           )}
           <Button
@@ -103,7 +96,7 @@ export default function TransactionDetailPage() {
           </Button>
         </div>
       </div>
-    );
+    )
   }
 
   const handleStatusChange = (newStatus: TransactionStatus) => {
@@ -111,35 +104,35 @@ export default function TransactionDetailPage() {
       { status: newStatus },
       {
         onSuccess: () => {
-          setIsChangingStatus(false);
+          setIsChangingStatus(false)
         },
-      },
-    );
-  };
+      }
+    )
+  }
 
   const handleDelete = () => {
-    if (confirm("Tem certeza que deseja deletar esta transação?")) {
+    if (confirm('Tem certeza que deseja deletar esta transação?')) {
       deleteTransaction(transactionId, {
         onSuccess: () => {
-          router.push(moduleRoutes.finance);
+          router.push(moduleRoutes.finance)
         },
-      });
+      })
     }
-  };
+  }
 
   const handleMarkAsPaid = () => {
     updateTransaction({
       status: TransactionStatus.PAID,
       paidDate: new Date(),
-    });
-  };
+    })
+  }
 
   return (
     <ModuleGuard moduleId="finance" workspaceId={activeWorkspace?.id}>
-      <div className="min-h-screen bg-gradient-to-br from-gh-bg via-gh-bg to-gh-hover p-6">
-        <div className="max-w-4xl mx-auto">
+      <div className="from-gh-bg via-gh-bg to-gh-hover min-h-screen bg-gradient-to-br p-6">
+        <div className="mx-auto max-w-4xl">
           {/* Header */}
-          <div className="flex items-center gap-4 mb-6">
+          <div className="mb-6 flex items-center gap-4">
             <Button
               variant="ghost"
               size="sm"
@@ -152,12 +145,12 @@ export default function TransactionDetailPage() {
           </div>
 
           {/* Main Content */}
-          <div className="bg-gh-card border border-gh-border rounded-lg p-8 mb-6">
+          <div className="bg-gh-card border-gh-border mb-6 rounded-lg border p-8">
             <TransactionDetail transaction={transaction} />
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 justify-between">
+          <div className="flex justify-between gap-3">
             <div className="flex gap-3">
               {transaction.status === TransactionStatus.PENDING && (
                 <Button
@@ -168,21 +161,20 @@ export default function TransactionDetailPage() {
                 </Button>
               )}
 
-              {[
-                TransactionStatus.PENDING,
-                TransactionStatus.PARTIALLY_PAID,
-              ].includes(transaction.status) && (
-                <div className="relative group">
+              {[TransactionStatus.PENDING, TransactionStatus.PARTIALLY_PAID].includes(
+                transaction.status
+              ) && (
+                <div className="group relative">
                   <Button variant="outline">Alterar Status</Button>
 
-                  <div className="absolute hidden group-hover:block left-0 mt-1 bg-gh-card border border-gh-border rounded-lg shadow-lg z-10 min-w-max">
+                  <div className="bg-gh-card border-gh-border absolute left-0 z-10 mt-1 hidden min-w-max rounded-lg border shadow-lg group-hover:block">
                     {Object.values(TransactionStatus)
                       .filter((s) => s !== transaction.status)
                       .map((status) => (
                         <button
                           key={status}
                           onClick={() => handleStatusChange(status)}
-                          className="block w-full text-left px-4 py-2 text-sm text-gh-text hover:bg-gh-hover first:rounded-t last:rounded-b"
+                          className="text-gh-text hover:bg-gh-hover block w-full px-4 py-2 text-left text-sm first:rounded-t last:rounded-b"
                         >
                           {status}
                         </button>
@@ -204,5 +196,5 @@ export default function TransactionDetailPage() {
         </div>
       </div>
     </ModuleGuard>
-  );
+  )
 }

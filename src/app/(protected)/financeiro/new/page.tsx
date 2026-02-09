@@ -1,72 +1,69 @@
-"use client";
+'use client'
 
-import { useRouter, useParams } from "next/navigation";
-import { useActiveWorkspace } from "@/modules/workspace/hooks/useActiveWorkspace";
-import { TransactionForm } from "@/modules/finance/components";
-import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
-import { ArrowLeft } from "lucide-react";
-import { useBreadcrumb } from "@/modules/workspace/hooks";
+import { ArrowLeft } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+
+import { TransactionForm } from '@/modules/financeiro/components'
+import { ModuleGuard } from '@/modules/workspace/components/ModuleGuard'
+import { useBreadcrumb } from '@/modules/workspace/hooks'
+import { useActiveWorkspace } from '@/modules/workspace/hooks/useActiveWorkspace'
 
 export default function NewTransactionPage() {
-  const router = useRouter();
-  const { activeWorkspace } = useActiveWorkspace();
+  const router = useRouter()
+  const { activeWorkspace } = useActiveWorkspace()
 
   useBreadcrumb([
     {
-      label: "Finanças",
-      href: "/finance",
+      label: 'Finanças',
+      href: '/finance',
     },
     {
-      label: "Nova Transação",
-      href: "/finance/new",
+      label: 'Nova Transação',
+      href: '/finance/new',
     },
-  ]);
+  ])
 
   if (!activeWorkspace?.id) {
     return (
-      <div className="text-center py-12">
+      <div className="py-12 text-center">
         <p className="text-gh-text-secondary">Workspace não disponível</p>
       </div>
-    );
+    )
   }
 
   return (
     <ModuleGuard moduleId="finance" workspaceId={activeWorkspace?.id}>
-      <div className="min-h-screen bg-gradient-to-br from-gh-bg via-gh-bg to-gh-hover p-6">
-        <div className="max-w-4xl mx-auto">
+      <div className="from-gh-bg via-gh-bg to-gh-hover min-h-screen bg-gradient-to-br p-6">
+        <div className="mx-auto max-w-4xl">
           {/* Header com Voltar */}
           <div className="mb-8">
             <button
               onClick={() => router.back()}
-              className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors mb-4"
+              className="mb-4 flex items-center gap-2 text-blue-600 transition-colors hover:text-blue-700"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="h-5 w-5" />
               <span className="font-medium">Voltar</span>
             </button>
             <div>
-              <h1 className="text-3xl font-bold text-gh-text">
-                Nova Transação
-              </h1>
-              <p className="text-gh-text-secondary mt-1">
-                Preencha os detalhes da transação
-              </p>
+              <h1 className="text-gh-text text-3xl font-bold">Nova Transação</h1>
+              <p className="text-gh-text-secondary mt-1">Preencha os detalhes da transação</p>
             </div>
           </div>
 
           {/* Formulário */}
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="overflow-hidden rounded-lg bg-white shadow-lg">
             <TransactionForm
               workspaceId={activeWorkspace.id}
               onSuccess={() => {
-                router.back();
+                router.back()
               }}
               onCancel={() => {
-                router.back();
+                router.back()
               }}
             />
           </div>
         </div>
       </div>
     </ModuleGuard>
-  );
+  )
 }

@@ -2,7 +2,6 @@ import { useState } from 'react'
 
 import { Clock, Coins, Plus } from 'lucide-react'
 
-import { WalletDisplay } from '@/components/WalletDisplay'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,

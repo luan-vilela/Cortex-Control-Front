@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { Eye, Plus, Trash2, X } from 'lucide-react'
+import { CheckCircle2, Eye, Plus, Trash2, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 import { type Column, DataTable, type RowAction } from '@/components/DataTable'
@@ -11,16 +11,20 @@ import { DateRangePicker } from '@/components/patterns/DateRangePicker'
 import { FilterWithBadge } from '@/components/patterns/FilterWithBadge'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { ActorTypeBadge } from '@/modules/finance/components/ActorTypeBadge'
-import { SourceBadge } from '@/modules/finance/components/SourceBadge'
-import { StatusBadge } from '@/modules/finance/components/StatusBadge'
-import { useDeleteTransaction, useTransactions } from '@/modules/finance/hooks/useFinance'
+import { ActorTypeBadge } from '@/modules/financeiro/components/ActorTypeBadge'
+import { SourceBadge } from '@/modules/financeiro/components/SourceBadge'
+import { StatusBadge } from '@/modules/financeiro/components/StatusBadge'
+import {
+  useDeleteTransaction,
+  useTransactions,
+  useUpdateTransactionGeneric,
+} from '@/modules/financeiro/hooks/useFinance'
 import {
   type GetTransactionsFilters,
   TransactionActorType,
   TransactionSourceType,
   TransactionStatus,
-} from '@/modules/finance/types'
+} from '@/modules/financeiro/types'
 import { ModuleGuard } from '@/modules/workspace/components/ModuleGuard'
 import { useBreadcrumb } from '@/modules/workspace/hooks'
 import { useActiveWorkspace } from '@/modules/workspace/hooks/useActiveWorkspace'
@@ -31,8 +35,8 @@ export default function FinanceiroPage() {
 
   useBreadcrumb([
     {
-      label: 'Finanças',
-      href: '/finance',
+      label: 'Financeiro',
+      href: '/financeiro',
     },
   ])
 
@@ -65,6 +69,7 @@ export default function FinanceiroPage() {
     )
 
   const { mutate: deleteTransaction } = useDeleteTransaction(activeWorkspace?.id || '')
+  const { mutate: updateTransaction } = useUpdateTransactionGeneric(activeWorkspace?.id || '')
 
   const handleResetFilters = () => {
     const defaultFilters = getDefaultFilters()
@@ -86,7 +91,7 @@ export default function FinanceiroPage() {
       label: 'Tipo',
       render: (_, row) => {
         if (row.parties && row.parties.length > 0) {
-          return <ActorTypeBadge partyType={row.parties[0].partyType} showIcon={true} />
+          return <ActorTypeBadge partyType={row.parties[0].partyType} />
         }
         return <span className="text-gh-text-secondary text-xs">-</span>
       },
@@ -99,7 +104,7 @@ export default function FinanceiroPage() {
     {
       key: 'sourceType',
       label: 'Origem',
-      render: (value) => <SourceBadge sourceType={value} showIcon={true} />,
+      render: (value) => <SourceBadge sourceType={value} />,
     },
     {
       key: 'amount',
@@ -112,9 +117,7 @@ export default function FinanceiroPage() {
       key: 'dueDate',
       label: 'Vencimento',
       render: (value) => (
-        <span className="text-gh-text-secondary text-sm">
-          {value ? formatDate(new Date(value)) : '-'}
-        </span>
+        <span className="text-gh-text-secondary text-sm">{value ? formatDate(value) : '-'}</span>
       ),
     },
     {
@@ -130,7 +133,21 @@ export default function FinanceiroPage() {
       id: 'view',
       label: 'Visualizar',
       icon: <Eye className="h-4 w-4" />,
-      onClick: (row) => router.push(`/finance/${row.id}`),
+      onClick: (row) => router.push(`/financeiro/${row.id}`),
+    },
+    {
+      id: 'mark-paid',
+      label: 'Marcar como Pago',
+      icon: <CheckCircle2 className="h-4 w-4" />,
+      onClick: (row) => {
+        if (row.status !== TransactionStatus.PAID) {
+          updateTransaction({
+            transactionId: row.id,
+            payload: { isPaid: true, paidDate: new Date() },
+          })
+        }
+      },
+      visible: (row) => row.status !== TransactionStatus.PAID,
     },
     {
       id: 'delete',
@@ -154,7 +171,7 @@ export default function FinanceiroPage() {
           description="Gerencie suas transações e receitas/despesas"
           action={{
             label: 'Nova Transação',
-            onClick: () => router.push(`/finance/new`),
+            onClick: () => router.push(`/financeiro/new`),
             icon: <Plus className="h-4 w-4" />,
           }}
         />
@@ -230,6 +247,10 @@ export default function FinanceiroPage() {
               {
                 value: TransactionStatus.PENDING,
                 label: 'Pendente',
+              },
+              {
+                value: TransactionStatus.OVERDUE,
+                label: 'Vencido',
               },
               {
                 value: TransactionStatus.PAID,

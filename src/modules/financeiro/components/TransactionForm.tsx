@@ -27,7 +27,6 @@ import {
   FieldTitle,
 } from '@/components/ui/field'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { useWorkspace } from '@/modules/workspace/hooks'
 
 import { InterestConfigComponent, PaymentModeConfig, RecurrenceConfigComponent } from './index'
 
@@ -38,7 +37,6 @@ interface TransactionFormProps {
 }
 
 export function TransactionForm({ workspaceId, onSuccess, onCancel }: TransactionFormProps) {
-  const { data: workspace } = useWorkspaceDetail(workspaceId)
   // Função helper para gerar data inicial em hora local
   const getInitialLocalDate = (): string => {
     const today = new Date()
@@ -114,8 +112,13 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
       dueDate: formData.dueDate, // Send as YYYY-MM-DD string, backend parses correctly
       notes: formData.notes || undefined,
       paymentConfig,
-      // Backend automaticamente adiciona o usuário logado como ator
-      // quando actors não é fornecido
+      // Adiciona o workspace como ator com o tipo selecionado (INCOME/EXPENSE)
+      actors: [
+        {
+          workspaceId,
+          actorType: partyType,
+        },
+      ],
     }
 
     createTransaction(payload, {
