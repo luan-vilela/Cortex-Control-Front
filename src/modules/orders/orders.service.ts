@@ -1,4 +1,5 @@
 import api from '@/lib/api'
+import { buildQueryParams } from '@/lib/utils'
 
 import {
   CreateOrderPayload,
@@ -19,18 +20,10 @@ export const ordersService = {
 
   // Listar pedidos
   async getOrders(workspaceId: string, filters?: GetOrdersFilters): Promise<GetOrdersResponse> {
-    const params = new URLSearchParams()
-
-    if (filters?.status) params.append('status', filters.status)
-    if (filters?.priority) params.append('priority', filters.priority)
-    if (filters?.clientId) params.append('clientId', String(filters.clientId))
-    if (filters?.assignedToId) params.append('assignedToId', String(filters.assignedToId))
-    if (filters?.fromDate) params.append('fromDate', filters.fromDate.toISOString().split('T')[0])
-    if (filters?.toDate) params.append('toDate', filters.toDate.toISOString().split('T')[0])
-    if (filters?.page) params.append('page', String(filters.page))
-    if (filters?.limit) params.append('limit', String(filters.limit))
-
-    const response = await api.get(`${ORDERS_API}/${workspaceId}/orders?${params.toString()}`)
+    const queryString = buildQueryParams(filters)
+    const response = await api.get(
+      `${ORDERS_API}/${workspaceId}/orders${queryString ? `?${queryString}` : ''}`
+    )
 
     // A API retorna um array diretamente, mas o frontend espera { data, meta }
     const orders = response.data

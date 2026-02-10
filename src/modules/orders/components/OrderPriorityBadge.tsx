@@ -26,7 +26,7 @@ const priorityConfig = {
 }
 
 export function OrderPriorityBadge({ priority }: OrderPriorityBadgeProps) {
-  const config = priorityConfig[priority]
+  const config = priorityConfig[priority || OrderPriority.LOW]
 
   return <Badge variant={config.variant}>{config.label}</Badge>
 }

@@ -1,9 +1,14 @@
 export enum OrderStatus {
-  DRAFT = 'DRAFT',
-  OPEN = 'OPEN',
-  IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED',
+  DRAFT = 'draft',
+  OPEN = 'open',
+  SCHEDULED = 'scheduled',
+  IN_PROGRESS = 'in_progress',
+  WAITING_CLIENT = 'waiting_client',
+  WAITING_RESOURCES = 'waiting_resources',
+  COMPLETED = 'completed',
+  INVOICED = 'invoiced',
+  CLOSED = 'closed',
+  CANCELED = 'canceled',
 }
 
 export enum OrderPriority {
@@ -11,6 +16,17 @@ export enum OrderPriority {
   MEDIUM = 'MEDIUM',
   HIGH = 'HIGH',
   URGENT = 'URGENT',
+}
+
+export interface OrderStatusTransition {
+  id: string
+  orderId: string
+  fromStatus: OrderStatus
+  toStatus: OrderStatus
+  transitionedAt: string
+  transitionedBy: string
+  reason?: string
+  metadata?: Record<string, any>
 }
 
 export interface Order {
@@ -35,6 +51,10 @@ export interface Order {
   }
   dueDate?: string
   completedAt?: string
+  invoicedAt?: string
+  closedAt?: string
+  canceledAt?: string
+  statusHistory: OrderStatusTransition[]
   createdAt: string
   updatedAt: string
   workspaceId: string

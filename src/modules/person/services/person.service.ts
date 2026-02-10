@@ -7,6 +7,7 @@ import {
 } from '../types/person.types'
 
 import api from '@/lib/api'
+import { buildQueryParams } from '@/lib/utils'
 
 export const personService = {
   // Criar pessoa
@@ -17,13 +18,10 @@ export const personService = {
 
   // Listar pessoas
   async getPersons(workspaceId: string, filters?: PersonFilters): Promise<AllContacts[]> {
-    const params = new URLSearchParams()
-
-    if (filters?.entityType) params.append('entityType', filters.entityType)
-    if (filters?.active !== undefined) params.append('active', String(filters.active))
-    if (filters?.search) params.append('search', filters.search)
-
-    const response = await api.get(`/workspaces/${workspaceId}/persons?${params.toString()}`)
+    const queryString = buildQueryParams(filters)
+    const response = await api.get(
+      `/workspaces/${workspaceId}/persons${queryString ? `?${queryString}` : ''}`
+    )
     return response.data
   },
 
@@ -64,56 +62,4 @@ export const personService = {
     const response = await api.get(`/workspaces/${workspaceId}/persons/stats`)
     return response.data
   },
-}
-
-// Funções para Leads
-export const createLead = async (workspaceId: string, data: any): Promise<any> => {
-  const response = await api.post(`/workspaces/${workspaceId}/leads`, data)
-  return response.data
-}
-
-export const getLeads = async (
-  workspaceId: string,
-  filters?: {
-    search?: string
-    status?: string
-    active?: boolean
-  }
-): Promise<any[]> => {
-  const params = new URLSearchParams()
-
-  if (filters?.status) params.append('status', filters.status)
-  if (filters?.active !== undefined) params.append('active', String(filters.active))
-  if (filters?.search) params.append('search', filters.search)
-
-  const response = await api.get(`/workspaces/${workspaceId}/leads?${params.toString()}`)
-  return response.data
-}
-
-export const getLead = async (workspaceId: string, leadId: string): Promise<any> => {
-  const response = await api.get(`/workspaces/${workspaceId}/leads/${leadId}`)
-  return response.data
-}
-
-export const updateLead = async (workspaceId: string, leadId: string, data: any): Promise<any> => {
-  const response = await api.patch(`/workspaces/${workspaceId}/leads/${leadId}`, data)
-  return response.data
-}
-
-export const deleteLead = async (workspaceId: string, leadId: string): Promise<void> => {
-  await api.delete(`/workspaces/${workspaceId}/leads/${leadId}`)
-}
-
-export const hardDeleteLead = async (workspaceId: string, leadId: string): Promise<void> => {
-  await api.delete(`/workspaces/${workspaceId}/leads/${leadId}/hard`)
-}
-
-export const restoreLead = async (workspaceId: string, leadId: string): Promise<any> => {
-  const response = await api.patch(`/workspaces/${workspaceId}/leads/${leadId}/restore`)
-  return response.data
-}
-
-export const getLeadStats = async (workspaceId: string): Promise<any> => {
-  const response = await api.get(`/workspaces/${workspaceId}/leads/stats`)
-  return response.data
 }

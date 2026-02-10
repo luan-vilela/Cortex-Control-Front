@@ -91,20 +91,35 @@ export function DatePicker({
             disabled={disabledDates}
             initialFocus
           />
-          <Button
-            type="button"
-            variant="link"
-            size="sm"
-            className="mb-2 w-24 self-end"
-            onClick={() => {
-              const today = new Date()
-              setTempDate(today)
-              onValueChange?.(today)
-              setOpen(false)
-            }}
-          >
-            Hoje
-          </Button>
+          <div className="flex justify-between border-t p-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const today = new Date()
+                setTempDate(today)
+                onValueChange?.(today)
+                setOpen(false)
+              }}
+            >
+              Hoje
+            </Button>
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={() => {
+                if (tempDate) {
+                  onValueChange?.(tempDate)
+                  setOpen(false)
+                }
+              }}
+              disabled={!tempDate}
+            >
+              Confirmar
+            </Button>
+          </div>
         </div>
       </PopoverContent>
     </Popover>
