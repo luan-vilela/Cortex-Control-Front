@@ -1,6 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
-import { workspaceService } from "../services/workspace.service";
-import { workspaceKeys } from "./queryKeys";
+import { workspaceService } from '../services/workspace.service'
+
+import { useQuery } from '@tanstack/react-query'
+
+import { workspaceKeys } from './queryKeys'
 
 /**
  * Hook para buscar lista de workspaces do usuário
@@ -10,7 +12,7 @@ export function useWorkspaces() {
     queryKey: workspaceKeys.lists(),
     queryFn: () => workspaceService.getUserWorkspaces(),
     staleTime: 2 * 60 * 1000, // 2 minutos
-  });
+  })
 }
 
 /**
@@ -22,7 +24,7 @@ export function useWorkspace(id: string) {
     queryFn: () => workspaceService.getWorkspaceDetails(id),
     enabled: !!id,
     staleTime: 2 * 60 * 1000,
-  });
+  })
 }
 
 /**
@@ -34,7 +36,7 @@ export function useWorkspaceMembers(workspaceId: string) {
     queryFn: () => workspaceService.getWorkspaceMembers(workspaceId),
     enabled: !!workspaceId,
     staleTime: 1 * 60 * 1000, // 1 minuto - dados mais voláteis
-  });
+  })
 }
 
 /**
@@ -45,7 +47,7 @@ export function useWorkspaceInvites() {
     queryKey: workspaceKeys.invites(),
     queryFn: () => workspaceService.getPendingInvites(),
     staleTime: 30 * 1000, // 30 segundos - dados bem voláteis
-  });
+  })
 }
 
 /**
@@ -53,22 +55,22 @@ export function useWorkspaceInvites() {
  */
 export function useWorkspacePendingInvites(workspaceId: string) {
   return useQuery({
-    queryKey: [...workspaceKeys.detail(workspaceId), "invites"],
+    queryKey: [...workspaceKeys.detail(workspaceId), 'invites'],
     queryFn: () => workspaceService.getWorkspaceInvites(workspaceId),
     enabled: !!workspaceId,
     staleTime: 30 * 1000, // 30 segundos - dados bem voláteis
-  });
+  })
 }
 /**
  * Hook para buscar módulos habilitados do workspace
  */
 export function useEnabledModules(workspaceId: string) {
   return useQuery({
-    queryKey: [...workspaceKeys.detail(workspaceId), "modules"],
+    queryKey: [...workspaceKeys.detail(workspaceId), 'modules333'],
     queryFn: () => workspaceService.getEnabledModules(workspaceId),
-    enabled: !!workspaceId,
+    enabled: !!workspaceId && workspaceId !== '',
     staleTime: 5 * 60 * 1000, // 5 minutos - não muda frequentemente
-  });
+  })
 }
 
 /**
@@ -79,5 +81,5 @@ export function useAvailableModules() {
     queryKey: workspaceKeys.availableModules(),
     queryFn: () => workspaceService.getAvailableModules(),
     staleTime: 60 * 60 * 1000, // 1 hora - configuração estática
-  });
+  })
 }

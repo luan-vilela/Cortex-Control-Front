@@ -128,7 +128,7 @@ export default function TransactionDetailPage() {
   }
 
   return (
-    <ModuleGuard moduleId="finance" workspaceId={activeWorkspace?.id}>
+    <ModuleGuard moduleId="finance">
       <div className="from-gh-bg via-gh-bg to-gh-hover min-h-screen bg-gradient-to-br p-6">
         <div className="mx-auto max-w-4xl">
           {/* Header */}

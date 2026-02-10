@@ -1,35 +1,35 @@
-"use client";
+'use client'
 
-import React, { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
-import { usePersons } from "@/modules/person/hooks/usePersonQueries";
-import { useAlerts } from "@/contexts/AlertContext";
-import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
-import { DataTable } from "@/components/DataTable";
-import { PageHeader } from "@/components/patterns/PageHeader";
-import { DataTableToolbar } from "@/components/patterns/DataTableToolbar";
-import { Plus } from "lucide-react";
-import { formatDocument } from "@/lib/masks";
-import api from "@/lib/api";
+import React, { useMemo, useState } from 'react'
+
+import { Plus } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+
+import { DataTable } from '@/components/DataTable'
+import { DataTableToolbar } from '@/components/patterns/DataTableToolbar'
+import { PageHeader } from '@/components/patterns/PageHeader'
+import { useAlerts } from '@/contexts/AlertContext'
+import api from '@/lib/api'
+import { formatDocument } from '@/lib/masks'
+import { usePersons } from '@/modules/person/hooks/usePersonQueries'
+import { ModuleGuard } from '@/modules/workspace/components/ModuleGuard'
+import { useWorkspaceStore } from '@/modules/workspace/store/workspace.store'
 
 export default function SemPapelsPage() {
-  const router = useRouter();
-  const { activeWorkspace } = useWorkspaceStore();
-  const alerts = useAlerts();
+  const router = useRouter()
+  const { activeWorkspace } = useWorkspaceStore()
+  const alerts = useAlerts()
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('')
 
-  const { data: allPersons = [], isLoading } = usePersons(
-    activeWorkspace?.id || "",
-  );
+  const { data: allPersons = [], isLoading } = usePersons(activeWorkspace?.id || '')
 
   // Filtra apenas contatos sem papéis
   const personsWithoutRoles = useMemo(() => {
     return allPersons.filter((person: any) => {
       // Se tem papeisList vindo da API, filtra
       if (person.papeisList && person.papeisList.length > 0) {
-        return false;
+        return false
       }
       // Se tem informações específicas de cliente/fornecedor/parceiro, não inclui
       if (
@@ -38,42 +38,42 @@ export default function SemPapelsPage() {
         person.fornecedorStatus ||
         person.parceiroStatus
       ) {
-        return false;
+        return false
       }
-      return true;
-    });
-  }, [allPersons]);
+      return true
+    })
+  }, [allPersons])
 
   // Filtra por termo de busca
   const filteredPersons = useMemo(() => {
-    if (!searchTerm) return personsWithoutRoles;
-    const term = searchTerm.toLowerCase();
+    if (!searchTerm) return personsWithoutRoles
+    const term = searchTerm.toLowerCase()
     return personsWithoutRoles.filter(
       (person: any) =>
         person.name.toLowerCase().includes(term) ||
         person.email?.toLowerCase().includes(term) ||
-        person.document?.includes(term),
-    );
-  }, [personsWithoutRoles, searchTerm]);
+        person.document?.includes(term)
+    )
+  }, [personsWithoutRoles, searchTerm])
 
   if (!activeWorkspace) {
     return (
       <div className="flex items-center justify-center py-12">
         <p className="text-gh-text-secondary">Selecione um workspace</p>
       </div>
-    );
+    )
   }
 
   return (
-    <ModuleGuard moduleId="contacts" workspaceId={activeWorkspace?.id}>
+    <ModuleGuard moduleId="contacts">
       <div className="space-y-6">
         <PageHeader
           title="Contatos sem Papéis"
           description="Pessoas que ainda não têm papéis definidos (Cliente, Fornecedor ou Parceiro)"
           action={{
-            label: "Novo Contato",
+            label: 'Novo Contato',
             onClick: () => router.push(`/contatos/new`),
-            icon: <Plus className="w-4 h-4" />,
+            icon: <Plus className="h-4 w-4" />,
           }}
         />
 
@@ -88,53 +88,42 @@ export default function SemPapelsPage() {
         <DataTable
           headers={[
             {
-              key: "name",
-              label: "Nome",
-              render: (_, row) => (
-                <span className="font-medium text-gh-text">{row.name}</span>
-              ),
+              key: 'name',
+              label: 'Nome',
+              render: (_, row) => <span className="text-gh-text font-medium">{row.name}</span>,
             },
             {
-              key: "email",
-              label: "Email",
+              key: 'email',
+              label: 'Email',
               render: (email) => (
-                <span className="text-sm text-gh-text-secondary">
-                  {email || "-"}
-                </span>
+                <span className="text-gh-text-secondary text-sm">{email || '-'}</span>
               ),
             },
             {
-              key: "phones",
-              label: "Telefone",
+              key: 'phones',
+              label: 'Telefone',
               render: (phones) => {
-                const primaryPhone = phones?.find((p: any) => p.isPrimary);
-                const phone = primaryPhone || phones?.[0];
+                const primaryPhone = phones?.find((p: any) => p.isPrimary)
+                const phone = primaryPhone || phones?.[0]
                 return (
-                  <span className="text-sm text-gh-text-secondary">
-                    {phone?.number || "-"}
-                  </span>
-                );
+                  <span className="text-gh-text-secondary text-sm">{phone?.number || '-'}</span>
+                )
               },
             },
             {
-              key: "document",
-              label: "Documento",
+              key: 'document',
+              label: 'Documento',
               render: (document) => {
-                if (!document)
-                  return (
-                    <span className="text-sm text-gh-text-secondary">-</span>
-                  );
-                const formatted = formatDocument(document);
-                const isCpf = document.length === 11;
-                const type = isCpf ? "CPF" : "CNPJ";
+                if (!document) return <span className="text-gh-text-secondary text-sm">-</span>
+                const formatted = formatDocument(document)
+                const isCpf = document.length === 11
+                const type = isCpf ? 'CPF' : 'CNPJ'
                 return (
                   <div className="text-sm">
-                    <span className="text-xs font-medium text-gh-text-secondary">
-                      {type}
-                    </span>
+                    <span className="text-gh-text-secondary text-xs font-medium">{type}</span>
                     <p className="text-gh-text font-mono">{formatted}</p>
                   </div>
-                );
+                )
               },
             },
           ]}
@@ -142,11 +131,11 @@ export default function SemPapelsPage() {
           isLoading={isLoading}
           emptyMessage={
             searchTerm
-              ? "Nenhum contato encontrado com esse termo de busca."
-              : "Todos os contatos já têm papéis definidos!"
+              ? 'Nenhum contato encontrado com esse termo de busca.'
+              : 'Todos os contatos já têm papéis definidos!'
           }
         />
       </div>
     </ModuleGuard>
-  );
+  )
 }

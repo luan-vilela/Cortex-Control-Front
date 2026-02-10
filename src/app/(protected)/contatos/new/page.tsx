@@ -142,7 +142,7 @@ export default function NewPersonPage() {
   }
 
   return (
-    <ModuleGuard moduleId="contacts" workspaceId={activeWorkspace?.id}>
+    <ModuleGuard moduleId="contacts">
       <div className="space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         {/* Header com Botões */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

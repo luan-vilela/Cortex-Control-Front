@@ -31,7 +31,7 @@ export default function NewTransactionPage() {
   }
 
   return (
-    <ModuleGuard moduleId="finance" workspaceId={activeWorkspace?.id}>
+    <ModuleGuard moduleId="finance">
       <div className="min-h-screen p-6">
         <div className="mx-auto w-full">
           {/* Formulário */}

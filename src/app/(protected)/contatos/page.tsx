@@ -112,7 +112,7 @@ export default function PersonsPage() {
   ]
 
   return (
-    <ModuleGuard moduleId="contacts" workspaceId={activeWorkspace?.id}>
+    <ModuleGuard moduleId="contacts">
       <div className="space-y-6">
         <PageHeader
           title="Contatos"

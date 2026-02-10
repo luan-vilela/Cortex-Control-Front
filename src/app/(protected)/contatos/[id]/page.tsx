@@ -56,6 +56,7 @@ export default function PersonDetailPage() {
         const data = await personService.getPerson(activeWorkspace.id, personId)
         setPerson(data as Person)
       } catch (error) {
+        console.warn('Erro ao carregar pessoa:', error)
         alerts.error('Erro ao carregar pessoa')
       } finally {
         setIsLoading(false)
@@ -134,7 +135,7 @@ export default function PersonDetailPage() {
   }
 
   return (
-    <ModuleGuard moduleId="contacts" workspaceId={activeWorkspace?.id}>
+    <ModuleGuard moduleId="contacts">
       <div className="space-y-6">
         <PersonDetailHeader person={person} />
 

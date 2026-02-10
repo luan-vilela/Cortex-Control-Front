@@ -54,6 +54,8 @@ export default function FinanceiroPage() {
 
   const [filters, setFilters] = useState<GetTransactionsFilters>(getDefaultFilters())
   const [searchTerm, setSearchTerm] = useState('')
+  const [advancedOptionsEnabled, setAdvancedOptionsEnabled] = useState(false)
+  const [selectedRows, setSelectedRows] = useState<any[]>([])
 
   // Use pendingFilters directly as active filters (apply immediately)
   const activeFilters = filters
@@ -70,6 +72,16 @@ export default function FinanceiroPage() {
 
   const { mutate: deleteTransaction } = useDeleteTransaction(activeWorkspace?.id || '')
   const { mutate: updateTransaction } = useUpdateTransactionGeneric(activeWorkspace?.id || '')
+
+  const handleDeleteSelected = async () => {
+    if (!activeWorkspace?.id || selectedRows.length === 0) return
+    if (confirm(`Tem certeza que deseja deletar ${selectedRows.length} transações?`)) {
+      for (const row of selectedRows) {
+        deleteTransaction(row.id)
+      }
+      setSelectedRows([])
+    }
+  }
 
   const handleResetFilters = () => {
     const defaultFilters = getDefaultFilters()
@@ -162,7 +174,7 @@ export default function FinanceiroPage() {
   ]
 
   return (
-    <ModuleGuard moduleId="finance" workspaceId={activeWorkspace?.id}>
+    <ModuleGuard moduleId="finance">
       <div className="space-y-6">
         {/* Header */}
         <PageHeader
@@ -182,6 +194,25 @@ export default function FinanceiroPage() {
           exportData={transactionsData.data || []}
           exportFilename="transacoes"
         />
+
+        {/* Advanced Options Button */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setAdvancedOptionsEnabled(!advancedOptionsEnabled)}
+            className="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+          >
+            {advancedOptionsEnabled ? 'Desabilitar Opções Avançadas' : 'Opções Avançadas'}
+          </button>
+          {advancedOptionsEnabled && selectedRows.length > 0 && (
+            <button
+              onClick={handleDeleteSelected}
+              className="flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+            >
+              <Trash2 className="h-4 w-4" />
+              Deletar Selecionadas ({selectedRows.length})
+            </button>
+          )}
+        </div>
 
         {/* Advanced Filters - Dropdown with Badge */}
         <div className="flex flex-wrap items-center gap-3">
@@ -314,6 +345,8 @@ export default function FinanceiroPage() {
           headers={columns}
           data={transactionsData.data || []}
           isLoading={isLoading}
+          selectable={advancedOptionsEnabled}
+          onSelectionChange={setSelectedRows}
           emptyMessage={
             searchTerm
               ? 'Nenhuma transação encontrada. Tente ajustar os filtros.'
