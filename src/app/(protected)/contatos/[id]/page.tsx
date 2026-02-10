@@ -1,135 +1,128 @@
-"use client";
+'use client'
 
-import React, { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
-import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
-import { ModuleGuard } from "@/modules/workspace/components/ModuleGuard";
-import { useAlerts } from "@/contexts/AlertContext";
-import { Loader2 } from "lucide-react";
-import type { Person } from "@/modules/person/types/person.types";
-import { personService } from "@/modules/person/services/person.service";
-import { usePersonRoles } from "@/modules/person/hooks/usePersonRoles";
-import { useBreadcrumb } from "@/modules/workspace/hooks";
-import { usePersonActions } from "@/modules/person/hooks/usePersonActions";
-import { PersonDetailHeader } from "@/modules/person/components/PersonDetailHeader";
-import { PersonViewSection } from "@/modules/person/components/PersonViewSection";
-import {
-  PersonEditForm,
-  type PersonFormData,
-} from "@/modules/person/components/PersonEditForm";
-import { PersonSidebar } from "@/modules/person/components/PersonSidebar";
+import React, { useEffect, useState } from 'react'
+
+import { Loader2 } from 'lucide-react'
+import { useParams } from 'next/navigation'
+
+import { useAlerts } from '@/contexts/AlertContext'
+import { PersonDetailHeader } from '@/modules/person/components/PersonDetailHeader'
+import { PersonEditForm, type PersonFormData } from '@/modules/person/components/PersonEditForm'
+import { PersonSidebar } from '@/modules/person/components/PersonSidebar'
+import { PersonViewSection } from '@/modules/person/components/PersonViewSection'
+import { ResponsiblesViewSection } from '@/modules/person/components/ResponsiblesViewSection'
+import { usePersonActions } from '@/modules/person/hooks/usePersonActions'
+import { usePersonRoles } from '@/modules/person/hooks/usePersonRoles'
+import { personService } from '@/modules/person/services/person.service'
+import type { Person } from '@/modules/person/types/person.types'
+import { ModuleGuard } from '@/modules/workspace/components/ModuleGuard'
+import { useBreadcrumb } from '@/modules/workspace/hooks'
+import { useWorkspaceStore } from '@/modules/workspace/store/workspace.store'
 
 export default function PersonDetailPage() {
-  const params = useParams();
-  const { activeWorkspace } = useWorkspaceStore();
-  const alerts = useAlerts();
-  const personId = params.id as string;
+  const params = useParams()
+  const { activeWorkspace } = useWorkspaceStore()
+  const alerts = useAlerts()
+  const personId = params.id as string
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [person, setPerson] = useState<Person | null>(null);
+  const [isEditing, setIsEditing] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [person, setPerson] = useState<Person | null>(null)
 
-  const { data: papeisList = [] } = usePersonRoles(
-    activeWorkspace?.id || "",
-    personId,
-  );
+  const { data: papeisList = [] } = usePersonRoles(activeWorkspace?.id || '', personId)
 
-  const { updatePerson, deletePerson, restorePerson, reloadPerson } =
-    usePersonActions();
+  const { updatePerson, deletePerson, restorePerson, reloadPerson } = usePersonActions()
 
   useBreadcrumb([
     {
-      label: "Contatos",
-      href: "/contatos",
+      label: 'Contatos',
+      href: '/contatos',
     },
     {
-      label: "Detalhes do Contato",
+      label: 'Detalhes do Contato',
       href: `/contatos/${personId}`,
     },
-  ]);
+  ])
 
   // Carregar pessoa
   useEffect(() => {
-    if (!activeWorkspace?.id) return;
+    if (!activeWorkspace?.id) return
 
     const fetchPerson = async () => {
       try {
-        setIsLoading(true);
-        const data = await personService.getPerson(
-          activeWorkspace.id,
-          personId,
-        );
-        setPerson(data as Person);
+        setIsLoading(true)
+        const data = await personService.getPerson(activeWorkspace.id, personId)
+        setPerson(data as Person)
       } catch (error) {
-        alerts.error("Erro ao carregar pessoa");
+        alerts.error('Erro ao carregar pessoa')
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
-    fetchPerson();
-  }, [activeWorkspace?.id, personId, alerts]);
+    fetchPerson()
+  }, [activeWorkspace?.id, personId, alerts])
 
   const handleUpdateSubmit = async (data: PersonFormData) => {
     try {
-      await updatePerson(personId, data);
-      alerts.success("Pessoa atualizada com sucesso!");
-      setIsEditing(false);
+      await updatePerson(personId, data)
+      alerts.success('Pessoa atualizada com sucesso!')
+      setIsEditing(false)
 
       // Recarregar dados
-      const updatedPerson = await reloadPerson(personId);
-      setPerson(updatedPerson);
+      const updatedPerson = await reloadPerson(personId)
+      setPerson(updatedPerson)
     } catch (error: any) {
-      alerts.error(error.response?.data?.message || "Erro ao atualizar pessoa");
+      alerts.error(error.response?.data?.message || 'Erro ao atualizar pessoa')
     }
-  };
+  }
 
   const handleDeleteClick = async () => {
-    if (!person) return;
+    if (!person) return
 
-    setIsDeleting(true);
+    setIsDeleting(true)
     try {
-      const success = await deletePerson(person);
+      const success = await deletePerson(person)
       if (success) {
         // Redirecionamento já acontece dentro da função
       }
     } finally {
-      setIsDeleting(false);
+      setIsDeleting(false)
     }
-  };
+  }
 
   const handleRestoreClick = async () => {
-    if (!person) return;
+    if (!person) return
 
-    setIsSaving(true);
+    setIsSaving(true)
     try {
-      const success = await restorePerson(personId);
+      const success = await restorePerson(personId)
       if (success) {
         // Recarregar dados
-        const updatedPerson = await reloadPerson(personId);
-        setPerson(updatedPerson);
+        const updatedPerson = await reloadPerson(personId)
+        setPerson(updatedPerson)
       }
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  };
+  }
 
   if (!activeWorkspace) {
     return (
       <div className="flex items-center justify-center py-12">
         <p className="text-gh-text-secondary">Selecione um workspace</p>
       </div>
-    );
+    )
   }
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-6 h-6 animate-spin text-gh-text-secondary" />
+        <Loader2 className="text-gh-text-secondary h-6 w-6 animate-spin" />
       </div>
-    );
+    )
   }
 
   if (!person) {
@@ -137,7 +130,7 @@ export default function PersonDetailPage() {
       <div className="flex items-center justify-center py-12">
         <p className="text-gh-text-secondary">Pessoa não encontrada</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -146,13 +139,10 @@ export default function PersonDetailPage() {
         <PersonDetailHeader person={person} />
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
             {!isEditing ? (
-              <PersonViewSection
-                person={person}
-                onEdit={() => setIsEditing(true)}
-              />
+              <PersonViewSection person={person} onEdit={() => setIsEditing(true)} />
             ) : (
               <PersonEditForm
                 person={person}
@@ -160,6 +150,11 @@ export default function PersonDetailPage() {
                 onCancel={() => setIsEditing(false)}
               />
             )}
+
+            {/* Responsáveis */}
+            <div className="mt-6">
+              <ResponsiblesViewSection person={person} />
+            </div>
           </div>
 
           {/* Sidebar */}
@@ -174,5 +169,5 @@ export default function PersonDetailPage() {
         </div>
       </div>
     </ModuleGuard>
-  );
+  )
 }

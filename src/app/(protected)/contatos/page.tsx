@@ -29,7 +29,9 @@ export default function PersonsPage() {
 
   const [searchTerm, setSearchTerm] = useState('')
 
-  const { data, isLoading } = usePersons(activeWorkspace?.id || '')
+  const { data, isLoading } = usePersons(activeWorkspace?.id || '', {
+    search: searchTerm || undefined,
+  })
   const deleteMutation = useDeletePerson(activeWorkspace?.id || '')
 
   const handleDelete = async (personId: string, personName: string) => {

@@ -1,9 +1,10 @@
-"use client";
+'use client'
 
-import { PageHeader } from "@/components/patterns/PageHeader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ComponentShowcase } from "./ComponentShowcase";
+import { PageHeader } from '@/components/patterns/PageHeader'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+
+import { ComponentShowcase } from './ComponentShowcase'
 
 export function PatternsShowcase() {
   return (
@@ -15,13 +16,13 @@ export function PatternsShowcase() {
         {/* PageHeader */}
         <div className="space-y-2">
           <Label className="text-sm font-semibold">PageHeader</Label>
-          <div className="border rounded p-4 bg-gray-50 dark:bg-gray-900">
+          <div className="rounded border bg-gray-50 p-4 dark:bg-gray-900">
             <PageHeader
               title="Exemplo de PageHeader"
-              subtitle="Usado em páginas principais"
+              description="Usado em páginas principais"
               action={{
-                label: "Botão de ação",
-                onClick: () => console.log("Clicado!"),
+                label: 'Botão de ação',
+                onClick: () => console.log('Clicado!'),
               }}
             />
           </div>
@@ -30,8 +31,8 @@ export function PatternsShowcase() {
         {/* DataTableToolbar Pattern */}
         <div className="space-y-2">
           <p className="text-sm font-semibold">DataTableToolbar</p>
-          <div className="border rounded p-4 bg-gray-50 dark:bg-gray-900">
-            <div className="flex gap-2 flex-wrap">
+          <div className="rounded border bg-gray-50 p-4 dark:bg-gray-900">
+            <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="outline">
                 Filtro 1
               </Button>
@@ -42,16 +43,14 @@ export function PatternsShowcase() {
                 Buscar
               </Button>
             </div>
-            <p className="text-xs text-gray-600 mt-2">
-              Usado para filtros e busca em tabelas
-            </p>
+            <p className="mt-2 text-xs text-gray-600">Usado para filtros e busca em tabelas</p>
           </div>
         </div>
       </div>
 
-      <div className="mt-4 pt-4 border-t">
-        <h4 className="text-sm font-semibold mb-2">Código:</h4>
-        <pre className="bg-gray-100 dark:bg-gray-800 p-2 rounded text-xs overflow-auto">
+      <div className="mt-4 border-t pt-4">
+        <h4 className="mb-2 text-sm font-semibold">Código:</h4>
+        <pre className="overflow-auto rounded bg-gray-100 p-2 text-xs dark:bg-gray-800">
           {`<PageHeader
   title="Título da página"
   subtitle="Subtítulo opcional"
@@ -63,7 +62,5 @@ export function PatternsShowcase() {
         </pre>
       </div>
     </ComponentShowcase>
-  );
+  )
 }
-
-import { Label } from "@/components/ui/label";

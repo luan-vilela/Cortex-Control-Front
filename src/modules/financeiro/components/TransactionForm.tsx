@@ -18,6 +18,7 @@ import { TrendingDown, TrendingUp } from 'lucide-react'
 import { FormInput } from '@/components/FormInput'
 import { FormTextarea } from '@/components/FormTextarea'
 import { DatePicker } from '@/components/patterns/DatePicker'
+import { InputNumber } from '@/components/ui/InputNumber'
 import { Button } from '@/components/ui/button'
 import {
   Field,
@@ -246,15 +247,17 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             />
             <div className="grid grid-cols-2 gap-3">
-              <FormInput
-                type="number"
-                label="Valor"
-                step="0.01"
-                min="0"
-                placeholder="0,00"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              />
+              <div className="space-y-2">
+                <label className="text-gh-text text-sm font-medium">Valor</label>
+                <InputNumber
+                  value={parseFloat(formData.amount) || 0}
+                  onChange={(val) => setFormData({ ...formData, amount: val.toString() })}
+                  float={true}
+                  min={0}
+                  placeholder="R$ 0,00"
+                  mask="real"
+                />
+              </div>
               <div className="space-y-2">
                 <label className="text-gh-text text-sm font-medium">Vencimento</label>
                 <DatePicker

@@ -5,8 +5,9 @@ import React, { useMemo, useState } from 'react'
 import { Edit, Plus, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
-import { Column, DataTable, RowAction } from '@/components/DataTable'
+import { type Column, DataTable, type RowAction } from '@/components/DataTable'
 import { RolesBadge } from '@/components/RolesBadge'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { DataTableToolbar, PageHeader } from '@/components/patterns'
 import { FilterWithBadge } from '@/components/patterns/FilterWithBadge'
 import { useAlerts } from '@/contexts/AlertContext'
@@ -60,17 +61,27 @@ export function ClienteListComponent() {
   }, [categoriaFilter, statusFilter, searchTerm])
 
   const { data, isLoading } = useClientes(activeWorkspace?.id || '', filters)
+  const deleteMutation = useDeleteCliente(activeWorkspace?.id || '')
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [targetCliente, setTargetCliente] = useState<{ id: string; name?: string } | null>(null)
 
   const handleDelete = (clienteId: string, personName: string) => {
-    if (!confirm(`Tem certeza que deseja remover ${personName} como cliente?`)) return
+    setTargetCliente({ id: clienteId, name: personName })
+    setConfirmOpen(true)
+  }
 
-    const mutation = useDeleteCliente(activeWorkspace?.id || '', clienteId)
-    mutation.mutate(undefined, {
+  const handleConfirmDelete = () => {
+    if (!targetCliente) return
+    deleteMutation.mutate(targetCliente.id, {
       onSuccess: () => {
         alerts.success('Cliente removido com sucesso!')
+        setConfirmOpen(false)
+        setTargetCliente(null)
       },
       onError: (error: any) => {
         alerts.error(error.response?.data?.message || 'Erro ao remover cliente')
+        setConfirmOpen(false)
+        setTargetCliente(null)
       },
     })
   }
@@ -163,6 +174,21 @@ export function ClienteListComponent() {
         onSearch={setSearchTerm}
         exportData={data || []}
         exportFilename="clientes"
+      />
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={(open) => {
+          setConfirmOpen(open)
+          if (!open) setTargetCliente(null)
+        }}
+        title="Remover cliente"
+        desc={`Tem certeza que deseja remover ${targetCliente?.name || 'este cliente'}?`}
+        confirmText="Remover"
+        cancelBtnText="Cancelar"
+        destructive
+        handleConfirm={handleConfirmDelete}
+        isLoading={deleteMutation.status === 'pending'}
       />
 
       {/* Advanced Filters - Dropdown with Badge */}

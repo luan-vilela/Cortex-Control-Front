@@ -76,20 +76,36 @@ export function DatePicker({
         <Button
           variant="outline"
           disabled={disabled}
-          className={cn('w-full justify-start text-left font-normal', className)}
+          className={cn('w-full justify-start px-3 py-5 text-left font-normal', className)}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
           {formatDate(value)}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode="single"
-          selected={tempDate}
-          onSelect={handleSelect}
-          disabled={disabledDates}
-          initialFocus
-        />
+        <div className="flex flex-col items-stretch">
+          <Calendar
+            mode="single"
+            selected={tempDate}
+            onSelect={handleSelect}
+            disabled={disabledDates}
+            initialFocus
+          />
+          <Button
+            type="button"
+            variant="link"
+            size="sm"
+            className="mb-2 w-24 self-end"
+            onClick={() => {
+              const today = new Date()
+              setTempDate(today)
+              onValueChange?.(today)
+              setOpen(false)
+            }}
+          >
+            Hoje
+          </Button>
+        </div>
       </PopoverContent>
     </Popover>
   )

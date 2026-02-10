@@ -1,55 +1,56 @@
-"use client";
+'use client'
 
-import { useCallback, useState } from "react";
-import { fetchCepData, formatCep, unformatCep } from "@/lib/cep-utils";
+import { useCallback, useState } from 'react'
+
+import { searchCep as fetchCepData, formatCep } from '@/lib/cep-utils'
 
 export interface UseCepResult {
-  isLoading: boolean;
-  error: string | null;
-  handleCepChange: (value: string) => string;
+  isLoading: boolean
+  error: string | null
+  handleCepChange: (value: string) => string
   searchCep: (cep: string) => Promise<{
-    address?: string;
-    city?: string;
-    state?: string;
-    neighborhood?: string;
-  } | null>;
+    address?: string
+    city?: string
+    state?: string
+    neighborhood?: string
+  } | null>
 }
 
 /**
  * Hook para buscar e formatar CEP
  */
 export const useCep = (): UseCepResult => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   /**
    * Formata o CEP enquanto o usuário digita
    */
   const handleCepChange = useCallback((value: string): string => {
-    return formatCep(value);
-  }, []);
+    return formatCep(value)
+  }, [])
 
   /**
    * Busca os dados do CEP e retorna formatados
    */
   const searchCep = useCallback(
     async (
-      cep: string,
+      cep: string
     ): Promise<{
-      address?: string;
-      city?: string;
-      state?: string;
-      neighborhood?: string;
+      address?: string
+      city?: string
+      state?: string
+      neighborhood?: string
     } | null> => {
       try {
-        setIsLoading(true);
-        setError(null);
+        setIsLoading(true)
+        setError(null)
 
-        const data = await fetchCepData(cep);
+        const data = await fetchCepData(cep)
 
         if (!data) {
-          setError("CEP não encontrado");
-          return null;
+          setError('CEP não encontrado')
+          return null
         }
 
         return {
@@ -57,23 +58,23 @@ export const useCep = (): UseCepResult => {
           city: data.localidade,
           state: data.uf,
           neighborhood: data.bairro,
-        };
+        }
       } catch (err) {
-        const errorMessage = "Erro ao buscar CEP";
-        setError(errorMessage);
-        console.error(errorMessage, err);
-        return null;
+        const errorMessage = 'Erro ao buscar CEP'
+        setError(errorMessage)
+        console.error(errorMessage, err)
+        return null
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
     },
-    [],
-  );
+    []
+  )
 
   return {
     isLoading,
     error,
     handleCepChange,
     searchCep,
-  };
-};
+  }
+}
