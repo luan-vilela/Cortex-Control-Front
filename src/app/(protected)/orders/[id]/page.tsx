@@ -115,10 +115,20 @@ export default function OrderDetailPage() {
               </div>
 
               <div>
-                <label className="text-gh-text-secondary text-sm font-medium">Valor</label>
+                <label className="text-gh-text-secondary text-sm font-medium">Valor Aprovado</label>
                 <p className="text-gh-text mt-1 text-lg font-semibold">
-                  {formatCurrency(order.value)}
+                  {formatCurrency(order.approvedValue)}
                 </p>
+                {order.totalValue && order.totalValue !== order.approvedValue && (
+                  <>
+                    <label className="text-gh-text-secondary mt-2 block text-sm font-medium">
+                      Valor Total
+                    </label>
+                    <p className="text-gh-text mt-1 text-lg font-semibold text-green-600">
+                      {formatCurrency(order.totalValue)}
+                    </p>
+                  </>
+                )}
               </div>
 
               {order.description && (

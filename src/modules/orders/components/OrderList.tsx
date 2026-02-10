@@ -82,7 +82,16 @@ export function OrderList({
                 {order.client?.name || '-'}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <p className="text-gh-text text-sm font-semibold">{formatCurrency(order.value)}</p>
+                <div className="flex flex-col">
+                  <p className="text-gh-text text-sm font-semibold">
+                    Aprovado: {formatCurrency(order.approvedValue)}
+                  </p>
+                  {order.totalValue && order.totalValue !== order.approvedValue && (
+                    <p className="text-gh-text-secondary text-xs">
+                      Total: {formatCurrency(order.totalValue)}
+                    </p>
+                  )}
+                </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <OrderPriorityBadge priority={order.priority} />

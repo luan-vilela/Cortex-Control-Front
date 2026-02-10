@@ -1,14 +1,14 @@
 export enum OrderStatus {
-  DRAFT = 'draft',
-  OPEN = 'open',
-  SCHEDULED = 'scheduled',
-  IN_PROGRESS = 'in_progress',
-  WAITING_CLIENT = 'waiting_client',
-  WAITING_RESOURCES = 'waiting_resources',
-  COMPLETED = 'completed',
-  INVOICED = 'invoiced',
-  CLOSED = 'closed',
-  CANCELED = 'canceled',
+  DRAFT = 'DRAFT',
+  OPEN = 'OPEN',
+  SCHEDULED = 'SCHEDULED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  WAITING_CLIENT = 'WAITING_CLIENT',
+  WAITING_RESOURCES = 'WAITING_RESOURCES',
+  COMPLETED = 'COMPLETED',
+  INVOICED = 'INVOICED',
+  CLOSED = 'CLOSED',
+  CANCELED = 'CANCELED',
 }
 
 export enum OrderPriority {
@@ -33,7 +33,8 @@ export interface Order {
   id: string
   title: string
   description?: string
-  value: number
+  approvedValue: number
+  totalValue?: number
   status: OrderStatus
   priority: OrderPriority
   clientId: string
@@ -63,7 +64,8 @@ export interface Order {
 export interface CreateOrderPayload {
   title: string
   description?: string
-  value: number
+  approvedValue: number
+  totalValue?: number
   priority: OrderPriority
   clientId: string
   assignedToId?: string
@@ -73,7 +75,8 @@ export interface CreateOrderPayload {
 export interface UpdateOrderPayload {
   title?: string
   description?: string
-  value?: number
+  approvedValue?: number
+  totalValue?: number
   status?: OrderStatus
   priority?: OrderPriority
   assignedToId?: string

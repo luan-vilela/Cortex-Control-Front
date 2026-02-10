@@ -10,6 +10,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { DatePicker } from '@/components/patterns/DatePicker'
+import { InputNumber } from '@/components/ui/InputNumber'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -34,7 +35,8 @@ import { MemberSearchModal } from '@/modules/workspace/components/MemberSearchMo
 const orderSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
   description: z.string().optional(),
-  value: z.number().min(0, 'Valor deve ser maior ou igual a 0'),
+  approvedValue: z.number().min(0, 'Valor aprovado deve ser maior ou igual a 0'),
+  totalValue: z.number().min(0, 'Valor total deve ser maior ou igual a 0').optional(),
   priority: z.nativeEnum(OrderPriority),
   status: z.nativeEnum(OrderStatus),
   clientId: z.string().min(1, 'Cliente é obrigatório'),
@@ -62,7 +64,8 @@ export function OrderForm({ workspaceId, order, onSuccess, onCancel }: OrderForm
     defaultValues: {
       title: order?.title || '',
       description: order?.description || '',
-      value: order?.value || 0,
+      approvedValue: order?.approvedValue || 0,
+      totalValue: order?.totalValue || undefined,
       priority: order?.priority || OrderPriority.MEDIUM,
       status: order?.status || OrderStatus.DRAFT,
       clientId: order?.clientId?.toString() || '',
@@ -127,20 +130,21 @@ export function OrderForm({ workspaceId, order, onSuccess, onCancel }: OrderForm
           )}
         />
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <FormField
             control={orderForm.control}
-            name="value"
+            name="approvedValue"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Valor</FormLabel>
+                <FormLabel>Valor Aprovado</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    {...field}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                  <InputNumber
+                    value={field.value || 0}
+                    onChange={field.onChange}
+                    float={true}
+                    min={0}
+                    placeholder="R$ 0,00"
+                    mask="real"
                   />
                 </FormControl>
                 <FormMessage />
@@ -148,6 +152,29 @@ export function OrderForm({ workspaceId, order, onSuccess, onCancel }: OrderForm
             )}
           />
 
+          <FormField
+            control={orderForm.control}
+            name="totalValue"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Valor Total (Opcional)</FormLabel>
+                <FormControl>
+                  <InputNumber
+                    value={field.value || 0}
+                    onChange={(val) => field.onChange(val === 0 ? undefined : val)}
+                    float={true}
+                    min={0}
+                    placeholder="R$ 0,00"
+                    mask="real"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
           <FormField
             control={orderForm.control}
             name="priority"
