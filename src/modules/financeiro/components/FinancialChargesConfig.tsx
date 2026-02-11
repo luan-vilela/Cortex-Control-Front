@@ -5,15 +5,21 @@ import { InterestType } from '../types'
 
 import { useState } from 'react'
 
+import { InputNumber } from '@/components/ui/InputNumber'
 import { Input } from '@/components/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
 interface InterestConfigComponentProps {
   interest?: InterestConfig
   onChange: (interest: InterestConfig | undefined) => void
+  error?: string
 }
 
-export function InterestConfigComponent({ interest, onChange }: InterestConfigComponentProps) {
+export function InterestConfigComponent({
+  interest,
+  onChange,
+  error,
+}: InterestConfigComponentProps) {
   const [type, setType] = useState<InterestType>(interest?.type || InterestType.PERCENTAGE)
 
   const handleEnableInterest = () => {
@@ -107,33 +113,41 @@ export function InterestConfigComponent({ interest, onChange }: InterestConfigCo
             <label className="text-muted-foreground text-xs font-medium">
               {type === InterestType.PERCENTAGE ? 'Taxa (%)' : 'Valor (R$)'}
             </label>
-            <Input
-              type="number"
-              step="0.01"
-              min="0"
-              value={
-                type === InterestType.PERCENTAGE
-                  ? interest.percentage || 0
-                  : interest.flatAmount || 0
-              }
-              onChange={(e) => {
-                const value = parseFloat(e.target.value) || 0
-                if (type === InterestType.PERCENTAGE) {
+            {type === InterestType.PERCENTAGE ? (
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                value={interest.percentage || ''}
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value) || 0
                   onChange({
                     type,
                     percentage: value,
                     description: interest.description,
                   })
-                } else {
+                }}
+                placeholder="0"
+                className={error ? 'border-destructive' : ''}
+              />
+            ) : (
+              <InputNumber
+                value={interest.flatAmount || 0}
+                onChange={(value) => {
                   onChange({
                     type,
                     flatAmount: value,
                     description: interest.description,
                   })
-                }
-              }}
-              placeholder="0"
-            />
+                }}
+                float={true}
+                min={0}
+                placeholder="R$ 0,00"
+                mask="real"
+                className={error ? 'border-destructive' : ''}
+              />
+            )}
+            {error && <p className="text-destructive text-sm">{error}</p>}
           </div>
 
           {/* Campo de Descrição */}

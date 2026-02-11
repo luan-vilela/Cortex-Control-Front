@@ -12,6 +12,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 interface RecurrenceConfigProps {
   config?: RecurrenceConfig
   onChange: (config: RecurrenceConfig | undefined) => void
+  error?: string
 }
 
 const RECURRENCE_LABELS: Record<RecurrenceType, string> = {
@@ -24,7 +25,7 @@ const RECURRENCE_LABELS: Record<RecurrenceType, string> = {
   [RecurrenceType.ANNUAL]: 'Anual',
 }
 
-export function RecurrenceConfigComponent({ config, onChange }: RecurrenceConfigProps) {
+export function RecurrenceConfigComponent({ config, onChange, error }: RecurrenceConfigProps) {
   const [endDateType, setEndDateType] = useState<'occurrences' | 'date'>('occurrences')
 
   const handleEnableRecurrence = () => {
@@ -146,10 +147,12 @@ export function RecurrenceConfigComponent({ config, onChange }: RecurrenceConfig
                 type="number"
                 min="1"
                 max="365"
-                value={config.occurrences || 12}
+                value={config.occurrences || ''}
                 onChange={(e) => handleOccurrencesChange(parseInt(e.target.value, 10))}
                 placeholder="12"
+                className={error ? 'border-destructive' : ''}
               />
+              {error && <p className="text-destructive text-sm">{error}</p>}
             </div>
           ) : (
             <div className="space-y-2">

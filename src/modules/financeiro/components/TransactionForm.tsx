@@ -5,6 +5,7 @@ import {
   type CreateTransactionPayload,
   type InstallmentPaymentConfig,
   type InterestConfig,
+  InterestType,
   type PaymentConfig,
   PaymentMode,
   type RecurrenceConfig,
@@ -59,6 +60,8 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
     description: '',
     amount: '',
     installments: '',
+    recurrence: '',
+    interest: '',
   })
 
   const [partyType, setPartyType] = useState<TransactionActorType>(TransactionActorType.INCOME)
@@ -67,6 +70,28 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
   })
   const [recurrenceConfig, setRecurrenceConfig] = useState<RecurrenceConfig | undefined>(undefined)
   const [interest, setInterest] = useState<InterestConfig | undefined>(undefined)
+  const handleInterestChange = (interest: InterestConfig | undefined) => {
+    setInterest(interest)
+    // Limpar erro se o valor for válido
+    if (interest) {
+      if (
+        interest.type === InterestType.PERCENTAGE &&
+        interest.percentage &&
+        interest.percentage > 0
+      ) {
+        setErrors((prev) => ({ ...prev, interest: '' }))
+      } else if (
+        interest.type === InterestType.FLAT &&
+        interest.flatAmount &&
+        interest.flatAmount > 0
+      ) {
+        setErrors((prev) => ({ ...prev, interest: '' }))
+      }
+    } else {
+      // Limpar erro quando desabilitar juros
+      setErrors((prev) => ({ ...prev, interest: '' }))
+    }
+  }
 
   const { mutate: createTransaction, isPending } = useCreateTransaction(workspaceId)
 
@@ -95,6 +120,13 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
     // Se ativar recorrência, muda para À Vista
     if (config !== undefined) {
       setPaymentConfig({ mode: PaymentMode.CASH })
+      // Limpar erro se o valor for válido
+      if (config.occurrences && config.occurrences >= 1) {
+        setErrors((prev) => ({ ...prev, recurrence: '' }))
+      }
+    } else {
+      // Limpar erro quando desabilitar recorrência
+      setErrors((prev) => ({ ...prev, recurrence: '' }))
     }
   }
 
@@ -123,7 +155,7 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
     e.preventDefault()
 
     // Limpar erros anteriores
-    setErrors({ description: '', amount: '', installments: '' })
+    setErrors({ description: '', amount: '', installments: '', recurrence: '', interest: '' })
 
     let hasErrors = false
 
@@ -142,6 +174,27 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
       if (!numInstallments || numInstallments < 1) {
         setErrors((prev) => ({ ...prev, installments: 'Número de parcelas deve ser pelo menos 1' }))
         hasErrors = true
+      }
+    }
+
+    if (recurrenceConfig) {
+      if (!recurrenceConfig.occurrences || recurrenceConfig.occurrences < 1) {
+        setErrors((prev) => ({ ...prev, recurrence: 'Número de repetições deve ser pelo menos 1' }))
+        hasErrors = true
+      }
+    }
+
+    if (interest) {
+      if (interest.type === InterestType.PERCENTAGE) {
+        if (!interest.percentage || interest.percentage <= 0) {
+          setErrors((prev) => ({ ...prev, interest: 'Taxa percentual deve ser maior que 0' }))
+          hasErrors = true
+        }
+      } else if (interest.type === InterestType.FLAT) {
+        if (!interest.flatAmount || interest.flatAmount <= 0) {
+          setErrors((prev) => ({ ...prev, interest: 'Valor fixo deve ser maior que 0' }))
+          hasErrors = true
+        }
       }
     }
 
@@ -348,6 +401,7 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
             <RecurrenceConfigComponent
               config={recurrenceConfig}
               onChange={handleRecurrenceConfigChange}
+              error={errors.recurrence}
             />
             {paymentConfig?.mode === PaymentMode.INSTALLMENT && (
               <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
@@ -359,7 +413,11 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
           {/* Juros/Taxas */}
           <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
             <h3 className="text-gh-text font-semibold">Juros/Taxas</h3>
-            <InterestConfigComponent interest={interest} onChange={setInterest} />
+            <InterestConfigComponent
+              interest={interest}
+              onChange={handleInterestChange}
+              error={errors.interest}
+            />
           </div>
         </div>
       </form>
