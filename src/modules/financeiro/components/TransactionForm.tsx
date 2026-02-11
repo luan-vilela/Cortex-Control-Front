@@ -12,10 +12,6 @@ import { useState } from 'react'
 
 import { TrendingDown, TrendingUp } from 'lucide-react'
 
-import { FormInput } from '@/components/FormInput'
-import { FormTextarea } from '@/components/FormTextarea'
-import { DatePicker } from '@/components/patterns/DatePicker'
-import { InputNumber } from '@/components/ui/InputNumber'
 import { Button } from '@/components/ui/button'
 import {
   Field,
@@ -27,7 +23,13 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useFormRefValidation } from '@/hooks/useFormRefValidation'
 
-import { InterestConfigComponent, PaymentConfigComponent, RecurrenceConfigComponent } from './index'
+import {
+  InfoBlockComponent,
+  InterestConfigComponent,
+  PaymentConfigComponent,
+  RecurrenceConfigComponent,
+} from './index'
+import { type InfoBlockFormValues } from './info/infoBlock.types'
 import { type InterestBlockFormValues } from './interest/interestBlock.types'
 import { type PaymentBlockFormValues } from './payment'
 import { type RecurrenceBlockFormValues } from './recurrence/recurrenceBlock.types'
@@ -41,28 +43,13 @@ interface TransactionFormProps {
 export function TransactionForm({ workspaceId, onSuccess, onCancel }: TransactionFormProps) {
   const { validate, setRef, getRef } = useFormRefValidation()
 
-  // Função helper para gerar data inicial em hora local
-  const getInitialLocalDate = (): string => {
-    const today = new Date()
-    const year = today.getFullYear()
-    const month = String(today.getMonth() + 1).padStart(2, '0')
-    const day = String(today.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
-
-  const [formData, setFormData] = useState({
+  const [partyType, setPartyType] = useState<TransactionActorType>(TransactionActorType.INCOME)
+  const [infoConfig, setInfoConfig] = useState<InfoBlockFormValues>({
     description: '',
-    amount: '',
-    dueDate: getInitialLocalDate(),
+    amount: 0,
+    dueDate: new Date(),
     notes: '',
   })
-
-  const [errors, setErrors] = useState({
-    description: '',
-    amount: '',
-  })
-
-  const [partyType, setPartyType] = useState<TransactionActorType>(TransactionActorType.INCOME)
   const [paymentConfig, setPaymentConfig] = useState<PaymentBlockFormValues>({
     mode: PaymentMode.CASH,
   })
@@ -111,24 +98,6 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
     const isFormValid = await validate('TransactionForm')
 
     if (!isFormValid) return
-    // Limpar erros anteriores
-    setErrors({ description: '', amount: '' })
-
-    let hasErrors = false
-
-    if (!formData.description.trim()) {
-      setErrors((prev) => ({ ...prev, description: 'Descrição é obrigatória' }))
-      hasErrors = true
-    }
-
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      setErrors((prev) => ({ ...prev, amount: 'Valor deve ser maior que zero' }))
-      hasErrors = true
-    }
-
-    if (hasErrors) {
-      return
-    }
 
     // Converter PaymentBlockFormValues para PaymentConfig (tipo esperado pela API)
     const apiPaymentConfig =
@@ -142,13 +111,16 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
             installmentIntervalDays: paymentConfig.installmentIntervalDays,
           }
 
+    // Formata a data para string YYYY-MM-DD
+    const dueDateString = formatDateToLocalISO(infoConfig.dueDate)
+
     const payload: CreateTransactionPayload = {
       sourceType: TransactionSourceType.MANUAL,
       sourceId: 'manual-' + Date.now(),
-      amount: parseFloat(formData.amount),
-      description: formData.description,
-      dueDate: formData.dueDate, // Send as YYYY-MM-DD string, backend parses correctly
-      notes: formData.notes || undefined,
+      amount: infoConfig.amount,
+      description: infoConfig.description,
+      dueDate: dueDateString, // Send as YYYY-MM-DD string, backend parses correctly
+      notes: infoConfig.notes || undefined,
       paymentConfig: apiPaymentConfig as any,
       // Adiciona o workspace como ator com o tipo selecionado (INCOME/EXPENSE)
       actors: [
@@ -161,10 +133,10 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
 
     createTransaction(payload, {
       onSuccess: () => {
-        setFormData({
+        setInfoConfig({
           description: '',
-          amount: '',
-          dueDate: getInitialLocalDate(),
+          amount: 0,
+          dueDate: new Date(),
           notes: '',
         })
         setPaymentConfig({ mode: PaymentMode.CASH })
@@ -255,63 +227,10 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
           {/* Informações */}
           <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
             <h3 className="text-gh-text font-semibold">Informações</h3>
-            <FormInput
-              type="text"
-              label="Descrição"
-              placeholder="Ex: Serviço de consultoria, Venda de produtos..."
-              value={formData.description}
-              error={errors.description}
-              onChange={(e) => {
-                setFormData({ ...formData, description: e.target.value })
-                // Limpar erro quando usuário começar a digitar
-                if (errors.description) {
-                  setErrors((prev) => ({ ...prev, description: '' }))
-                }
-              }}
-            />
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <label className="text-gh-text text-sm font-medium">Valor</label>
-                <InputNumber
-                  value={parseFloat(formData.amount) || 0}
-                  onChange={(val) => {
-                    setFormData({ ...formData, amount: val.toString() })
-                    // Limpar erro quando usuário começar a digitar
-                    if (errors.amount) {
-                      setErrors((prev) => ({ ...prev, amount: '' }))
-                    }
-                  }}
-                  float={true}
-                  min={0}
-                  placeholder="R$ 0,00"
-                  mask="real"
-                  className={errors.amount ? 'border-destructive' : ''}
-                />
-                {errors.amount && <p className="text-destructive text-sm">{errors.amount}</p>}
-              </div>
-              <div className="space-y-2">
-                <label className="text-gh-text text-sm font-medium">Vencimento</label>
-                <DatePicker
-                  value={parseLocalDateString(formData.dueDate)}
-                  onValueChange={(date) => {
-                    if (date) {
-                      const dateString = formatDateToLocalISO(date)
-                      setFormData({
-                        ...formData,
-                        dueDate: dateString,
-                      })
-                    }
-                  }}
-                  placeholder="Selecionar data"
-                />
-              </div>
-            </div>
-            <FormTextarea
-              label="Notas (opcional)"
-              placeholder="Adicione observações sobre essa transação..."
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              rows={2}
+            <InfoBlockComponent
+              ref={(ref) => setRef('TransactionForm', 'InfoBlockComponentRef', ref)}
+              initialValues={infoConfig}
+              onDataChange={setInfoConfig}
             />
           </div>
 
