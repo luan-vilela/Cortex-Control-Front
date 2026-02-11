@@ -9,6 +9,13 @@ import { DatePicker } from '@/components/patterns/DatePicker'
 import { InputNumber } from '@/components/ui/InputNumber'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 import {
   type PaymentBlockFormValues,
@@ -143,7 +150,9 @@ export const PaymentConfigComponent = forwardRef<PaymentConfigRef, PaymentConfig
                   id="downPayment"
                   value={(watch as any)('downPayment') ?? 0}
                   onChange={(value) => handleChange('downPayment', value || 0)}
+                  float
                   min={0}
+                  mask="real"
                   placeholder="R$ 0,00"
                   className={(errors as any).downPayment ? 'border-destructive' : ''}
                 />
@@ -176,19 +185,29 @@ export const PaymentConfigComponent = forwardRef<PaymentConfigRef, PaymentConfig
 
               {/* Intervalo entre Parcelas */}
               <div className="flex-1 space-y-2">
-                <Label htmlFor="installmentIntervalDays">Intervalo entre Parcelas (dias)</Label>
-                <InputNumber
-                  id="installmentIntervalDays"
-                  value={(watch as any)('installmentIntervalDays') ?? 30}
-                  onChange={(value) => {
-                    const interval = Math.max(1, Math.min(365, value || 30))
-                    handleChange('installmentIntervalDays', interval)
-                  }}
-                  min={1}
-                  max={365}
-                  placeholder="30 dias"
-                  className={(errors as any).installmentIntervalDays ? 'border-destructive' : ''}
-                />
+                <Label htmlFor="installmentIntervalDays">Intervalo entre Parcelas</Label>
+                <Select
+                  value={String((watch as any)('installmentIntervalDays') ?? 30)}
+                  onValueChange={(value) => handleChange('installmentIntervalDays', Number(value))}
+                >
+                  <SelectTrigger
+                    className={
+                      (errors as any).installmentIntervalDays
+                        ? 'border-destructive w-full'
+                        : 'w-full'
+                    }
+                  >
+                    <SelectValue placeholder="Selecione o intervalo" />
+                  </SelectTrigger>
+                  <SelectContent className="w-full min-w-[220px]">
+                    <SelectItem value="7">Semanal (7 dias)</SelectItem>
+                    <SelectItem value="14">Quinzenal (14 dias)</SelectItem>
+                    <SelectItem value="30">Mensal (30 dias)</SelectItem>
+                    <SelectItem value="60">Bimensal (60 dias)</SelectItem>
+                    <SelectItem value="90">Trimestral (90 dias)</SelectItem>
+                    <SelectItem value="365">Anual (365 dias)</SelectItem>
+                  </SelectContent>
+                </Select>
                 {(errors as any).installmentIntervalDays && (
                   <p className="text-destructive text-sm">
                     {(errors as any).installmentIntervalDays.message}

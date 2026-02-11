@@ -7,11 +7,13 @@ import {
   TransactionActorType,
   TransactionSourceType,
 } from '../types'
+import { validatePayment } from '../utils/validatePayment'
 
 import { useState } from 'react'
 
-import { TrendingDown, TrendingUp } from 'lucide-react'
+import { AlertCircle, Eye, TrendingDown, TrendingUp, X } from 'lucide-react'
 
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
   Field,
@@ -23,6 +25,7 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useFormRefValidation } from '@/hooks/useFormRefValidation'
 
+import { TransactionPreview } from './TransactionPreview'
 import {
   InfoBlockComponent,
   InterestConfigComponent,
@@ -59,12 +62,14 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
   const [interestConfig, setInterestConfig] = useState<InterestBlockFormValues | undefined>(
     undefined
   )
+  const [validationErrors, setValidationErrors] = useState<string[]>([])
 
   const { mutate: createTransaction, isPending } = useCreateTransaction(workspaceId)
 
   const handlePaymentConfigChange = (config: PaymentBlockFormValues | undefined) => {
     if (!config) return
     setPaymentConfig(config)
+
     // Se for Parcelado, desabilita recorrência
     if (config.mode === PaymentMode.INSTALLMENT) {
       setRecurrenceConfig(undefined)
@@ -98,6 +103,15 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
     const isFormValid = await validate('TransactionForm')
 
     if (!isFormValid) return
+
+    // Validar regras de negócio de pagamento e descontos
+    const paymentValidation = validatePayment(infoConfig, paymentConfig, interestConfig)
+    if (!paymentValidation.isValid) {
+      setValidationErrors(paymentValidation.errors)
+      // Scroll para o topo para ver o banner
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
 
     // Converter PaymentBlockFormValues para PaymentConfig (tipo esperado pela API)
     const apiPaymentConfig =
@@ -162,11 +176,47 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
               Cancelar
             </Button>
           )}
+          <TransactionPreview
+            partyType={partyType}
+            infoConfig={infoConfig}
+            paymentConfig={paymentConfig}
+            recurrenceConfig={recurrenceConfig}
+            interestConfig={interestConfig}
+          >
+            <Button type="button" variant="outline">
+              <Eye className="mr-2 h-4 w-4" />
+              Visualizar
+            </Button>
+          </TransactionPreview>
           <Button form="transaction-form" type="submit" disabled={isPending}>
             {isPending ? 'Salvando...' : 'Criar Transação'}
           </Button>
         </div>
       </div>
+
+      {/* Banner de Erro de Validação */}
+      {validationErrors.length > 0 && (
+        <div className="px-4 pb-4">
+          <Alert variant="destructive" className="relative">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erro de Validação</AlertTitle>
+            <AlertDescription className="mt-2 space-y-2">
+              {validationErrors.map((error, index) => (
+                <div key={index} className="text-sm">
+                  • {error}
+                </div>
+              ))}
+            </AlertDescription>
+            <button
+              onClick={() => setValidationErrors([])}
+              className="absolute top-2 right-2 rounded-sm opacity-70 transition-opacity hover:opacity-100"
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Fechar</span>
+            </button>
+          </Alert>
+        </div>
+      )}
 
       {/* Form em Grid 2 Colunas */}
       <form
@@ -231,6 +281,8 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
               ref={(ref) => setRef('TransactionForm', 'InfoBlockComponentRef', ref)}
               initialValues={infoConfig}
               onDataChange={setInfoConfig}
+              disableDueDate={paymentConfig.mode === PaymentMode.INSTALLMENT}
+              requireAmount={paymentConfig.mode === PaymentMode.INSTALLMENT}
             />
           </div>
 

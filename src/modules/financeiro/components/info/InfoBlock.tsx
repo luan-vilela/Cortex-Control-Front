@@ -4,6 +4,7 @@ import React, { forwardRef, useImperativeHandle } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { z } from 'zod'
 
 import { DatePicker } from '@/components/patterns/DatePicker'
 import { InputNumber } from '@/components/ui/InputNumber'
@@ -19,7 +20,30 @@ import {
 } from './infoBlock.types'
 
 export const InfoBlockComponent = forwardRef<InfoBlockRef, InfoBlockProps>(
-  ({ initialValues, onDataChange }, ref) => {
+  ({ initialValues, onDataChange, disableDueDate = false, requireAmount = false }, ref) => {
+    // Schema dinâmico baseado nas props
+    const dynamicSchema = React.useMemo(() => {
+      return infoBlockSchema.superRefine((data, ctx) => {
+        // Validar valor obrigatório se requireAmount for true
+        if (requireAmount && (!data.amount || data.amount <= 0)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Valor é obrigatório para pagamentos parcelados',
+            path: ['amount'],
+          })
+        }
+
+        // Validar data de vencimento se não estiver desabilitada
+        if (!disableDueDate && !data.dueDate) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Data de vencimento é obrigatória',
+            path: ['dueDate'],
+          })
+        }
+      })
+    }, [requireAmount, disableDueDate])
+
     const {
       watch,
       setValue,
@@ -28,7 +52,7 @@ export const InfoBlockComponent = forwardRef<InfoBlockRef, InfoBlockProps>(
       formState: { errors },
       trigger,
     } = useForm<InfoBlockFormValues>({
-      resolver: zodResolver(infoBlockSchema),
+      resolver: zodResolver(dynamicSchema),
       defaultValues: {
         description: '',
         amount: 0,
@@ -82,7 +106,9 @@ export const InfoBlockComponent = forwardRef<InfoBlockRef, InfoBlockProps>(
         <div className="flex w-full gap-3">
           {/* Valor */}
           <div className="flex-1 space-y-2">
-            <Label htmlFor="amount">Valor</Label>
+            <Label htmlFor="amount">
+              Valor {requireAmount && <span className="text-destructive">*</span>}
+            </Label>
             <InputNumber
               id="amount"
               value={watch('amount')}
@@ -99,19 +125,27 @@ export const InfoBlockComponent = forwardRef<InfoBlockRef, InfoBlockProps>(
           {/* Data de Vencimento */}
           <div className="flex-1 space-y-2">
             <Label htmlFor="dueDate">
-              Data de Vencimento <span className="text-destructive">*</span>
+              Data de Vencimento {!disableDueDate && <span className="text-destructive">*</span>}
             </Label>
             <DatePicker
               value={watch('dueDate')}
               onValueChange={(date) => {
-                if (date) {
+                if (date && !disableDueDate) {
                   handleChange('dueDate', date)
                 }
               }}
               placeholder="Selecione a data de vencimento"
+              disabled={disableDueDate}
               className={errors.dueDate ? 'border-destructive' : ''}
             />
-            {errors.dueDate && <p className="text-destructive text-sm">{errors.dueDate.message}</p>}
+            {disableDueDate && (
+              <p className="text-muted-foreground text-xs">
+                Data de vencimento não disponível para pagamentos parcelados
+              </p>
+            )}
+            {!disableDueDate && errors.dueDate && (
+              <p className="text-destructive text-sm">{errors.dueDate.message}</p>
+            )}
           </div>
         </div>
 

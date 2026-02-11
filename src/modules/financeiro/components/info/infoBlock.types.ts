@@ -4,7 +4,7 @@ import { z } from 'zod'
 export const infoBlockSchema = z.object({
   description: z.string().min(1, 'Descrição é obrigatória'),
   amount: z.number().min(0, 'Valor não pode ser negativo'),
-  dueDate: z.date('Data de vencimento é obrigatória'),
+  dueDate: z.date().optional(),
   notes: z.string().optional(),
 })
 
@@ -13,6 +13,8 @@ export type InfoBlockFormValues = z.infer<typeof infoBlockSchema>
 export interface InfoBlockProps {
   initialValues?: Partial<InfoBlockFormValues>
   onDataChange?: (values: InfoBlockFormValues | undefined) => void
+  disableDueDate?: boolean
+  requireAmount?: boolean
 }
 
 export interface InfoBlockRef {
