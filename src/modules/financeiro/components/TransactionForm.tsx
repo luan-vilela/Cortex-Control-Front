@@ -15,6 +15,7 @@ import {
 
 import { useState } from 'react'
 
+import { is } from 'date-fns/locale'
 import { TrendingDown, TrendingUp } from 'lucide-react'
 
 import { FormInput } from '@/components/FormInput'
@@ -30,6 +31,7 @@ import {
   FieldTitle,
 } from '@/components/ui/field'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { useFormRefValidation } from '@/hooks/useFormRefValidation'
 
 import { InterestConfigComponent, PaymentModeConfig, RecurrenceConfigComponent } from './index'
 import { RecurrenceBlockFormValues } from './recurrence/recurrenceBlock.types'
@@ -41,6 +43,8 @@ interface TransactionFormProps {
 }
 
 export function TransactionForm({ workspaceId, onSuccess, onCancel }: TransactionFormProps) {
+  const { validate, setRef, getRef } = useFormRefValidation()
+
   // Função helper para gerar data inicial em hora local
   const getInitialLocalDate = (): string => {
     const today = new Date()
@@ -135,9 +139,12 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
     const result = `${year}-${month}-${day}`
     return result
   }
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    const isFormValid = await validate('TransactionForm')
+
+    if (!isFormValid) return
     // Limpar erros anteriores
     setErrors({ description: '', amount: '', installments: '', recurrence: '', interest: '' })
 
@@ -234,12 +241,7 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
               Cancelar
             </Button>
           )}
-          <Button
-            form="transaction-form"
-            type="submit"
-            disabled={isPending}
-            className="bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-          >
+          <Button form="transaction-form" type="submit" disabled={isPending}>
             {isPending ? 'Salvando...' : 'Criar Transação'}
           </Button>
         </div>
@@ -383,6 +385,7 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
           >
             <h3 className="text-gh-text font-semibold">Recorrência</h3>
             <RecurrenceConfigComponent
+              ref={(ref) => setRef('TransactionForm', 'RecurrenceConfigComponentRef', ref)}
               initialValues={recurrenceConfig}
               onDataChange={setRecurrenceConfig}
               // error={errors.recurrence}

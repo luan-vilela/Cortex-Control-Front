@@ -1,6 +1,6 @@
 'use client'
 
-import { forwardRef, useImperativeHandle, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -21,7 +21,6 @@ export const RecurrenceConfigComponent = forwardRef<
   RecurrenceConfigComponentRef,
   RecurrenceConfigComponentProps
 >(({ initialValues, onDataChange }, ref) => {
-  const [endDateType, setEndDateType] = useState<'occurrences' | 'date'>('occurrences')
   const {
     watch,
     trigger,
@@ -35,12 +34,14 @@ export const RecurrenceConfigComponent = forwardRef<
       type: 'MONTHLY',
       occurrences: 1,
       endDate: undefined,
+      endDateType: 'occurrences',
       ...initialValues,
     },
   })
 
   const validate = async () => {
     const isValid = await trigger()
+
     return isValid
   }
 
@@ -60,19 +61,26 @@ export const RecurrenceConfigComponent = forwardRef<
     onDataChange?.(getValues())
   }
 
+  useEffect(() => {
+    if (!initialValues) {
+      reset()
+      handleChange('type', undefined)
+      return
+    }
+  }, [initialValues])
+
   return (
     <div className="space-y-3">
       <RadioGroup
         value={watch('type') ? 'with' : 'without'}
         onValueChange={(value) => {
           if (value === 'without') {
+            reset()
             handleChange('type', undefined)
-            handleChange('occurrences', 1)
-            handleChange('endDate', undefined)
           } else {
             handleChange('type', 'MONTHLY')
             handleChange('occurrences', 1)
-            setEndDateType('occurrences')
+            handleChange('endDateType', 'occurrences')
           }
         }}
       >
@@ -121,8 +129,8 @@ export const RecurrenceConfigComponent = forwardRef<
                 type="radio"
                 name="endDateType"
                 value="occurrences"
-                checked={endDateType === 'occurrences'}
-                onChange={() => setEndDateType('occurrences')}
+                checked={watch('endDateType') === 'occurrences'}
+                onChange={() => handleChange('endDateType', 'occurrences')}
                 className="h-3 w-3"
               />
               <span className="text-foreground text-xs font-medium">Quantidade</span>
@@ -133,8 +141,11 @@ export const RecurrenceConfigComponent = forwardRef<
                 type="radio"
                 name="endDateType"
                 value="date"
-                checked={endDateType === 'date'}
-                onChange={() => setEndDateType('date')}
+                checked={watch('endDateType') === 'date'}
+                onChange={() => {
+                  handleChange('endDateType', 'date')
+                  handleChange('occurrences', 1)
+                }}
                 className="h-3 w-3"
               />
               <span className="text-foreground text-xs font-medium">Data Final</span>
@@ -142,10 +153,10 @@ export const RecurrenceConfigComponent = forwardRef<
           </div>
 
           {/* Campo de Quantidade ou Data */}
-          {endDateType === 'occurrences' ? (
+          {watch('endDateType') === 'occurrences' ? (
             <div className="space-y-2">
               <label className="text-muted-foreground text-xs font-medium">
-                Número de Repetições (1-365)
+                Número de Repetições
               </label>
               <Input
                 type="number"
@@ -166,7 +177,11 @@ export const RecurrenceConfigComponent = forwardRef<
                 value={watch('endDate')}
                 onValueChange={(date) => handleChange('endDate', date)}
                 placeholder="Selecionar data final"
+                className={errors.endDate ? 'border-destructive' : ''}
               />
+              {errors.endDate && (
+                <p className="text-destructive text-sm">{errors.endDate.message}</p>
+              )}
             </div>
           )}
         </div>
