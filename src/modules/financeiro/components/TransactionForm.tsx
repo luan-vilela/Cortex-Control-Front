@@ -32,6 +32,7 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
 import { InterestConfigComponent, PaymentModeConfig, RecurrenceConfigComponent } from './index'
+import { RecurrenceBlockFormValues } from './recurrence/recurrenceBlock.types'
 
 interface TransactionFormProps {
   workspaceId: string
@@ -68,7 +69,9 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig>({
     mode: PaymentMode.CASH,
   })
-  const [recurrenceConfig, setRecurrenceConfig] = useState<RecurrenceConfig | undefined>(undefined)
+  const [recurrenceConfig, setRecurrenceConfig] = useState<RecurrenceBlockFormValues | undefined>(
+    undefined
+  )
   const [interest, setInterest] = useState<InterestConfig | undefined>(undefined)
   const handleInterestChange = (interest: InterestConfig | undefined) => {
     setInterest(interest)
@@ -108,25 +111,6 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
     } else {
       // Limpar erro quando não for parcelado
       setErrors((prev) => ({ ...prev, installments: '' }))
-    }
-  }
-
-  /**
-   * Handler para mudanças em recorrência
-   * Se ativar recorrência (config !== undefined), muda pagamento para À Vista
-   */
-  const handleRecurrenceConfigChange = (config: RecurrenceConfig | undefined) => {
-    setRecurrenceConfig(config)
-    // Se ativar recorrência, muda para À Vista
-    if (config !== undefined) {
-      setPaymentConfig({ mode: PaymentMode.CASH })
-      // Limpar erro se o valor for válido
-      if (config.occurrences && config.occurrences >= 1) {
-        setErrors((prev) => ({ ...prev, recurrence: '' }))
-      }
-    } else {
-      // Limpar erro quando desabilitar recorrência
-      setErrors((prev) => ({ ...prev, recurrence: '' }))
     }
   }
 
@@ -399,9 +383,9 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
           >
             <h3 className="text-gh-text font-semibold">Recorrência</h3>
             <RecurrenceConfigComponent
-              config={recurrenceConfig}
-              onChange={handleRecurrenceConfigChange}
-              error={errors.recurrence}
+              initialValues={recurrenceConfig}
+              onDataChange={setRecurrenceConfig}
+              // error={errors.recurrence}
             />
             {paymentConfig?.mode === PaymentMode.INSTALLMENT && (
               <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">

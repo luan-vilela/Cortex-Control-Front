@@ -1,74 +1,78 @@
 'use client'
 
-import type { RecurrenceConfig } from '../types'
-import { RecurrenceType } from '../types'
+import { forwardRef, useImperativeHandle, useState } from 'react'
 
-import { useState } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
 
 import { DatePicker } from '@/components/patterns/DatePicker'
 import { Input } from '@/components/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
-interface RecurrenceConfigProps {
-  config?: RecurrenceConfig
-  onChange: (config: RecurrenceConfig | undefined) => void
-  error?: string
-}
+import {
+  RECURRENCE_LABELS,
+  type RecurrenceBlockFormValues,
+  type RecurrenceConfigComponentProps,
+  type RecurrenceConfigComponentRef,
+  recurrenceBlockSchema,
+} from './recurrenceBlock.types'
 
-const RECURRENCE_LABELS: Record<RecurrenceType, string> = {
-  [RecurrenceType.DAILY]: 'Diária',
-  [RecurrenceType.WEEKLY]: 'Semanal',
-  [RecurrenceType.BIWEEKLY]: 'Quinzenal',
-  [RecurrenceType.MONTHLY]: 'Mensal',
-  [RecurrenceType.QUARTERLY]: 'Trimestral',
-  [RecurrenceType.SEMIANNUAL]: 'Semestral',
-  [RecurrenceType.ANNUAL]: 'Anual',
-}
-
-export function RecurrenceConfigComponent({ config, onChange, error }: RecurrenceConfigProps) {
+export const RecurrenceConfigComponent = forwardRef<
+  RecurrenceConfigComponentRef,
+  RecurrenceConfigComponentProps
+>(({ initialValues, onDataChange }, ref) => {
   const [endDateType, setEndDateType] = useState<'occurrences' | 'date'>('occurrences')
-
-  const handleEnableRecurrence = () => {
-    const newConfig: RecurrenceConfig = {
-      type: RecurrenceType.MONTHLY,
+  const {
+    watch,
+    trigger,
+    getValues,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<RecurrenceBlockFormValues>({
+    resolver: zodResolver(recurrenceBlockSchema),
+    defaultValues: {
+      type: 'MONTHLY',
       occurrences: 1,
-    }
-    onChange(newConfig)
-    setEndDateType('occurrences')
+      endDate: undefined,
+      ...initialValues,
+    },
+  })
+
+  const validate = async () => {
+    const isValid = await trigger()
+    return isValid
   }
 
-  const handleDisableRecurrence = () => {
-    onChange(undefined)
+  const clearDirty = () => {
+    reset(getValues(), { keepValues: true })
   }
 
-  const handleTypeChange = (type: RecurrenceType) => {
-    if (config) {
-      onChange({
-        ...config,
-        type,
-      })
-    }
-  }
+  useImperativeHandle(ref, () => ({
+    validate,
+    getValues,
+    clearDirty,
+  }))
 
-  const handleOccurrencesChange = (occurrences: number) => {
-    if (config) {
-      onChange({
-        ...config,
-        occurrences: Math.max(1, Math.min(365, occurrences)),
-        endDate: undefined,
-      })
-    }
+  // Atualiza valores e notifica parent
+  const handleChange = (field: keyof RecurrenceBlockFormValues, value: any) => {
+    setValue(field, value, { shouldValidate: false, shouldDirty: true })
+    onDataChange?.(getValues())
   }
 
   return (
     <div className="space-y-3">
       <RadioGroup
-        value={config ? 'with' : 'without'}
+        value={watch('type') ? 'with' : 'without'}
         onValueChange={(value) => {
           if (value === 'without') {
-            handleDisableRecurrence()
+            handleChange('type', undefined)
+            handleChange('occurrences', 1)
+            handleChange('endDate', undefined)
           } else {
-            handleEnableRecurrence()
+            handleChange('type', 'MONTHLY')
+            handleChange('occurrences', 1)
+            setEndDateType('occurrences')
           }
         }}
       >
@@ -92,14 +96,14 @@ export function RecurrenceConfigComponent({ config, onChange, error }: Recurrenc
       </RadioGroup>
 
       {/* Opções de Recorrência - Aparecem quando "Com Recorrência" selecionado */}
-      {config && (
+      {watch('type') && (
         <div className="border-border space-y-3 border-t pt-4">
           {/* Tipo de Frequência */}
           <div className="space-y-2">
             <label className="text-foreground text-sm font-medium">Frequência</label>
             <select
-              value={config.type}
-              onChange={(e) => handleTypeChange(e.target.value as RecurrenceType)}
+              value={watch('type')}
+              onChange={(e) => handleChange('type', e.target.value)}
               className="border-input bg-background text-foreground w-full rounded border px-3 py-2 text-sm"
             >
               {Object.entries(RECURRENCE_LABELS).map(([type, label]) => (
@@ -146,28 +150,21 @@ export function RecurrenceConfigComponent({ config, onChange, error }: Recurrenc
               <Input
                 type="number"
                 min="1"
-                max="365"
-                value={config.occurrences || ''}
-                onChange={(e) => handleOccurrencesChange(parseInt(e.target.value, 10))}
+                value={watch('occurrences') || ''}
+                onChange={(e) => handleChange('occurrences', parseInt(e.target.value, 10))}
                 placeholder="12"
-                className={error ? 'border-destructive' : ''}
+                className={errors.occurrences ? 'border-destructive' : ''}
               />
-              {error && <p className="text-destructive text-sm">{error}</p>}
+              {errors.occurrences && (
+                <p className="text-destructive text-sm">{errors.occurrences.message}</p>
+              )}
             </div>
           ) : (
             <div className="space-y-2">
               <label className="text-muted-foreground text-xs font-medium">Data Final</label>
               <DatePicker
-                value={config.endDate}
-                onValueChange={(date) => {
-                  if (config) {
-                    onChange({
-                      ...config,
-                      endDate: date,
-                      occurrences: undefined,
-                    })
-                  }
-                }}
+                value={watch('endDate')}
+                onValueChange={(date) => handleChange('endDate', date)}
                 placeholder="Selecionar data final"
               />
             </div>
@@ -176,4 +173,6 @@ export function RecurrenceConfigComponent({ config, onChange, error }: Recurrenc
       )}
     </div>
   )
-}
+})
+
+RecurrenceConfigComponent.displayName = 'RecurrenceConfigComponent'
