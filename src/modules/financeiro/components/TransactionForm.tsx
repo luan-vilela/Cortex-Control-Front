@@ -4,18 +4,14 @@ import { useCreateTransaction } from '../hooks/useFinance'
 import {
   type CreateTransactionPayload,
   type InstallmentPaymentConfig,
-  type InterestConfig,
-  InterestType,
   type PaymentConfig,
   PaymentMode,
-  type RecurrenceConfig,
   TransactionActorType,
   TransactionSourceType,
 } from '../types'
 
 import { useState } from 'react'
 
-import { is } from 'date-fns/locale'
 import { TrendingDown, TrendingUp } from 'lucide-react'
 
 import { FormInput } from '@/components/FormInput'
@@ -34,6 +30,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useFormRefValidation } from '@/hooks/useFormRefValidation'
 
 import { InterestConfigComponent, PaymentModeConfig, RecurrenceConfigComponent } from './index'
+import { InterestBlockFormValues } from './interest/interestBlock.types'
 import { RecurrenceBlockFormValues } from './recurrence/recurrenceBlock.types'
 
 interface TransactionFormProps {
@@ -76,29 +73,9 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
   const [recurrenceConfig, setRecurrenceConfig] = useState<RecurrenceBlockFormValues | undefined>(
     undefined
   )
-  const [interest, setInterest] = useState<InterestConfig | undefined>(undefined)
-  const handleInterestChange = (interest: InterestConfig | undefined) => {
-    setInterest(interest)
-    // Limpar erro se o valor for válido
-    if (interest) {
-      if (
-        interest.type === InterestType.PERCENTAGE &&
-        interest.percentage &&
-        interest.percentage > 0
-      ) {
-        setErrors((prev) => ({ ...prev, interest: '' }))
-      } else if (
-        interest.type === InterestType.FLAT &&
-        interest.flatAmount &&
-        interest.flatAmount > 0
-      ) {
-        setErrors((prev) => ({ ...prev, interest: '' }))
-      }
-    } else {
-      // Limpar erro quando desabilitar juros
-      setErrors((prev) => ({ ...prev, interest: '' }))
-    }
-  }
+  const [interestConfig, setInterestConfig] = useState<InterestBlockFormValues | undefined>(
+    undefined
+  )
 
   const { mutate: createTransaction, isPending } = useCreateTransaction(workspaceId)
 
@@ -175,20 +152,6 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
       }
     }
 
-    if (interest) {
-      if (interest.type === InterestType.PERCENTAGE) {
-        if (!interest.percentage || interest.percentage <= 0) {
-          setErrors((prev) => ({ ...prev, interest: 'Taxa percentual deve ser maior que 0' }))
-          hasErrors = true
-        }
-      } else if (interest.type === InterestType.FLAT) {
-        if (!interest.flatAmount || interest.flatAmount <= 0) {
-          setErrors((prev) => ({ ...prev, interest: 'Valor fixo deve ser maior que 0' }))
-          hasErrors = true
-        }
-      }
-    }
-
     if (hasErrors) {
       return
     }
@@ -220,7 +183,7 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
         })
         setPaymentConfig({ mode: PaymentMode.CASH })
         setRecurrenceConfig(undefined)
-        setInterest(undefined)
+        setInterestConfig(undefined)
         setPartyType(TransactionActorType.INCOME)
         onSuccess?.()
       },
@@ -401,9 +364,9 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
           <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
             <h3 className="text-gh-text font-semibold">Juros/Taxas</h3>
             <InterestConfigComponent
-              interest={interest}
-              onChange={handleInterestChange}
-              error={errors.interest}
+              ref={(ref) => setRef('TransactionForm', 'InterestConfigComponentRef', ref)}
+              initialValues={interestConfig}
+              onDataChange={setInterestConfig}
             />
           </div>
         </div>

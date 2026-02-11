@@ -44,14 +44,6 @@ export enum InterestType {
   FLAT = 'FLAT', // Valor fixo (ex: R$100)
 }
 
-// Interest configuration (shared by CASH and INSTALLMENT modes)
-export interface InterestConfig {
-  type: InterestType
-  percentage?: number // For PERCENTAGE type
-  flatAmount?: number // For FLAT type
-  description?: string
-}
-
 // Recurrence configuration (only for CASH mode)
 export interface RecurrenceConfig {
   type: RecurrenceType
@@ -63,7 +55,7 @@ export interface RecurrenceConfig {
 export interface CashPaymentConfig {
   mode: PaymentMode.CASH
   recurrence?: RecurrenceConfig
-  interest?: InterestConfig
+  interest?: any
 }
 
 // Payment configuration for INSTALLMENT mode (parcelado)
@@ -75,7 +67,7 @@ export interface InstallmentPaymentConfig {
   downpaymentDate?: Date
   firstInstallmentDate: Date
   installmentIntervalDays?: number
-  interest?: InterestConfig
+  interest?: any
 }
 
 // Union type for payment configuration
