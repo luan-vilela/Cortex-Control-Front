@@ -113,8 +113,9 @@ api.interceptors.response.use(
       originalRequest._retry = true
       originalRequest._retryCount = (originalRequest._retryCount || 0) + 1
 
-      // Limite de 5 tentativas
-      if (originalRequest._retryCount > 5) {
+      // Limite de tentativas configurável via .env
+      const maxRetries = parseInt(process.env.NEXT_PUBLIC_MAX_REFRESH_RETRIES || '5', 10)
+      if (originalRequest._retryCount > maxRetries) {
         if (typeof window !== 'undefined') {
           const isAuthPage =
             window.location.pathname.includes('/auth/login') ||
