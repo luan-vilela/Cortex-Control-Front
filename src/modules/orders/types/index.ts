@@ -18,6 +18,21 @@ export enum OrderPriority {
   URGENT = 'URGENT',
 }
 
+export enum OrderType {
+  OS = 'OS', // Ordem de Serviço
+  CH = 'CH', // Chamado
+  OT = 'OT', // Ordem de Trabalho
+  PV = 'PV', // Proposta / Orçamento
+  CT = 'CT', // Contrato
+  IN = 'IN', // Inspeção / Vistoria
+  MA = 'MA', // Manutenção
+  TR = 'TR', // Treinamento
+  GT = 'GT', // Garantia
+  AG = 'AG', // Agendamento
+  RC = 'RC', // Reclamação
+  SV = 'SV', // Serviço Avulso
+}
+
 export interface OrderStatusTransition {
   id: string
   orderId: string
@@ -31,10 +46,13 @@ export interface OrderStatusTransition {
 
 export interface Order {
   id: string
+  orderNumber: string
+  orderType: OrderType
   title: string
   description?: string
   approvedValue: number
   totalValue?: number
+  isBillable?: boolean
   status: OrderStatus
   priority: OrderPriority
   clientId: string
@@ -62,10 +80,12 @@ export interface Order {
 }
 
 export interface CreateOrderPayload {
+  orderType?: OrderType
   title: string
   description?: string
-  approvedValue: number
+  approvedValue?: number
   totalValue?: number
+  isBillable?: boolean
   priority: OrderPriority
   clientId: string
   assignedToId?: string
@@ -73,6 +93,7 @@ export interface CreateOrderPayload {
 }
 
 export interface UpdateOrderPayload {
+  orderType?: OrderType
   title?: string
   description?: string
   approvedValue?: number

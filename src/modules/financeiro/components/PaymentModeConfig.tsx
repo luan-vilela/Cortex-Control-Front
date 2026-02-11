@@ -3,15 +3,16 @@
 import type { CashPaymentConfig, InstallmentPaymentConfig } from '../types'
 import { InstallmentPlanType, PaymentMode } from '../types'
 
-import { Input } from '@/components/ui/input'
+import { InputNumber } from '@/components/ui/InputNumber'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
 interface PaymentModeConfigProps {
   config?: CashPaymentConfig | InstallmentPaymentConfig
   onChange: (config: CashPaymentConfig | InstallmentPaymentConfig) => void
+  error?: string
 }
 
-export function PaymentModeConfig({ config, onChange }: PaymentModeConfigProps) {
+export function PaymentModeConfig({ config, onChange, error }: PaymentModeConfigProps) {
   const handleModeChange = (mode: PaymentMode) => {
     if (mode === PaymentMode.CASH) {
       const newConfig: CashPaymentConfig = { mode: PaymentMode.CASH }
@@ -20,14 +21,13 @@ export function PaymentModeConfig({ config, onChange }: PaymentModeConfigProps) 
       const newConfig: InstallmentPaymentConfig = {
         mode: PaymentMode.INSTALLMENT,
         planType: InstallmentPlanType.PRICE_TABLE,
-        numberOfInstallments: 12,
+        numberOfInstallments: 1,
         firstInstallmentDate: new Date(),
         installmentIntervalDays: 30,
       }
       onChange(newConfig)
     }
   }
-
   return (
     <div className="space-y-3">
       <RadioGroup
@@ -63,13 +63,10 @@ export function PaymentModeConfig({ config, onChange }: PaymentModeConfigProps) 
       {config?.mode === PaymentMode.INSTALLMENT && (
         <div className="border-border space-y-2 border-t pt-3">
           <label className="text-foreground text-sm font-medium">Número de Parcelas</label>
-          <Input
-            type="number"
-            min="1"
-            max="365"
-            value={(config as InstallmentPaymentConfig).numberOfInstallments || 12}
-            onChange={(e) => {
-              const installments = Math.max(1, Math.min(365, parseInt(e.target.value) || 12))
+          <InputNumber
+            value={(config as InstallmentPaymentConfig).numberOfInstallments}
+            onChange={(value) => {
+              const installments = Math.max(0, Math.min(365, value || 0))
               const newConfig: InstallmentPaymentConfig = {
                 ...config,
                 mode: PaymentMode.INSTALLMENT,
@@ -77,8 +74,12 @@ export function PaymentModeConfig({ config, onChange }: PaymentModeConfigProps) 
               }
               onChange(newConfig)
             }}
+            min={0}
+            max={365}
             placeholder="Digite o número de parcelas"
+            className={error ? 'border-destructive' : ''}
           />
+          {error && <p className="text-destructive text-sm">{error}</p>}
         </div>
       )}
     </div>

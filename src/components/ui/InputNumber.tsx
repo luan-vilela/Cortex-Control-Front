@@ -71,7 +71,7 @@ export const InputNumber: React.FC<InputNumberProps> = ({
     <Input
       type="text"
       inputMode="numeric"
-      pattern="[0-9]*"
+      pattern={mask === 'real' ? '[0-9R$ .,]*' : '[0-9]*'}
       value={displayValue}
       onChange={handleChange}
       min={min}

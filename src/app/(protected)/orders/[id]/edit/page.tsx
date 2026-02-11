@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation'
 
-import { PageHeader } from '@/components/patterns'
 import { OrderForm } from '@/modules/orders/components'
 import { useOrder } from '@/modules/orders/hooks/useOrders'
 import { ModuleGuard } from '@/modules/workspace/components/ModuleGuard'
@@ -67,16 +66,17 @@ export default function EditOrderPage({ params }: EditOrderPageProps) {
 
   return (
     <ModuleGuard moduleId="orders">
-      <div className="space-y-6">
-        <PageHeader title="Editar Ordem de Serviço" description={`Editando: ${order.title}`} />
-
-        <div className="max-w-2xl">
-          <OrderForm
-            workspaceId={activeWorkspace?.id || ''}
-            order={order}
-            onSuccess={handleSuccess}
-            onCancel={handleCancel}
-          />
+      <div className="min-h-screen p-6">
+        <div className="mx-auto w-full">
+          {/* Formulário */}
+          <div className="overflow-hidden rounded-lg bg-white shadow-lg">
+            <OrderForm
+              workspaceId={activeWorkspace?.id || ''}
+              order={order}
+              onSuccess={handleSuccess}
+              onCancel={handleCancel}
+            />
+          </div>
         </div>
       </div>
     </ModuleGuard>

@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation'
 
-import { PageHeader } from '@/components/patterns'
 import { OrderForm } from '@/modules/orders/components'
 import { ModuleGuard } from '@/modules/workspace/components/ModuleGuard'
 import { useBreadcrumb } from '@/modules/workspace/hooks'
@@ -33,10 +32,9 @@ export default function NewOrderPage() {
 
   return (
     <ModuleGuard moduleId="orders">
-      <div className="space-y-6">
-        <PageHeader title="Nova Ordem de Serviço" description="Crie uma nova ordem de serviço" />
-
-        <div className="max-w-2xl">
+      <div className="min-h-screen p-6">
+        <div className="mx-auto w-full">
+          {/* Formulário */}
           <OrderForm
             workspaceId={activeWorkspace?.id || ''}
             onSuccess={handleSuccess}

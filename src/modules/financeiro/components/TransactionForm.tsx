@@ -3,6 +3,7 @@
 import { useCreateTransaction } from '../hooks/useFinance'
 import {
   type CreateTransactionPayload,
+  type InstallmentPaymentConfig,
   type InterestConfig,
   type PaymentConfig,
   PaymentMode,
@@ -54,6 +55,12 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
     notes: '',
   })
 
+  const [errors, setErrors] = useState({
+    description: '',
+    amount: '',
+    installments: '',
+  })
+
   const [partyType, setPartyType] = useState<TransactionActorType>(TransactionActorType.INCOME)
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig>({
     mode: PaymentMode.CASH,
@@ -63,15 +70,19 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
 
   const { mutate: createTransaction, isPending } = useCreateTransaction(workspaceId)
 
-  /**
-   * Handler para mudanças no modo de pagamento
-   * Se mudar para Parcelado, remove recorrência
-   */
   const handlePaymentConfigChange = (config: PaymentConfig) => {
     setPaymentConfig(config)
     // Se for Parcelado, desabilita recorrência
     if (config.mode === PaymentMode.INSTALLMENT) {
       setRecurrenceConfig(undefined)
+      // Limpar erro se o valor for válido
+      const numInstallments = (config as InstallmentPaymentConfig).numberOfInstallments
+      if (numInstallments && numInstallments >= 1) {
+        setErrors((prev) => ({ ...prev, installments: '' }))
+      }
+    } else {
+      // Limpar erro quando não for parcelado
+      setErrors((prev) => ({ ...prev, installments: '' }))
     }
   }
 
@@ -111,13 +122,30 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
+    // Limpar erros anteriores
+    setErrors({ description: '', amount: '', installments: '' })
+
+    let hasErrors = false
+
     if (!formData.description.trim()) {
-      alert('Descrição é obrigatória')
-      return
+      setErrors((prev) => ({ ...prev, description: 'Descrição é obrigatória' }))
+      hasErrors = true
     }
 
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      alert('Valor deve ser maior que zero')
+      setErrors((prev) => ({ ...prev, amount: 'Valor deve ser maior que zero' }))
+      hasErrors = true
+    }
+
+    if (paymentConfig.mode === PaymentMode.INSTALLMENT) {
+      const numInstallments = (paymentConfig as InstallmentPaymentConfig).numberOfInstallments
+      if (!numInstallments || numInstallments < 1) {
+        setErrors((prev) => ({ ...prev, installments: 'Número de parcelas deve ser pelo menos 1' }))
+        hasErrors = true
+      }
+    }
+
+    if (hasErrors) {
       return
     }
 
@@ -244,19 +272,34 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
               label="Descrição"
               placeholder="Ex: Serviço de consultoria, Venda de produtos..."
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              error={errors.description}
+              onChange={(e) => {
+                setFormData({ ...formData, description: e.target.value })
+                // Limpar erro quando usuário começar a digitar
+                if (errors.description) {
+                  setErrors((prev) => ({ ...prev, description: '' }))
+                }
+              }}
             />
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <label className="text-gh-text text-sm font-medium">Valor</label>
                 <InputNumber
                   value={parseFloat(formData.amount) || 0}
-                  onChange={(val) => setFormData({ ...formData, amount: val.toString() })}
+                  onChange={(val) => {
+                    setFormData({ ...formData, amount: val.toString() })
+                    // Limpar erro quando usuário começar a digitar
+                    if (errors.amount) {
+                      setErrors((prev) => ({ ...prev, amount: '' }))
+                    }
+                  }}
                   float={true}
                   min={0}
                   placeholder="R$ 0,00"
                   mask="real"
+                  className={errors.amount ? 'border-destructive' : ''}
                 />
+                {errors.amount && <p className="text-destructive text-sm">{errors.amount}</p>}
               </div>
               <div className="space-y-2">
                 <label className="text-gh-text text-sm font-medium">Vencimento</label>
@@ -287,7 +330,11 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
           {/* Pagamento */}
           <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
             <h3 className="text-gh-text font-semibold">Pagamento</h3>
-            <PaymentModeConfig config={paymentConfig} onChange={handlePaymentConfigChange} />
+            <PaymentModeConfig
+              config={paymentConfig}
+              onChange={handlePaymentConfigChange}
+              error={errors.installments}
+            />
           </div>
         </div>
 

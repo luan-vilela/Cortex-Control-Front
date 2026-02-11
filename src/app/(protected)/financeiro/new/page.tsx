@@ -35,17 +35,16 @@ export default function NewTransactionPage() {
       <div className="min-h-screen p-6">
         <div className="mx-auto w-full">
           {/* Formulário */}
-          <div className="overflow-hidden rounded-lg bg-white shadow-lg">
-            <TransactionForm
-              workspaceId={activeWorkspace.id}
-              onSuccess={() => {
-                router.back()
-              }}
-              onCancel={() => {
-                router.back()
-              }}
-            />
-          </div>
+
+          <TransactionForm
+            workspaceId={activeWorkspace.id}
+            onSuccess={() => {
+              router.back()
+            }}
+            onCancel={() => {
+              router.back()
+            }}
+          />
         </div>
       </div>
     </ModuleGuard>
