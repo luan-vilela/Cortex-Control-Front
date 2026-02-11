@@ -2,7 +2,10 @@ import React, { useState } from 'react'
 
 import { Input } from './input'
 
-interface InputNumberProps {
+interface InputNumberProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  'value' | 'onChange'
+> {
   value: number
   onChange: (value: number) => void
   float?: boolean
@@ -25,6 +28,7 @@ export const InputNumber: React.FC<InputNumberProps> = ({
   placeholder,
   className,
   mask,
+  ...props
 }) => {
   const [input, setInput] = useState('')
 
@@ -78,6 +82,7 @@ export const InputNumber: React.FC<InputNumberProps> = ({
       placeholder={placeholder}
       className={className}
       autoComplete="off"
+      {...props}
     />
   )
 }

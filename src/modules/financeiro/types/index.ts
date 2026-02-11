@@ -23,51 +23,25 @@ export enum PaymentMode {
   INSTALLMENT = 'INSTALLMENT',
 }
 
-export enum RecurrenceType {
-  DAILY = 'DAILY',
-  WEEKLY = 'WEEKLY',
-  BIWEEKLY = 'BIWEEKLY',
-  MONTHLY = 'MONTHLY',
-  QUARTERLY = 'QUARTERLY',
-  SEMIANNUAL = 'SEMIANNUAL',
-  ANNUAL = 'ANNUAL',
-}
-
 export enum InstallmentPlanType {
-  PRICE_TABLE = 'PRICE_TABLE', // Tabela Price: juros + amortização constante
-  SAC = 'SAC', // SAC: amortização fixa, juros decrescentes
   SIMPLE = 'SIMPLE', // Parcelamento Simples: divisão simples
-}
-
-export enum InterestType {
-  PERCENTAGE = 'PERCENTAGE', // Percentual (ex: 5%)
-  FLAT = 'FLAT', // Valor fixo (ex: R$100)
-}
-
-// Recurrence configuration (only for CASH mode)
-export interface RecurrenceConfig {
-  type: RecurrenceType
-  occurrences?: number // NULL = infinite
-  endDate?: Date // Optional end date
+  SAC = 'SAC', // SAC: amortização fixa, juros decrescentes (futuro)
+  PRICE_TABLE = 'PRICE_TABLE', // Tabela Price: juros + amortização constante (futuro)
 }
 
 // Payment configuration for CASH mode (à vista)
 export interface CashPaymentConfig {
   mode: PaymentMode.CASH
-  recurrence?: RecurrenceConfig
-  interest?: any
 }
 
 // Payment configuration for INSTALLMENT mode (parcelado)
 export interface InstallmentPaymentConfig {
   mode: PaymentMode.INSTALLMENT
-  planType: InstallmentPlanType
-  numberOfInstallments: number
-  downpayment?: number
-  downpaymentDate?: Date
-  firstInstallmentDate: Date
-  installmentIntervalDays?: number
-  interest?: any
+  numberOfInstallments: number // Mínimo 2
+  downPayment?: number // Valor de entrada (opcional)
+  planType: InstallmentPlanType // Tipo de plano (padrão SIMPLE)
+  firstInstallmentDate: Date // Data da primeira parcela
+  installmentIntervalDays: number // Intervalo entre parcelas em dias
 }
 
 // Union type for payment configuration

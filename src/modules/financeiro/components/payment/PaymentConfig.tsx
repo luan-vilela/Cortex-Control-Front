@@ -1,11 +1,13 @@
 import { InstallmentPlanType, PaymentMode } from '../../types'
 
-import React, { forwardRef, useImperativeHandle } from 'react'
+import { forwardRef, useImperativeHandle } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 
+import { DatePicker } from '@/components/patterns/DatePicker'
 import { InputNumber } from '@/components/ui/InputNumber'
+import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
 import {
@@ -61,11 +63,15 @@ export const PaymentConfigComponent = forwardRef<PaymentConfigRef, PaymentConfig
         })
         onDataChange?.({ mode: PaymentMode.CASH })
       } else if (mode === PaymentMode.INSTALLMENT) {
+        const tomorrow = new Date()
+        tomorrow.setDate(tomorrow.getDate() + 1)
+
         reset({
           mode: PaymentMode.INSTALLMENT,
-          planType: InstallmentPlanType.SIMPLE,
           numberOfInstallments: 2,
-          firstInstallmentDate: new Date(),
+          downPayment: 0,
+          planType: InstallmentPlanType.SIMPLE,
+          firstInstallmentDate: tomorrow,
           installmentIntervalDays: 30,
         })
         onDataChange?.(getValues())
@@ -105,26 +111,91 @@ export const PaymentConfigComponent = forwardRef<PaymentConfigRef, PaymentConfig
           </div>
         </RadioGroup>
 
-        {/* Campo de Parcelas */}
+        {/* Campos de Parcelamento */}
         {currentMode === PaymentMode.INSTALLMENT && (
-          <div className="border-border space-y-2 border-t pt-3">
-            <label className="text-foreground text-sm font-medium">Número de Parcelas</label>
-            <InputNumber
-              value={(watch as any)('numberOfInstallments') ?? 2}
-              onChange={(value) => {
-                const installments = Math.max(1, Math.min(365, value || 1))
-                handleChange('numberOfInstallments', installments)
-              }}
-              min={1}
-              max={365}
-              placeholder="Digite o número de parcelas"
-              className={(errors as any).numberOfInstallments ? 'border-destructive' : ''}
-            />
-            {(errors as any).numberOfInstallments && (
-              <p className="text-destructive text-sm">
-                {(errors as any).numberOfInstallments.message}
-              </p>
-            )}
+          <div className="border-border mt-6 space-y-3 border-t pt-3">
+            <p className="text-primary/50 pb-2 text-sm font-normal">Detalhes do Parcelamento</p>
+            {/* Valor de Entrada */}
+            <div className="flex w-full gap-3">
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="numberOfInstallments">Número de Parcelas</Label>
+                <InputNumber
+                  id="numberOfInstallments"
+                  value={(watch as any)('numberOfInstallments') ?? 2}
+                  onChange={(value) => {
+                    const installments = Math.max(2, Math.min(365, value || 2))
+                    handleChange('numberOfInstallments', installments)
+                  }}
+                  min={2}
+                  max={365}
+                  placeholder="Digite o número de parcelas (mínimo 2)"
+                  className={(errors as any).numberOfInstallments ? 'border-destructive' : ''}
+                />
+                {(errors as any).numberOfInstallments && (
+                  <p className="text-destructive text-sm">
+                    {(errors as any).numberOfInstallments.message}
+                  </p>
+                )}
+              </div>
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="downPayment">Valor de Entrada (Opcional)</Label>
+                <InputNumber
+                  id="downPayment"
+                  value={(watch as any)('downPayment') ?? 0}
+                  onChange={(value) => handleChange('downPayment', value || 0)}
+                  min={0}
+                  placeholder="R$ 0,00"
+                  className={(errors as any).downPayment ? 'border-destructive' : ''}
+                />
+                {(errors as any).downPayment && (
+                  <p className="text-destructive text-sm">{(errors as any).downPayment.message}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex w-full gap-3">
+              {/* Data da Primeira Parcela */}
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="firstInstallmentDate">Data da Primeira Parcela</Label>
+                <DatePicker
+                  value={(watch as any)('firstInstallmentDate')}
+                  onValueChange={(date) => {
+                    if (date) {
+                      handleChange('firstInstallmentDate', date)
+                    }
+                  }}
+                  placeholder="Selecione a data da primeira parcela"
+                  className={(errors as any).firstInstallmentDate ? 'border-destructive' : ''}
+                />
+                {(errors as any).firstInstallmentDate && (
+                  <p className="text-destructive text-sm">
+                    {(errors as any).firstInstallmentDate.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Intervalo entre Parcelas */}
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="installmentIntervalDays">Intervalo entre Parcelas (dias)</Label>
+                <InputNumber
+                  id="installmentIntervalDays"
+                  value={(watch as any)('installmentIntervalDays') ?? 30}
+                  onChange={(value) => {
+                    const interval = Math.max(1, Math.min(365, value || 30))
+                    handleChange('installmentIntervalDays', interval)
+                  }}
+                  min={1}
+                  max={365}
+                  placeholder="30 dias"
+                  className={(errors as any).installmentIntervalDays ? 'border-destructive' : ''}
+                />
+                {(errors as any).installmentIntervalDays && (
+                  <p className="text-destructive text-sm">
+                    {(errors as any).installmentIntervalDays.message}
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
