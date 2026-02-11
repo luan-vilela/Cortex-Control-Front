@@ -1,15 +1,16 @@
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import { User } from "../types/auth.types";
+import { User } from '../types/auth.types'
+
+import { create } from 'zustand'
+import { createJSONStorage, persist } from 'zustand/middleware'
 
 interface AuthState {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  _hasHydrated: boolean;
-  setHasHydrated: (state: boolean) => void;
-  setAuth: (user: User, token: string) => void;
-  clearAuth: () => void;
+  user: User | null
+  token: string | null
+  isAuthenticated: boolean
+  _hasHydrated: boolean
+  setHasHydrated: (state: boolean) => void
+  setAuth: (user: User, token: string) => void
+  clearAuth: () => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -20,33 +21,34 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       _hasHydrated: false,
       setHasHydrated: (state) => {
-        set({ _hasHydrated: state });
+        set({ _hasHydrated: state })
       },
       setAuth: (user, token) => {
-        if (typeof window !== "undefined") {
-          localStorage.setItem("token", token);
-          localStorage.setItem("user", JSON.stringify(user));
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('token', token)
+          localStorage.setItem('user', JSON.stringify(user))
           // Salva cookie para o middleware poder verificar
-          document.cookie = `cortex-auth-token=${token}; path=/; max-age=${7 * 24 * 60 * 60}`; // 7 dias
+          document.cookie = `cortex-auth-token=${token}; path=/; max-age=${7 * 24 * 60 * 60}` // 7 dias
         }
-        set({ user, token, isAuthenticated: true });
+        set({ user, token, isAuthenticated: true })
       },
       clearAuth: () => {
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token')
+          localStorage.removeItem('refreshToken')
+          localStorage.removeItem('user')
           // Remove o cookie
-          document.cookie = "cortex-auth-token=; path=/; max-age=0";
+          document.cookie = 'cortex-auth-token=; path=/; max-age=0'
         }
-        set({ user: null, token: null, isAuthenticated: false });
+        set({ user: null, token: null, isAuthenticated: false })
       },
     }),
     {
-      name: "auth-storage",
+      name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
+        state?.setHasHydrated(true)
       },
-    },
-  ),
-);
+    }
+  )
+)

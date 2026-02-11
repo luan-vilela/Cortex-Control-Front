@@ -3,8 +3,6 @@
 import { useCreateTransaction } from '../hooks/useFinance'
 import {
   type CreateTransactionPayload,
-  type InstallmentPaymentConfig,
-  type PaymentConfig,
   PaymentMode,
   TransactionActorType,
   TransactionSourceType,
@@ -29,9 +27,10 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useFormRefValidation } from '@/hooks/useFormRefValidation'
 
-import { InterestConfigComponent, PaymentModeConfig, RecurrenceConfigComponent } from './index'
-import { InterestBlockFormValues } from './interest/interestBlock.types'
-import { RecurrenceBlockFormValues } from './recurrence/recurrenceBlock.types'
+import { InterestConfigComponent, PaymentConfigComponent, RecurrenceConfigComponent } from './index'
+import { type InterestBlockFormValues } from './interest/interestBlock.types'
+import { type PaymentBlockFormValues } from './payment'
+import { type RecurrenceBlockFormValues } from './recurrence/recurrenceBlock.types'
 
 interface TransactionFormProps {
   workspaceId: string
@@ -61,13 +60,10 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
   const [errors, setErrors] = useState({
     description: '',
     amount: '',
-    installments: '',
-    recurrence: '',
-    interest: '',
   })
 
   const [partyType, setPartyType] = useState<TransactionActorType>(TransactionActorType.INCOME)
-  const [paymentConfig, setPaymentConfig] = useState<PaymentConfig>({
+  const [paymentConfig, setPaymentConfig] = useState<PaymentBlockFormValues>({
     mode: PaymentMode.CASH,
   })
   const [recurrenceConfig, setRecurrenceConfig] = useState<RecurrenceBlockFormValues | undefined>(
@@ -79,19 +75,12 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
 
   const { mutate: createTransaction, isPending } = useCreateTransaction(workspaceId)
 
-  const handlePaymentConfigChange = (config: PaymentConfig) => {
+  const handlePaymentConfigChange = (config: PaymentBlockFormValues | undefined) => {
+    if (!config) return
     setPaymentConfig(config)
     // Se for Parcelado, desabilita recorrência
     if (config.mode === PaymentMode.INSTALLMENT) {
       setRecurrenceConfig(undefined)
-      // Limpar erro se o valor for válido
-      const numInstallments = (config as InstallmentPaymentConfig).numberOfInstallments
-      if (numInstallments && numInstallments >= 1) {
-        setErrors((prev) => ({ ...prev, installments: '' }))
-      }
-    } else {
-      // Limpar erro quando não for parcelado
-      setErrors((prev) => ({ ...prev, installments: '' }))
     }
   }
 
@@ -123,7 +112,7 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
 
     if (!isFormValid) return
     // Limpar erros anteriores
-    setErrors({ description: '', amount: '', installments: '', recurrence: '', interest: '' })
+    setErrors({ description: '', amount: '' })
 
     let hasErrors = false
 
@@ -137,24 +126,21 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
       hasErrors = true
     }
 
-    if (paymentConfig.mode === PaymentMode.INSTALLMENT) {
-      const numInstallments = (paymentConfig as InstallmentPaymentConfig).numberOfInstallments
-      if (!numInstallments || numInstallments < 1) {
-        setErrors((prev) => ({ ...prev, installments: 'Número de parcelas deve ser pelo menos 1' }))
-        hasErrors = true
-      }
-    }
-
-    if (recurrenceConfig) {
-      if (!recurrenceConfig.occurrences || recurrenceConfig.occurrences < 1) {
-        setErrors((prev) => ({ ...prev, recurrence: 'Número de repetições deve ser pelo menos 1' }))
-        hasErrors = true
-      }
-    }
-
     if (hasErrors) {
       return
     }
+
+    // Converter PaymentBlockFormValues para PaymentConfig (tipo esperado pela API)
+    const apiPaymentConfig =
+      paymentConfig.mode === PaymentMode.CASH
+        ? { mode: PaymentMode.CASH }
+        : {
+            mode: PaymentMode.INSTALLMENT,
+            planType: paymentConfig.planType,
+            numberOfInstallments: paymentConfig.numberOfInstallments,
+            firstInstallmentDate: paymentConfig.firstInstallmentDate,
+            installmentIntervalDays: paymentConfig.installmentIntervalDays,
+          }
 
     const payload: CreateTransactionPayload = {
       sourceType: TransactionSourceType.MANUAL,
@@ -163,7 +149,7 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
       description: formData.description,
       dueDate: formData.dueDate, // Send as YYYY-MM-DD string, backend parses correctly
       notes: formData.notes || undefined,
-      paymentConfig,
+      paymentConfig: apiPaymentConfig as any,
       // Adiciona o workspace como ator com o tipo selecionado (INCOME/EXPENSE)
       actors: [
         {
@@ -332,10 +318,10 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
           {/* Pagamento */}
           <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
             <h3 className="text-gh-text font-semibold">Pagamento</h3>
-            <PaymentModeConfig
-              config={paymentConfig}
-              onChange={handlePaymentConfigChange}
-              error={errors.installments}
+            <PaymentConfigComponent
+              ref={(ref) => setRef('TransactionForm', 'PaymentConfigComponentRef', ref)}
+              initialValues={paymentConfig}
+              onDataChange={handlePaymentConfigChange}
             />
           </div>
         </div>
