@@ -21,22 +21,21 @@ export const interestBlockSchema = z
     if (!data.type) return
 
     if (data.type === InterestType.PERCENTAGE) {
-      if (data.percentage === undefined || data.percentage === 0) {
+      if (data.percentage === undefined) {
         ctx.addIssue({
           path: ['percentage'],
           message:
-            'Taxa percentual não pode ser zero. Use valores positivos para juros ou negativos para desconto',
+            'Informe a taxa percentual (pode ser zero, positivo para juros ou negativo para desconto)',
           code: 'custom',
         })
       }
     }
 
     if (data.type === InterestType.FLAT) {
-      if (data.flatAmount === undefined || data.flatAmount === 0) {
+      if (data.flatAmount === undefined) {
         ctx.addIssue({
           path: ['flatAmount'],
-          message:
-            'Valor não pode ser zero. Use valores positivos para juros ou negativos para desconto',
+          message: 'Informe o valor (pode ser zero, positivo para juros ou negativo para desconto)',
           code: 'custom',
         })
       }
