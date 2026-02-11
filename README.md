@@ -1,37 +1,160 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cortex Control - Frontend
 
-## Getting Started
+Frontend Next.js 16 para o CRM Cortex Control, um sistema multi-tenant para gestão de clientes, fornecedores e parceiros.
 
-First, run the development server:
+## Começando
 
+### Instalar dependências
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Iniciar servidor de desenvolvimento
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Acesse [http://localhost:3001](http://localhost:3001) no navegador.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Build para produção
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## Estrutura do Projeto
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── (protected)/       # Rotas autenticadas
+│   │   ├── persons/       # Módulo de contatos (PRINCIPAL)
+│   │   ├── leads/         # Módulo de leads
+│   │   ├── workspace/     # Configurações do workspace
+│   │   └── ...
+│   └── (public)/          # Rotas públicas (login, register)
+├── components/            # Componentes reutilizáveis
+├── lib/                   # Utilitários (API client, query client)
+├── modules/               # Módulos de negócio
+│   ├── person/           # Person service, hooks, tipos
+│   ├── auth/             # Autenticação
+│   ├── wallet/           # Sistema de créditos
+│   └── ...
+├── contexts/             # Contextos React (Alerts)
+├── providers/            # Providers (Theme, Query, etc)
+└── store/                # Zustand stores (workspace, theme)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Principais Módulos
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Contatos (Persons)
+- **Rota**: `/workspaces/[id]/contatos`
+- **Funcionalidades**: CRUD de contatos com papéis (CLIENTE, FORNECEDOR, PARCEIRO)
+- **Hooks**: `usePersons`, `usePerson`, `useCreatePerson`, `useUpdatePerson`, `useDeletePerson`
+- **Arquivo de referência**: [MODULO_CONTATOS_PADRONIZADO.md](../MODULO_CONTATOS_PADRONIZADO.md)
 
-## Deploy on Vercel
+### Leads
+- **Rota**: `/workspaces/[id]/leads`
+- **Funcionalidades**: Gestão de leads e conversão para cliente
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Workspace
+- **Rota**: `/workspaces/[id]/settings`
+- **Funcionalidades**: Configurações, membros, módulos ativos
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# Cortex-Control-Front
+## Stack Tecnológico
+
+- **Framework**: Next.js 16.1.6 (App Router)
+- **React**: 18.3
+- **State Management**: 
+  - **Server State**: React Query (@tanstack/react-query 5.63.1)
+  - **Client State**: Zustand 4.5.5
+- **Formulários**: React Hook Form + Zod
+- **Styling**: Tailwind CSS 4.0 + gh-theme customizado
+- **Icons**: Lucide React
+- **HTTP Client**: Axios com interceptor JWT
+- **Testing**: Jest + React Testing Library
+
+## Convenções de Código
+
+### Hooks de Dados
+```typescript
+// Queries (leitura)
+const { data, isLoading, error } = usePersons(workspaceId, filters);
+const { data: person } = usePerson(workspaceId, id);
+
+// Mutations (escrita)
+const createMutation = useCreatePerson(workspaceId);
+createMutation.mutate(data, {
+  onSuccess: () => {
+    queryClient.invalidateQueries(['persons', workspaceId]);
+  }
+});
+```
+
+### Componentes
+```typescript
+export default function MyComponent() {
+  const { activeWorkspace } = useWorkspaceStore();
+  const router = useRouter();
+  
+  return (
+    <div className="space-y-4">
+      {/* Tailwind + gh-theme */}
+    </div>
+  );
+}
+```
+
+### Autenticação
+- JWT token armazenado em localStorage
+- Interceptor automático em requisições HTTP
+- Guard de rotas em `middleware.ts`
+
+## Testes
+
+```bash
+npm test                # Testes unitários
+npm test -- --watch     # Watch mode
+npm test -- --coverage  # Cobertura
+```
+
+## Troubleshooting
+
+### Turbopack causando problemas?
+```bash
+TURBOPACK=0 npm run dev
+```
+
+### Limpar cache
+```bash
+rm -rf .next && npm run dev
+```
+
+### Rreconstruir dependências
+```bash
+rm -rf node_modules package-lock.json && npm install
+```
+
+## Integração com Backend
+
+### API Base URL
+- Desenvolvimento: `http://localhost:3000`
+- Produção: Configurável via `NEXT_PUBLIC_API_URL`
+
+### Endpoints Principais
+- `POST /auth/login` - Login com email/senha ou Google/Facebook
+- `POST /auth/register` - Registro de novo usuário
+- `GET /workspaces/:id` - Detalhes do workspace
+- `GET /workspaces/:id/contatos` - Lista de contatos
+- `POST /workspaces/:id/contatos` - Criar contato
+- `PATCH /workspaces/:id/contatos/:personId` - Editar contato
+- `DELETE /workspaces/:id/contatos/:personId` - Deletar contato
+
+Ver [INTEGRACAO_FRONTEND.md](../INTEGRACAO_FRONTEND.md) para documentação completa da integração.
+
+## Documentação Relacionada
+
+- [CONTEXTO_PROJETO.md](../CONTEXTO_PROJETO.md) - Visão geral do projeto
+- [MODULO_CONTATOS_PADRONIZADO.md](../MODULO_CONTATOS_PADRONIZADO.md) - Detalhes do módulo de contatos
+- [INTEGRACAO_FRONTEND.md](../INTEGRACAO_FRONTEND.md) - Comunicação com backend
+- [INTERFACE_PESSOAS.md](./INTERFACE_PESSOAS.md) - Interface do módulo de pessoas

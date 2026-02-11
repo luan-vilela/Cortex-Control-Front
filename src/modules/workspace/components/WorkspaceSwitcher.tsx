@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { useWorkspaceStore } from "../store/workspace.store";
-import { ChevronDown, Building2, Plus, Check } from "lucide-react";
+import { ChevronDown, Building2, Plus, Check, Package } from "lucide-react";
+import Link from "next/link";
 
 export function WorkspaceSwitcher() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const {
     workspaces,
@@ -14,20 +18,28 @@ export function WorkspaceSwitcher() {
     _hasHydrated,
   } = useWorkspaceStore();
 
+  // Carregar workspaces na montagem do componente
   useEffect(() => {
     if (_hasHydrated) {
       fetchWorkspaces();
     }
-  }, [_hasHydrated]);
+  }, [_hasHydrated, fetchWorkspaces]);
 
-  if (!_hasHydrated || !activeWorkspace) {
+  // Se ainda está carregando ou sem workspace, não renderiza o botão
+  if (!_hasHydrated || !activeWorkspace || workspaces.length === 0) {
     return null;
   }
 
   const handleSwitchWorkspace = async (workspaceId: string) => {
     try {
-      await switchWorkspace(workspaceId);
       setIsOpen(false);
+
+      const pathSegments = pathname.split("/").filter(Boolean);
+      const firstRoute = pathSegments[0] ? `/${pathSegments[0]}` : "/dashboard";
+      router.push(firstRoute);
+
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await switchWorkspace(workspaceId);
     } catch (error) {
       console.error("Erro ao trocar workspace:", error);
     }
@@ -91,15 +103,23 @@ export function WorkspaceSwitcher() {
 
               <div className="my-2 border-t border-gh-border" />
 
-              <a
+              <Link
                 href="/workspaces/new"
                 className="w-full flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gh-bg transition-colors text-blue-600"
               >
                 <Plus className="w-4 h-4" />
                 <span className="text-sm font-medium">Criar Workspace</span>
-              </a>
+              </Link>
 
-              <a
+              <Link
+                href={`/workspaces/${activeWorkspace.id}/modules`}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gh-bg transition-colors text-gh-text"
+              >
+                <Package className="w-4 h-4" />
+                <span className="text-sm font-medium">Instalar Módulos</span>
+              </Link>
+
+              <Link
                 href="/workspaces"
                 className="w-full flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gh-bg transition-colors text-gh-text"
               >
@@ -107,7 +127,7 @@ export function WorkspaceSwitcher() {
                 <span className="text-sm font-medium">
                   Gerenciar Workspaces
                 </span>
-              </a>
+              </Link>
             </div>
           </div>
         </>

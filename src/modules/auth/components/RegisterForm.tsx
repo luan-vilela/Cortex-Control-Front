@@ -9,8 +9,8 @@ import { UserPlus, Chrome } from "lucide-react";
 import { registerSchema, RegisterFormData } from "../schemas/auth.schema";
 import { authService } from "../services/auth.service";
 import { useAuthStore } from "../store/auth.store";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/button";
+import { FormInput } from "@/components/FormInput";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -68,7 +68,7 @@ export function RegisterForm() {
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <Input
+        <FormInput
           label="Nome Completo"
           type="text"
           placeholder="João Silva"
@@ -76,7 +76,7 @@ export function RegisterForm() {
           {...register("name")}
         />
 
-        <Input
+        <FormInput
           label="Email"
           type="email"
           placeholder="seu@email.com"
@@ -84,7 +84,7 @@ export function RegisterForm() {
           {...register("email")}
         />
 
-        <Input
+        <FormInput
           label="Senha"
           type="password"
           placeholder="••••••••"
@@ -92,7 +92,7 @@ export function RegisterForm() {
           {...register("password")}
         />
 
-        <Input
+        <FormInput
           label="Nome da Empresa (opcional)"
           type="text"
           placeholder="Minha Empresa"
@@ -120,9 +120,9 @@ export function RegisterForm() {
 
         <Button
           type="submit"
-          variant="primary"
+          variant="default"
           size="lg"
-          isLoading={isLoading}
+          disabled={isLoading}
           className="w-full"
         >
           Criar Conta
@@ -135,7 +135,9 @@ export function RegisterForm() {
           <div className="w-full border-t border-gh-border" />
         </div>
         <div className="relative flex justify-center">
-          <span className="px-4 text-xs text-gh-text-secondary bg-white">ou</span>
+          <span className="px-4 text-xs text-gh-text-secondary bg-white">
+            ou
+          </span>
         </div>
       </div>
 

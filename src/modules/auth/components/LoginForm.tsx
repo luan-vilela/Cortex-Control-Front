@@ -9,8 +9,8 @@ import { LogIn, Chrome } from "lucide-react";
 import { loginSchema, LoginFormData } from "../schemas/auth.schema";
 import { authService } from "../services/auth.service";
 import { useAuthStore } from "../store/auth.store";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/button";
+import { FormInput } from "@/components/FormInput";
 
 export function LoginForm() {
   const router = useRouter();
@@ -68,7 +68,7 @@ export function LoginForm() {
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <Input
+        <FormInput
           label="Email"
           type="email"
           placeholder="seu@email.com"
@@ -76,7 +76,7 @@ export function LoginForm() {
           {...register("email")}
         />
 
-        <Input
+        <FormInput
           label="Senha"
           type="password"
           placeholder="••••••••"
@@ -90,7 +90,9 @@ export function LoginForm() {
               type="checkbox"
               className="w-4 h-4 text-blue-600 border-gh-border rounded focus:ring-blue-500"
             />
-            <span className="ml-2 text-sm text-gh-text-secondary">Lembrar-me</span>
+            <span className="ml-2 text-sm text-gh-text-secondary">
+              Lembrar-me
+            </span>
           </label>
 
           <Link
@@ -103,9 +105,9 @@ export function LoginForm() {
 
         <Button
           type="submit"
-          variant="primary"
+          variant="default"
           size="lg"
-          isLoading={isLoading}
+          disabled={isLoading}
           className="w-full"
         >
           Entrar
@@ -118,7 +120,9 @@ export function LoginForm() {
           <div className="w-full border-t border-gh-border" />
         </div>
         <div className="relative flex justify-center">
-          <span className="px-4 text-xs text-gh-text-secondary bg-white">ou</span>
+          <span className="px-4 text-xs text-gh-text-secondary bg-white">
+            ou
+          </span>
         </div>
       </div>
 

@@ -23,28 +23,6 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gh-bg">
-      {/* Header */}
-      <header className="bg-gh-card border border-gh-border">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push("/dashboard")}
-                className="p-2 hover:bg-gh-bg rounded-lg transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <h1 className="text-2xl font-bold text-gh-text">Meu Perfil</h1>
-            </div>
-            <div className="flex items-center gap-2">
-              <NotificationBell />
-              <WalletDisplay />
-              <UserMenu />
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Profile Card */}
