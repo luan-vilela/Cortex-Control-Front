@@ -153,6 +153,11 @@ export interface CreateTransactionPayload {
     flatAmount?: number
     description?: string
   }
+  recurrenceConfig?: {
+    type: RecurrenceType
+    occurrences?: number
+    endDate?: Date
+  }
   actors?: CreateTransactionPartyPayload[]
 }
 

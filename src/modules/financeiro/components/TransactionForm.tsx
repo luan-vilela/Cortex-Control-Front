@@ -141,6 +141,13 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
             description: interestConfig.description,
           }
         : undefined,
+      recurrenceConfig: recurrenceConfig?.type
+        ? {
+            type: recurrenceConfig.type as any,
+            occurrences: recurrenceConfig.occurrences,
+            endDate: recurrenceConfig.endDate,
+          }
+        : undefined,
       // Adiciona o workspace como ator com o tipo selecionado (INCOME/EXPENSE)
       actors: [
         {
