@@ -139,6 +139,9 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
             percentage: interestConfig.percentage,
             flatAmount: interestConfig.flatAmount,
             description: interestConfig.description,
+            penaltyPercentage: interestConfig.penaltyPercentage,
+            interestPerMonth: interestConfig.interestPerMonth,
+            interestPeriod: interestConfig.interestPeriod,
           }
         : undefined,
       recurrenceConfig: recurrenceConfig?.type

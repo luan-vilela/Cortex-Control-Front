@@ -5,6 +5,11 @@ export enum InterestType {
   FLAT = 'FLAT',
 }
 
+export enum InterestPeriod {
+  MONTHLY = 'MONTHLY',
+  ANNUAL = 'ANNUAL',
+}
+
 export const interestBlockSchema = z
   .object({
     // Aba 1: Taxas e Ajustes (altera valor agora)
@@ -13,9 +18,10 @@ export const interestBlockSchema = z
     flatAmount: z.number().optional(),
     description: z.string().optional(),
 
-    // Aba 2: Multa e Mora (metadados para futuro)
+    // Aba 2: Multa e Mora (metadados para atraso)
     penaltyPercentage: z.number().optional(), // Multa fixa %
-    interestPerMonth: z.number().optional(), // Juros de mora % ao mês
+    interestPerMonth: z.number().optional(), // Juros de mora (taxa no período)
+    interestPeriod: z.nativeEnum(InterestPeriod).optional(), // Período de aplicação dos juros
   })
   .superRefine((data, ctx) => {
     if (!data.type) return

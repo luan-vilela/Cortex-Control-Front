@@ -14,6 +14,7 @@ import {
   type InterestConfigProps,
   type InterestConfigRef,
   InterestType,
+  InterestPeriod,
   interestBlockSchema,
 } from './interestBlock.types'
 
@@ -35,6 +36,7 @@ export const InterestConfigComponent = forwardRef<InterestConfigRef, InterestCon
         description: '',
         penaltyPercentage: undefined,
         interestPerMonth: undefined,
+        interestPeriod: InterestPeriod.MONTHLY, // Default para MONTHLY
         ...initialValues,
       },
       mode: 'onChange',
@@ -250,7 +252,7 @@ export const InterestConfigComponent = forwardRef<InterestConfigRef, InterestCon
               {/* Juros de Mora */}
               <div className="space-y-2">
                 <Label htmlFor="interestPerMonth" className="text-xs">
-                  Juros de Mora (% ao mês)
+                  Juros de Mora (% ao período)
                 </Label>
                 <InputNumber
                   id="interestPerMonth"
@@ -265,6 +267,36 @@ export const InterestConfigComponent = forwardRef<InterestConfigRef, InterestCon
                 {errors.interestPerMonth && (
                   <p className="text-destructive text-xs">{errors.interestPerMonth.message}</p>
                 )}
+              </div>
+
+              {/* Período de Juros */}
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Período de Juros</Label>
+                <div className="flex gap-2">
+                  <label className="border-input hover:bg-accent flex flex-1 cursor-pointer items-center gap-2 rounded border p-2 transition-colors">
+                    <input
+                      type="radio"
+                      name="interestPeriod"
+                      value="MONTHLY"
+                      checked={watch('interestPeriod') === InterestPeriod.MONTHLY}
+                      onChange={() => handleChange('interestPeriod', InterestPeriod.MONTHLY)}
+                      className="h-3 w-3"
+                    />
+                    <span className="text-foreground text-xs font-medium">Mensal</span>
+                  </label>
+
+                  <label className="border-input hover:bg-accent flex flex-1 cursor-pointer items-center gap-2 rounded border p-2 transition-colors opacity-50 cursor-not-allowed">
+                    <input
+                      type="radio"
+                      name="interestPeriod"
+                      value="ANNUAL"
+                      disabled
+                      className="h-3 w-3"
+                    />
+                    <span className="text-foreground text-xs font-medium">Anual</span>
+                    <span className="text-muted-foreground text-[10px]">(futuro)</span>
+                  </label>
+                </div>
               </div>
 
               <div className="bg-muted/50 text-muted-foreground rounded-md p-3 text-xs">

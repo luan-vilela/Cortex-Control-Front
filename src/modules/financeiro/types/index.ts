@@ -102,6 +102,10 @@ export interface InterestConfigEntity {
   percentage?: number
   flatAmount?: number
   description?: string
+  // ✨ Novos campos para multa e mora
+  penaltyPercentage?: number
+  interestPerMonth?: number
+  interestPeriod: 'MONTHLY' | 'ANNUAL'
   createdAt: Date
   updatedAt: Date
 }
@@ -152,6 +156,10 @@ export interface CreateTransactionPayload {
     percentage?: number
     flatAmount?: number
     description?: string
+    // ✨ Novos campos para multa e mora
+    penaltyPercentage?: number
+    interestPerMonth?: number
+    interestPeriod?: 'MONTHLY' | 'ANNUAL'
   }
   recurrenceConfig?: {
     type: RecurrenceType
