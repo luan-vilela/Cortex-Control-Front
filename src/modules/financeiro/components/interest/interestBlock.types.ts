@@ -52,6 +52,7 @@ export const INTEREST_LABELS: Record<InterestType, string> = {
 export interface InterestConfigProps {
   initialValues?: InterestBlockFormValues
   onDataChange?: (data: InterestBlockFormValues | undefined) => void
+  disabledTypes?: InterestType[]
 }
 
 export interface InterestConfigRef {

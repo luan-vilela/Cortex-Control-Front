@@ -18,7 +18,7 @@ import {
 } from './interestBlock.types'
 
 export const InterestConfigComponent = forwardRef<InterestConfigRef, InterestConfigProps>(
-  ({ initialValues, onDataChange }, ref) => {
+  ({ initialValues, onDataChange, disabledTypes = [] }, ref) => {
     const {
       watch,
       setValue,
@@ -141,7 +141,13 @@ export const InterestConfigComponent = forwardRef<InterestConfigRef, InterestCon
                   <span className="text-foreground text-xs font-medium">Percentual (%)</span>
                 </label>
 
-                <label className="border-input hover:bg-accent flex flex-1 cursor-pointer items-center gap-2 rounded border p-2 transition-colors">
+                <label
+                  className={`border-input flex flex-1 items-center gap-2 rounded border p-2 transition-colors ${
+                    disabledTypes.includes(InterestType.FLAT)
+                      ? 'cursor-not-allowed opacity-50'
+                      : 'hover:bg-accent cursor-pointer'
+                  }`}
+                >
                   <input
                     type="radio"
                     name="chargeType"
@@ -151,9 +157,15 @@ export const InterestConfigComponent = forwardRef<InterestConfigRef, InterestCon
                       handleChange('type', InterestType.FLAT)
                       if (!watch('flatAmount')) handleChange('flatAmount', 0)
                     }}
+                    disabled={disabledTypes.includes(InterestType.FLAT)}
                     className="h-3 w-3"
                   />
                   <span className="text-foreground text-xs font-medium">Valor Fixo (R$)</span>
+                  {disabledTypes.includes(InterestType.FLAT) && (
+                    <span className="text-muted-foreground text-[10px]">
+                      (não disponível para este plano)
+                    </span>
+                  )}
                 </label>
               </div>
 

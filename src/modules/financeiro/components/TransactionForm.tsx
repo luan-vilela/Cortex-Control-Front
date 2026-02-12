@@ -33,6 +33,7 @@ import {
   RecurrenceConfigComponent,
 } from './index'
 import { type InfoBlockFormValues } from './info/infoBlock.types'
+import { InterestType } from './interest/interestBlock.types'
 import { type InterestBlockFormValues } from './interest/interestBlock.types'
 import { type PaymentBlockFormValues } from './payment'
 import { type RecurrenceBlockFormValues } from './recurrence/recurrenceBlock.types'
@@ -44,7 +45,7 @@ interface TransactionFormProps {
 }
 
 export function TransactionForm({ workspaceId, onSuccess, onCancel }: TransactionFormProps) {
-  const { validate, setRef, getRef } = useFormRefValidation()
+  const { validate, setRef } = useFormRefValidation()
 
   const [partyType, setPartyType] = useState<TransactionActorType>(TransactionActorType.INCOME)
   const [infoConfig, setInfoConfig] = useState<InfoBlockFormValues>({
@@ -63,6 +64,7 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
     undefined
   )
   const [validationErrors, setValidationErrors] = useState<string[]>([])
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
 
   const { mutate: createTransaction, isPending } = useCreateTransaction(workspaceId)
 
@@ -77,20 +79,12 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
   }
 
   /**
-   * Converte string de data (YYYY-MM-DD) para Date em timezone local
-   * Evita problema onde new Date("2026-02-08") cria data em UTC
-   */
-  const parseLocalDateString = (dateStr: string): Date => {
-    const [year, month, day] = dateStr.split('-').map(Number)
-    const date = new Date(year, month - 1, day)
-    return date
-  }
-  /**
    * Converte Date para string ISO local (YYYY-MM-DD)
    * IMPORTANTE: Usa getFullYear/getMonth/getDate (local) não UTC!
    * Isso preserva a data local sem conversão para UTC
    */
-  const formatDateToLocalISO = (date: Date): string => {
+  const formatDateToLocalISO = (date?: Date): string => {
+    if (!date) return ''
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
@@ -176,18 +170,12 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
               Cancelar
             </Button>
           )}
-          <TransactionPreview
-            partyType={partyType}
-            infoConfig={infoConfig}
-            paymentConfig={paymentConfig}
-            recurrenceConfig={recurrenceConfig}
-            interestConfig={interestConfig}
-          >
-            <Button type="button" variant="outline">
-              <Eye className="mr-2 h-4 w-4" />
-              Visualizar
-            </Button>
-          </TransactionPreview>
+
+          <Button type="button" variant="outline" onClick={() => setIsPreviewOpen(true)}>
+            <Eye className="mr-2 h-4 w-4" />
+            Visualizar
+          </Button>
+
           <Button form="transaction-form" type="submit" disabled={isPending}>
             {isPending ? 'Salvando...' : 'Criar Transação'}
           </Button>
@@ -280,7 +268,7 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
             <InfoBlockComponent
               ref={(ref) => setRef('TransactionForm', 'InfoBlockComponentRef', ref)}
               initialValues={infoConfig}
-              onDataChange={setInfoConfig}
+              onDataChange={(values) => values && setInfoConfig(values)}
               disableDueDate={paymentConfig.mode === PaymentMode.INSTALLMENT}
               requireAmount={paymentConfig.mode === PaymentMode.INSTALLMENT}
             />
@@ -324,10 +312,28 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
               ref={(ref) => setRef('TransactionForm', 'InterestConfigComponentRef', ref)}
               initialValues={interestConfig}
               onDataChange={setInterestConfig}
+              disabledTypes={
+                paymentConfig?.mode === PaymentMode.INSTALLMENT &&
+                (paymentConfig.planType === 'PRICE_TABLE' || paymentConfig.planType === 'SAC')
+                  ? [InterestType.FLAT]
+                  : []
+              }
             />
           </div>
         </div>
       </form>
+
+      {isPreviewOpen && (
+        <TransactionPreview
+          open={isPreviewOpen}
+          onOpenChange={setIsPreviewOpen}
+          partyType={partyType}
+          infoConfig={infoConfig}
+          paymentConfig={paymentConfig}
+          recurrenceConfig={recurrenceConfig}
+          interestConfig={interestConfig}
+        />
+      )}
     </>
   )
 }

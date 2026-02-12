@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 import {
   type PaymentBlockFormValues,
@@ -122,6 +123,24 @@ export const PaymentConfigComponent = forwardRef<PaymentConfigRef, PaymentConfig
         {currentMode === PaymentMode.INSTALLMENT && (
           <div className="border-border mt-6 space-y-3 border-t pt-3">
             <p className="text-primary/50 pb-2 text-sm font-normal">Detalhes do Parcelamento</p>
+
+            {/* Tabs para tipo de amortização */}
+            <div className="flex flex-col gap-2">
+              <Label>Tipo de Amortização</Label>
+              <div className="w-full">
+                <Tabs
+                  value={(watch as any)('planType') ?? 'SIMPLE'}
+                  onValueChange={(value) => handleChange('planType', value)}
+                  className="w-full"
+                >
+                  <TabsList className="flex w-full gap-2">
+                    <TabsTrigger value="SIMPLE">Simples</TabsTrigger>
+                    <TabsTrigger value="PRICE_TABLE">Price</TabsTrigger>
+                    <TabsTrigger value="SAC">SAC</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+            </div>
             {/* Valor de Entrada */}
             <div className="flex w-full gap-3">
               <div className="flex-1 space-y-2">

@@ -29,6 +29,18 @@ export enum InstallmentPlanType {
   PRICE_TABLE = 'PRICE_TABLE', // Tabela Price: juros + amortização constante (futuro)
 }
 
+export enum RecurrenceType {
+  DAILY = 'DAILY',
+  WEEKLY = 'WEEKLY',
+  MONTHLY = 'MONTHLY',
+  YEARLY = 'YEARLY',
+}
+
+export enum InterestType {
+  PERCENTAGE = 'PERCENTAGE',
+  FLAT = 'FLAT',
+}
+
 // Payment configuration for CASH mode (à vista)
 export interface CashPaymentConfig {
   mode: PaymentMode.CASH
