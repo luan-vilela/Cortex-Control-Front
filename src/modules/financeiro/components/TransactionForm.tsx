@@ -140,7 +140,7 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
             flatAmount: interestConfig.flatAmount,
             description: interestConfig.description,
             penaltyPercentage: interestConfig.penaltyPercentage,
-            interestPerMonth: interestConfig.interestPerMonth,
+            interestPercentage: interestConfig.interestPercentage,
             interestPeriod: interestConfig.interestPeriod,
           }
         : undefined,

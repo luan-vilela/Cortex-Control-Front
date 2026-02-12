@@ -20,8 +20,8 @@ export const interestBlockSchema = z
 
     // Aba 2: Multa e Mora (metadados para atraso)
     penaltyPercentage: z.number().optional(), // Multa fixa %
-    interestPerMonth: z.number().optional(), // Juros de mora (taxa no período)
-    interestPeriod: z.nativeEnum(InterestPeriod).optional(), // Período de aplicação dos juros
+    interestPercentage: z.number().optional(), // Taxa de juros (período definido por interestPeriod)
+    interestPeriod: z.nativeEnum(InterestPeriod).optional(), // MONTHLY | ANNUAL
   })
   .superRefine((data, ctx) => {
     if (!data.type) return

@@ -10,6 +10,7 @@
 ### 1. Tipos e Schema - [interestBlock.types.ts](src/modules/financeiro/components/interest/interestBlock.types.ts)
 
 **Adicionado:**
+
 - ✨ Enum `InterestPeriod` com opções `MONTHLY` (padrão) e `ANNUAL` (futuro, desabilitado)
 - ✨ Campo `interestPercentage` opcional no schema
 - ✨ Campo `interestPeriod` com default `MONTHLY`
@@ -32,13 +33,14 @@ interestPeriod: z.nativeEnum(InterestPeriod).default(InterestPeriod.MONTHLY)
 
 **Aba 2 "Multa e Mora" agora contém:**
 
-| Campo | Tipo | Default | Status |
-|-------|------|---------|--------|
-| Multa (%) | InputNumber | 0 | ✅ Editável |
-| Juros de Mora (%) | InputNumber | 0 | ✅ Editável |
-| Período | Radio (MONTHLY/ANNUAL) | MONTHLY | ✅ MONTHLY ativo, ANNUAL desabilitado (futuro) |
+| Campo             | Tipo                   | Default | Status                                         |
+| ----------------- | ---------------------- | ------- | ---------------------------------------------- |
+| Multa (%)         | InputNumber            | 0       | ✅ Editável                                    |
+| Juros de Mora (%) | InputNumber            | 0       | ✅ Editável                                    |
+| Período           | Radio (MONTHLY/ANNUAL) | MONTHLY | ✅ MONTHLY ativo, ANNUAL desabilitado (futuro) |
 
 **Visual:**
+
 - Multa e Mora são campos opcionais
 - Campo de período permite seleção de MONTHLY vs ANNUAL
 - ANNUAL aparece com tag "(futuro)" e é desabilitado por enquanto
@@ -70,6 +72,7 @@ interestConfig: {
 Veja [BACKEND_IMPLEMENTATION_PENALTY_INTEREST.md](./BACKEND_IMPLEMENTATION_PENALTY_INTEREST.md) para:
 
 ### 1. Migration SQL
+
 ```sql
 ALTER TABLE financeiro_interest_config
   ADD COLUMN penalty_percentage DECIMAL(5,2),
@@ -78,6 +81,7 @@ ALTER TABLE financeiro_interest_config
 ```
 
 ### 2. TypeORM Entity (`interest-config.entity.ts`)
+
 ```typescript
 @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
 penaltyPercentage: number | null
@@ -90,13 +94,16 @@ interestPeriod: string
 ```
 
 ### 3. DTOs
+
 - `CreateInterestConfigDto` - Validações com `@IsNumber()`, `@Min(0)`, `@Max(100)`
 - `InterestConfigResponseDto` - Retorno de dados
 
 ### 4. Tipos Frontend
+
 Atualizar `InterestConfigEntity` em [src/modules/financeiro/types/index.ts](src/modules/financeiro/types/index.ts)
 
 ### 5. Serviço de Cálculo (Futuro)
+
 `PenaltyCalculatorService` - Calcula multa + juros proporcionais ao período
 
 ---
@@ -104,6 +111,7 @@ Atualizar `InterestConfigEntity` em [src/modules/financeiro/types/index.ts](src/
 ## 🔄 Fluxo de Dados Completo
 
 ### Configuração (Agora)
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ InterestConfig.tsx (Aba 2: Multa e Mora)                    │
@@ -134,6 +142,7 @@ Atualizar `InterestConfigEntity` em [src/modules/financeiro/types/index.ts](src/
 ```
 
 ### Cálculo de Atraso (Futuro)
+
 ```
 Quando transação fica atrasada:
   1. Sistema detecta: daysOverdue = 15
@@ -168,6 +177,7 @@ Se parcela de R$ 100,00 atrasar 45 dias:
 ## 🚀 Próximos Passos
 
 ### Imediato (hoje)
+
 - [x] Frontend: Adicionar campos UI e validação ✅
 - [x] Frontend: Enviar no payload ✅
 - [ ] Backend: Executar migration SQL
@@ -176,12 +186,14 @@ Se parcela de R$ 100,00 atrasar 45 dias:
 - [ ] Testar endpoint POST /transactions
 
 ### Curto Prazo (essa semana)
+
 - [ ] Implementar `PenaltyCalculatorService`
 - [ ] Job/cron de detecção de atrasos
 - [ ] Tabela `financeiro_penalty_calculations` para auditoria
 - [ ] Endpoint GET `/transactions/:id/penalties`
 
 ### Médio Prazo (próximas 2 semanas)
+
 - [ ] UI de relatório de multas/juros
 - [ ] Suporte para período ANNUAL
 - [ ] Integração com sistema de notificações
@@ -191,14 +203,14 @@ Se parcela de R$ 100,00 atrasar 45 dias:
 
 ## 📁 Arquivos Modificados
 
-| Arquivo | Mudança | Status |
-|---------|---------|--------|
-| [interestBlock.types.ts](src/modules/financeiro/components/interest/interestBlock.types.ts) | Enum + Schema | ✅ |
-| [InterestConfig.tsx](src/modules/financeiro/components/interest/InterestConfig.tsx) | UI + import | ✅ |
-| [TransactionForm.tsx](src/modules/financeiro/components/TransactionForm.tsx) | Payload | ✅ |
-| Backend: interest-config.entity.ts | @Column | 📋 Documentado |
-| Backend: DTOs | Validações | 📋 Documentado |
-| Backend: index.ts (tipos) | Interfaces | 📋 Documentado |
+| Arquivo                                                                                     | Mudança       | Status         |
+| ------------------------------------------------------------------------------------------- | ------------- | -------------- |
+| [interestBlock.types.ts](src/modules/financeiro/components/interest/interestBlock.types.ts) | Enum + Schema | ✅             |
+| [InterestConfig.tsx](src/modules/financeiro/components/interest/InterestConfig.tsx)         | UI + import   | ✅             |
+| [TransactionForm.tsx](src/modules/financeiro/components/TransactionForm.tsx)                | Payload       | ✅             |
+| Backend: interest-config.entity.ts                                                          | @Column       | 📋 Documentado |
+| Backend: DTOs                                                                               | Validações    | 📋 Documentado |
+| Backend: index.ts (tipos)                                                                   | Interfaces    | 📋 Documentado |
 
 ---
 
@@ -224,4 +236,3 @@ A: Backend (detecção de atraso via job) ou Frontend (preview opcional). Hoje: 
 - ✅ Default: interestPeriod = MONTHLY
 
 ---
-

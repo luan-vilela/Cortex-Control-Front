@@ -271,4 +271,3 @@ export class PenaltyCalculatorService {
 - [ ] Calcular e armazenar penalidades em tabela `financeiro_penalty_calculations` (auditoria)
 - [ ] Endpoints de relatório com agregação de multas e juros
 - [ ] Implementar suporte a período ANNUAL
-

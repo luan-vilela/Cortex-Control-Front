@@ -195,7 +195,8 @@ export function TransactionPreview({
           {/* Multa e Mora */}
           <PenaltySection
             penaltyPercentage={interestConfig?.penaltyPercentage}
-            interestPerMonth={interestConfig?.interestPerMonth}
+            interestPercentage={interestConfig?.interestPercentage}
+            interestPeriod={interestConfig?.interestPeriod}
           />
 
           {/* Forma de Pagamento */}

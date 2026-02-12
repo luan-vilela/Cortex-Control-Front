@@ -4,11 +4,14 @@ import { Separator } from '@/components/ui/separator'
 
 interface PenaltySectionProps {
   penaltyPercentage?: number
-  interestPerMonth?: number
+  interestPercentage?: number
+  interestPeriod?: 'MONTHLY' | 'ANNUAL'
 }
 
-export function PenaltySection({ penaltyPercentage, interestPerMonth }: PenaltySectionProps) {
-  if (!penaltyPercentage && !interestPerMonth) return null
+export function PenaltySection({ penaltyPercentage, interestPercentage, interestPeriod = 'MONTHLY' }: PenaltySectionProps) {
+  if (!penaltyPercentage && !interestPercentage) return null
+
+  const periodLabel = interestPeriod === 'ANNUAL' ? 'Ano' : 'Mês'
 
   return (
     <div className="space-y-3 rounded-lg border border-orange-200 bg-orange-50/50 p-4 dark:border-orange-900 dark:bg-orange-950/20">
@@ -24,10 +27,10 @@ export function PenaltySection({ penaltyPercentage, interestPerMonth }: PenaltyS
             <span className="font-medium">{penaltyPercentage} %</span>
           </div>
         )}
-        {interestPerMonth && (
+        {interestPercentage && (
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Juros ao Mês:</span>
-            <span className="font-medium">{interestPerMonth} %</span>
+            <span className="text-muted-foreground">Juros (% ao {periodLabel.toLowerCase()}):</span>
+            <span className="font-medium">{interestPercentage} %</span>
           </div>
         )}
         <div className="border-t border-orange-200 pt-2 dark:border-orange-900">

@@ -13,8 +13,8 @@ import {
   type InterestBlockFormValues,
   type InterestConfigProps,
   type InterestConfigRef,
-  InterestType,
   InterestPeriod,
+  InterestType,
   interestBlockSchema,
 } from './interestBlock.types'
 
@@ -35,7 +35,7 @@ export const InterestConfigComponent = forwardRef<InterestConfigRef, InterestCon
         flatAmount: undefined,
         description: '',
         penaltyPercentage: undefined,
-        interestPerMonth: undefined,
+        interestPercentage: undefined,
         interestPeriod: InterestPeriod.MONTHLY, // Default para MONTHLY
         ...initialValues,
       },
@@ -251,21 +251,21 @@ export const InterestConfigComponent = forwardRef<InterestConfigRef, InterestCon
 
               {/* Juros de Mora */}
               <div className="space-y-2">
-                <Label htmlFor="interestPerMonth" className="text-xs">
-                  Juros de Mora (% ao período)
+                <Label htmlFor="interestPercentage" className="text-xs">
+                  Juros (%)
                 </Label>
                 <InputNumber
-                  id="interestPerMonth"
-                  value={watch('interestPerMonth') ?? 0}
-                  onChange={(val) => handleChange('interestPerMonth', val)}
+                  id="interestPercentage"
+                  value={watch('interestPercentage') ?? 0}
+                  onChange={(val) => handleChange('interestPercentage', val)}
                   float={true}
                   mask="percentage"
                   min={0}
-                  placeholder="Ex: 1 (para 1% ao mês)"
-                  className={errors.interestPerMonth ? 'border-destructive' : ''}
+                  placeholder="Ex: 1 (taxa aplicada no período selecionado)"
+                  className={errors.interestPercentage ? 'border-destructive' : ''}
                 />
-                {errors.interestPerMonth && (
-                  <p className="text-destructive text-xs">{errors.interestPerMonth.message}</p>
+                {errors.interestPercentage && (
+                  <p className="text-destructive text-xs">{errors.interestPercentage.message}</p>
                 )}
               </div>
 
@@ -285,7 +285,7 @@ export const InterestConfigComponent = forwardRef<InterestConfigRef, InterestCon
                     <span className="text-foreground text-xs font-medium">Mensal</span>
                   </label>
 
-                  <label className="border-input hover:bg-accent flex flex-1 cursor-pointer items-center gap-2 rounded border p-2 transition-colors opacity-50 cursor-not-allowed">
+                  <label className="border-input hover:bg-accent flex flex-1 cursor-not-allowed cursor-pointer items-center gap-2 rounded border p-2 opacity-50 transition-colors">
                     <input
                       type="radio"
                       name="interestPeriod"
@@ -301,14 +301,14 @@ export const InterestConfigComponent = forwardRef<InterestConfigRef, InterestCon
 
               <div className="bg-muted/50 text-muted-foreground rounded-md p-3 text-xs">
                 <p className="mb-1 font-medium">Fórmula aplicada no atraso:</p>
-                <p>Valor Final = Valor Parcela + (Valor × Multa%) + (Valor × Mora% × Dias/30)</p>
+                <p>Valor Final = Valor Parcela + (Valor × Multa%) + (Valor × Taxa% × Dias/{watch('interestPeriod') === 'MONTHLY' ? '30' : '365'})</p>
                 <hr className="my-1" />
                 <span className="text-muted-foreground/70 ml-1 font-normal">
                   - Multa: Aplicada uma vez sobre o valor da parcela
                 </span>
                 <br />
                 <span className="text-muted-foreground/70 ml-1 font-normal">
-                  -Juros: Calculado proporcionalmente por dia de atraso
+                  - Juros: Calculado proporcionalmente por dia ({watch('interestPeriod') === 'MONTHLY' ? 'mês' : 'ano'})
                 </span>
               </div>
             </TabsContent>

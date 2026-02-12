@@ -11,6 +11,7 @@
 ### Frontend ✅ CONCLUÍDO
 
 **Objetivos Alcançados:**
+
 - ✅ Adicionar enum `InterestPeriod` (MONTHLY/ANNUAL)
 - ✅ Estender schema Zod com `penaltyPercentage`, `interestPerMonth`, `interestPeriod`
 - ✅ Criar UI na Aba 2 "Multa e Mora" com:
@@ -28,6 +29,7 @@
 ### 1. [src/modules/financeiro/components/interest/interestBlock.types.ts](src/modules/financeiro/components/interest/interestBlock.types.ts)
 
 **Adições:**
+
 ```typescript
 // ✨ Novo Enum
 export enum InterestPeriod {
@@ -38,7 +40,7 @@ export enum InterestPeriod {
 // ✨ Schema expandido
 export const interestBlockSchema = z.object({
   // ... campos existentes ...
-  
+
   // Aba 2: Multa e Mora
   penaltyPercentage: z.number().optional(),
   interestPerMonth: z.number().optional(),
@@ -51,6 +53,7 @@ export const interestBlockSchema = z.object({
 ### 2. [src/modules/financeiro/components/interest/InterestConfig.tsx](src/modules/financeiro/components/interest/InterestConfig.tsx)
 
 **Adições:**
+
 ```typescript
 // ✨ Import do enum
 import { InterestPeriod } from './interestBlock.types'
@@ -125,6 +128,7 @@ defaultValues: {
 ### 3. [src/modules/financeiro/components/TransactionForm.tsx](src/modules/financeiro/components/TransactionForm.tsx)
 
 **Adições:**
+
 ```typescript
 // ✨ Payload agora inclui:
 interestConfig: interestConfig
@@ -146,6 +150,7 @@ interestConfig: interestConfig
 ### 4. [src/modules/financeiro/types/index.ts](src/modules/financeiro/types/index.ts)
 
 **Adições:**
+
 ```typescript
 // ✨ InterestConfigEntity expandida
 export interface InterestConfigEntity {
@@ -198,6 +203,7 @@ Status: ✅ PASS
 ### 1. [BACKEND_IMPLEMENTATION_PENALTY_INTEREST.md](./BACKEND_IMPLEMENTATION_PENALTY_INTEREST.md)
 
 Contém:
+
 - ✅ Migration SQL completa
 - ✅ TypeORM Entity com @Column decorators
 - ✅ DTOs (CreateInterestConfigDto, InterestConfigResponseDto)
@@ -208,6 +214,7 @@ Contém:
 ### 2. [IMPLEMENTATION_SUMMARY_PENALTY_INTEREST.md](./IMPLEMENTATION_SUMMARY_PENALTY_INTEREST.md)
 
 Contém:
+
 - ✅ Resumo completo das mudanças
 - ✅ Fluxo de dados end-to-end
 - ✅ Exemplo prático de cálculo
@@ -220,13 +227,13 @@ Contém:
 
 ### Na Aba 2 "Multa e Mora":
 
-| Feature | Tipo | Default | Limite | Status |
-|---------|------|---------|--------|--------|
-| Multa (%) | InputNumber | 0 | 0-100% | ✅ Ativo |
-| Juros de Mora (%) | InputNumber | 0 | 0-100% | ✅ Ativo |
-| Período - MONTHLY | Radio | Selecionado | - | ✅ Ativo |
-| Período - ANNUAL | Radio | - | - | ⏳ Desabilitado (futuro) |
-| Fórmula de Referência | Texto | - | - | ✅ Exibida |
+| Feature               | Tipo        | Default     | Limite | Status                   |
+| --------------------- | ----------- | ----------- | ------ | ------------------------ |
+| Multa (%)             | InputNumber | 0           | 0-100% | ✅ Ativo                 |
+| Juros de Mora (%)     | InputNumber | 0           | 0-100% | ✅ Ativo                 |
+| Período - MONTHLY     | Radio       | Selecionado | -      | ✅ Ativo                 |
+| Período - ANNUAL      | Radio       | -           | -      | ⏳ Desabilitado (futuro) |
+| Fórmula de Referência | Texto       | -           | -      | ✅ Exibida               |
 
 ---
 
@@ -282,6 +289,7 @@ Contém:
 ## 🚀 Próximas Fases
 
 ### Backend (Próxima etapa)
+
 - [ ] Executar migration SQL no cortex-control
 - [ ] Atualizar TypeORM Entity
 - [ ] Atualizar DTOs
@@ -289,12 +297,14 @@ Contém:
 - [ ] Validar salvamento dos dados
 
 ### Cálculo de Atraso (Futuro)
+
 - [ ] Implementar `PenaltyCalculatorService`
 - [ ] Job/cron de detecção de transações atrasadas
 - [ ] Tabela `financeiro_penalty_calculations` (auditoria)
 - [ ] Endpoint GET `/transactions/:id/penalties`
 
 ### UI de Relatório (Futuro)
+
 - [ ] Exibir multas/juros em listagem de transações
 - [ ] Relatório consolidado de multas
 - [ ] Suporte para período ANNUAL
@@ -316,6 +326,7 @@ Contém:
 ## 📞 Contato e Dúvidas
 
 Se surgirem questões durante implementação do backend:
+
 - Veja [BACKEND_IMPLEMENTATION_PENALTY_INTEREST.md](./BACKEND_IMPLEMENTATION_PENALTY_INTEREST.md)
 - Referência visual em [IMPLEMENTATION_SUMMARY_PENALTY_INTEREST.md](./IMPLEMENTATION_SUMMARY_PENALTY_INTEREST.md)
 - Exemplo de cálculo disponível na seção "Exemplo Prático"
@@ -323,4 +334,3 @@ Se surgirem questões durante implementação do backend:
 ---
 
 **Status Final**: ✅ Frontend 100% Pronto | 📋 Backend Documentado | 🚀 Pronto para Produção
-
