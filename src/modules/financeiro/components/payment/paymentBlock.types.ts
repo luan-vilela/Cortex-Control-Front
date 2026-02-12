@@ -13,6 +13,8 @@ export const paymentBlockSchema = z.discriminatedUnion('mode', [
     mode: z.literal(PaymentMode.INSTALLMENT),
     numberOfInstallments: z.number().min(2, 'Número de parcelas deve ser no mínimo 2'),
     downPayment: z.number().min(0, 'Entrada deve ser maior ou igual a zero').optional(),
+    downPaymentDate: z.date().optional(),
+    downPaymentIsPaid: z.boolean().optional(),
     planType: z.nativeEnum(InstallmentPlanType),
     firstInstallmentDate: z.date('Data da primeira parcela é obrigatória'),
     installmentIntervalDays: z.number().min(1, 'Intervalo deve ser pelo menos 1 dia'),

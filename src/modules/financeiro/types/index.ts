@@ -51,6 +51,7 @@ export interface InstallmentPaymentConfig {
   mode: PaymentMode.INSTALLMENT
   numberOfInstallments: number // Mínimo 2
   downPayment?: number // Valor de entrada (opcional)
+  downPaymentDate?: Date // Data da entrada (opcional)
   planType: InstallmentPlanType // Tipo de plano (padrão SIMPLE)
   firstInstallmentDate: Date // Data da primeira parcela
   installmentIntervalDays: number // Intervalo entre parcelas em dias
@@ -146,6 +147,12 @@ export interface CreateTransactionPayload {
   paidDate?: Date
   notes?: string
   paymentConfig: PaymentConfig // Now required
+  interestConfig?: {
+    type: InterestType
+    percentage?: number
+    flatAmount?: number
+    description?: string
+  }
   actors?: CreateTransactionPartyPayload[]
 }
 

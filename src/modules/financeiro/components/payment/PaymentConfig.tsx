@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 import {
@@ -168,7 +169,13 @@ export const PaymentConfigComponent = forwardRef<PaymentConfigRef, PaymentConfig
                 <InputNumber
                   id="downPayment"
                   value={(watch as any)('downPayment') ?? 0}
-                  onChange={(value) => handleChange('downPayment', value || 0)}
+                  onChange={(value) => {
+                    handleChange('downPayment', value || 0)
+                    // Se tem entrada e não tem o campo, marca como pago por padrão
+                    if (value && value > 0 && (watch as any)('downPaymentIsPaid') === undefined) {
+                      handleChange('downPaymentIsPaid', true)
+                    }
+                  }}
                   float
                   min={0}
                   mask="real"
@@ -180,6 +187,32 @@ export const PaymentConfigComponent = forwardRef<PaymentConfigRef, PaymentConfig
                 )}
               </div>
             </div>
+
+            {/* Switch para entrada já paga - só aparece se houver entrada */}
+            {((watch as any)('downPayment') ?? 0) > 0 && (
+              <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800">
+                <div className="space-y-0.5">
+                  <Label htmlFor="downPaymentIsPaid" className="text-sm font-medium">
+                    Entrada já foi paga?
+                  </Label>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Marque se a entrada já foi recebida/paga
+                  </p>
+                </div>
+                <Switch
+                  id="downPaymentIsPaid"
+                  checked={(watch as any)('downPaymentIsPaid') ?? true}
+                  onCheckedChange={(checked) => {
+                    handleChange('downPaymentIsPaid', checked)
+                    if (checked) {
+                      handleChange('downPaymentDate', new Date())
+                    } else {
+                      handleChange('downPaymentDate', undefined)
+                    }
+                  }}
+                />
+              </div>
+            )}
 
             <div className="flex w-full gap-3">
               {/* Data da Primeira Parcela */}

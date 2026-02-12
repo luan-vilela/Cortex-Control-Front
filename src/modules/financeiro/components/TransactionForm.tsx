@@ -117,6 +117,9 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
             numberOfInstallments: paymentConfig.numberOfInstallments,
             firstInstallmentDate: paymentConfig.firstInstallmentDate,
             installmentIntervalDays: paymentConfig.installmentIntervalDays,
+            downpayment: paymentConfig.downPayment || 0,
+            downpaymentDate: paymentConfig.downPaymentDate,
+            downpaymentIsPaid: paymentConfig.downPaymentIsPaid ?? true,
           }
 
     // Formata a data para string YYYY-MM-DD
@@ -130,6 +133,14 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
       dueDate: dueDateString, // Send as YYYY-MM-DD string, backend parses correctly
       notes: infoConfig.notes || undefined,
       paymentConfig: apiPaymentConfig as any,
+      interestConfig: interestConfig
+        ? {
+            type: interestConfig.type as any,
+            percentage: interestConfig.percentage,
+            flatAmount: interestConfig.flatAmount,
+            description: interestConfig.description,
+          }
+        : undefined,
       // Adiciona o workspace como ator com o tipo selecionado (INCOME/EXPENSE)
       actors: [
         {
