@@ -8,7 +8,11 @@ interface PenaltySectionProps {
   interestPeriod?: 'MONTHLY' | 'ANNUAL'
 }
 
-export function PenaltySection({ penaltyPercentage, interestPercentage, interestPeriod = 'MONTHLY' }: PenaltySectionProps) {
+export function PenaltySection({
+  penaltyPercentage,
+  interestPercentage,
+  interestPeriod = 'MONTHLY',
+}: PenaltySectionProps) {
   if (!penaltyPercentage && !interestPercentage) return null
 
   const periodLabel = interestPeriod === 'ANNUAL' ? 'Ano' : 'Mês'

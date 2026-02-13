@@ -129,6 +129,9 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
       sourceType: TransactionSourceType.MANUAL,
       sourceId: 'manual-' + Date.now(),
       amount: infoConfig.amount,
+      // ✨ Registrar valor original da dívida (sempre é o amount na criação)
+      // Em parcelamentos, as parcelas filhas terão seu próprio amount mas herdarão originalAmount
+      originalAmount: infoConfig.amount,
       description: infoConfig.description,
       dueDate: dueDateString, // Send as YYYY-MM-DD string, backend parses correctly
       notes: infoConfig.notes || undefined,

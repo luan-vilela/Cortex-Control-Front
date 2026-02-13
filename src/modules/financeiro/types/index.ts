@@ -117,6 +117,9 @@ export interface FinanceiroTransaction {
   sourceId: string
   sourceMetadata?: Record<string, any>
   amount: number
+  // ✨ Valor original da dívida (para referência em cálculos de multa/juros)
+  // Útil em parcelamentos com entrada: originalAmount = totalValue, amount = parcela
+  originalAmount?: number
   description: string
   dueDate: string | Date
   paidDate?: string | Date
@@ -146,6 +149,9 @@ export interface CreateTransactionPayload {
   sourceId: string
   sourceMetadata?: Record<string, any>
   amount: number
+  // ✨ Valor original da dívida (salvo na criação)
+  // Se não informado, frontend assume que originalAmount = amount
+  originalAmount?: number
   description: string
   dueDate: string | Date // Accept both string (YYYY-MM-DD) and Date
   paidDate?: Date

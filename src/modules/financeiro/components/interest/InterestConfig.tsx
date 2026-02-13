@@ -252,7 +252,7 @@ export const InterestConfigComponent = forwardRef<InterestConfigRef, InterestCon
               {/* Juros de Mora */}
               <div className="space-y-2">
                 <Label htmlFor="interestPercentage" className="text-xs">
-                  Juros (%)
+                  Juros de Mora
                 </Label>
                 <InputNumber
                   id="interestPercentage"
@@ -261,7 +261,7 @@ export const InterestConfigComponent = forwardRef<InterestConfigRef, InterestCon
                   float={true}
                   mask="percentage"
                   min={0}
-                  placeholder="Ex: 1 (taxa aplicada no período selecionado)"
+                  placeholder="Ex: 1 (para 1% ao mês)"
                   className={errors.interestPercentage ? 'border-destructive' : ''}
                 />
                 {errors.interestPercentage && (
@@ -301,14 +301,18 @@ export const InterestConfigComponent = forwardRef<InterestConfigRef, InterestCon
 
               <div className="bg-muted/50 text-muted-foreground rounded-md p-3 text-xs">
                 <p className="mb-1 font-medium">Fórmula aplicada no atraso:</p>
-                <p>Valor Final = Valor Parcela + (Valor × Multa%) + (Valor × Taxa% × Dias/{watch('interestPeriod') === 'MONTHLY' ? '30' : '365'})</p>
+                <p>
+                  Valor Final = Valor Parcela + (Valor × Multa%) + (Valor × Taxa% × Dias/
+                  {watch('interestPeriod') === 'MONTHLY' ? '30' : '365'})
+                </p>
                 <hr className="my-1" />
                 <span className="text-muted-foreground/70 ml-1 font-normal">
                   - Multa: Aplicada uma vez sobre o valor da parcela
                 </span>
                 <br />
                 <span className="text-muted-foreground/70 ml-1 font-normal">
-                  - Juros: Calculado proporcionalmente por dia ({watch('interestPeriod') === 'MONTHLY' ? 'mês' : 'ano'})
+                  - Juros: Calculado proporcionalmente por dia (
+                  {watch('interestPeriod') === 'MONTHLY' ? 'mês' : 'ano'})
                 </span>
               </div>
             </TabsContent>
