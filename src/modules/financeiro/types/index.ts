@@ -60,6 +60,13 @@ export interface InstallmentPaymentConfig {
 // Union type for payment configuration
 export type PaymentConfig = CashPaymentConfig | InstallmentPaymentConfig
 
+export interface TransactionPartyUser {
+  id: string
+  name: string
+  email: string
+  createdVia?: string
+}
+
 export interface TransactionParty {
   id: number
   transactionId: number
@@ -67,6 +74,7 @@ export interface TransactionParty {
   partyType: TransactionActorType
   partyStatus?: string
   partyMetadata?: Record<string, any>
+  user?: TransactionPartyUser
 }
 
 export interface InstallmentPlan {
