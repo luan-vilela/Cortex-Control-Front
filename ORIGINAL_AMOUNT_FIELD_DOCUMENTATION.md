@@ -31,8 +31,8 @@ Adicionar campo `originalAmount` que armazena o **valor original da dívida** qu
 ```typescript
 interface FinanceiroTransaction {
   id: number
-  amount: number              // Valor atual (pode ser entrada ou parcela)
-  originalAmount?: number     // Valor original (imutável, para referência)
+  amount: number // Valor atual (pode ser entrada ou parcela)
+  originalAmount?: number // Valor original (imutável, para referência)
   // ...
 }
 ```
@@ -123,16 +123,16 @@ total = 666,67 + 13,33 + 10,00 = 690,00  ← Muito menor!
 
 ## 📊 Tabela: Relação amount vs originalAmount
 
-| Cenário | Transação | amount | originalAmount | Uso |
-|---------|-----------|--------|-----------------|-----|
-| **À Vista** | Principal | 5.000 | 5.000 | Mesmo valor |
-| **À Vista Recorrente** | Gerada (pai) | 5.000 | 5.000 | Mesmo valor |
-| **À Vista Recorrente** | Gerada (filho) | 5.000 | 5.000 | Mesmo valor |
-| **Parcelado Simples** | Principal | 10.000 | 10.000 | Valor total |
-| **Parcelado com Entrada** | Principal | 10.000 | 10.000 | Valor total |
-| **Parcelado com Entrada** | Entrada (filha) | 2.000 | 10.000 | ✨ Diferentes! |
-| **Parcelado com Entrada** | Parcela 1 (filha) | 666,67 | 10.000 | ✨ Diferentes! |
-| **Parcelado com Entrada** | Parcela 12 (filha) | 666,67 | 10.000 | ✨ Diferentes! |
+| Cenário                   | Transação          | amount | originalAmount | Uso            |
+| ------------------------- | ------------------ | ------ | -------------- | -------------- |
+| **À Vista**               | Principal          | 5.000  | 5.000          | Mesmo valor    |
+| **À Vista Recorrente**    | Gerada (pai)       | 5.000  | 5.000          | Mesmo valor    |
+| **À Vista Recorrente**    | Gerada (filho)     | 5.000  | 5.000          | Mesmo valor    |
+| **Parcelado Simples**     | Principal          | 10.000 | 10.000         | Valor total    |
+| **Parcelado com Entrada** | Principal          | 10.000 | 10.000         | Valor total    |
+| **Parcelado com Entrada** | Entrada (filha)    | 2.000  | 10.000         | ✨ Diferentes! |
+| **Parcelado com Entrada** | Parcela 1 (filha)  | 666,67 | 10.000         | ✨ Diferentes! |
+| **Parcelado com Entrada** | Parcela 12 (filha) | 666,67 | 10.000         | ✨ Diferentes! |
 
 ---
 
@@ -182,6 +182,7 @@ const payload: CreateTransactionPayload = {
 ### Backend 📋 (Próxima etapa)
 
 **Migration SQL**:
+
 ```sql
 ALTER TABLE financeiro_transactions
   ADD COLUMN original_amount DECIMAL(15,2) DEFAULT NULL COMMENT 'Valor original da dívida para referência',
@@ -189,12 +190,14 @@ ALTER TABLE financeiro_transactions
 ```
 
 **TypeORM Entity**:
+
 ```typescript
 @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true })
 originalAmount: number | null
 ```
 
 **Logic**:
+
 - Na criação: `originalAmount = amount` (sempre)
 - Em parcelamentos: as parcelas filhas herdam `originalAmount` do pai
 - Em cálculos de multa/juros: sempre usar `originalAmount`, não `amount`
@@ -204,17 +207,20 @@ originalAmount: number | null
 ## 💡 Regras de Negócio
 
 ### 1. Criação Inicial
+
 ```
 originalAmount = amount (sempre)
 ```
 
 ### 2. Transações Filhas (Parcelamentos/Recorrências)
+
 ```
 originalAmount = pai.originalAmount
 amount = valor específico da parcela/recorrência
 ```
 
 ### 3. Cálculo de Multa e Juros
+
 ```
 BASE_PARA_CALCULO = transaction.originalAmount (não amount)
 
@@ -223,6 +229,7 @@ juros = originalAmount × (interestPercentage / 100) × (daysOverdue / periodo)
 ```
 
 ### 4. Imutabilidade
+
 ```
 originalAmount NUNCA muda após criação
 amount pode mudar (por ajustes, descontos, etc)
@@ -233,6 +240,7 @@ amount pode mudar (por ajustes, descontos, etc)
 ## 🧪 Exemplo Completo
 
 ### Entrada de Dados
+
 ```
 Total: R$ 10.000,00
 Entrada: R$ 2.000,00
@@ -244,6 +252,7 @@ Juros: 1% ao mês
 ### Transações Criadas
 
 **T1 (Principal)**
+
 ```json
 {
   "id": 1,
@@ -255,6 +264,7 @@ Juros: 1% ao mês
 ```
 
 **T2 (Entrada - Filha)**
+
 ```json
 {
   "id": 2,
@@ -267,6 +277,7 @@ Juros: 1% ao mês
 ```
 
 **T3-T14 (Parcelas 1-12 - Filhas)**
+
 ```json
 [
   {
@@ -312,17 +323,20 @@ total_devido = 10.350,00 ✅
 ## 🚀 Próximas Etapas
 
 ### Backend (Imediato)
+
 - [ ] Adicionar coluna `original_amount` em migration
 - [ ] Atualizar Entity TypeORM
 - [ ] Atualizar endpoint POST `/transactions`
 - [ ] Quando criar filhas (parcelamentos), herdar `originalAmount`
 
 ### Cálculo de Penalidades (Próxima semana)
+
 - [ ] Implementar `PenaltyCalculatorService` usando `originalAmount`
 - [ ] Job de detecção de atrasos
 - [ ] Usar `originalAmount` como base, não `amount`
 
 ### Validação (Importante)
+
 - [ ] Testes: parcelas filhas herdam `originalAmount`
 - [ ] Testes: cálculos de multa usam `originalAmount`
 - [ ] Testes: `originalAmount` é imutável
@@ -331,18 +345,17 @@ total_devido = 10.350,00 ✅
 
 ## 📝 Resumo
 
-| Aspecto | Detalhe |
-|---------|---------|
-| **Nome do campo** | `originalAmount` |
-| **Tipo** | `decimal(15,2)` nullable |
-| **Quando é preenchido** | Na criação da transação |
-| **Valor** | Sempre igual ao `amount` inicial |
-| **Uso** | Referência para cálculos de multa/juros |
-| **Mutabilidade** | Imutável (nunca muda) |
-| **Herança** | Filhas herdam do pai |
-| **Default** | Se não informado, usa `amount` |
+| Aspecto                 | Detalhe                                 |
+| ----------------------- | --------------------------------------- |
+| **Nome do campo**       | `originalAmount`                        |
+| **Tipo**                | `decimal(15,2)` nullable                |
+| **Quando é preenchido** | Na criação da transação                 |
+| **Valor**               | Sempre igual ao `amount` inicial        |
+| **Uso**                 | Referência para cálculos de multa/juros |
+| **Mutabilidade**        | Imutável (nunca muda)                   |
+| **Herança**             | Filhas herdam do pai                    |
+| **Default**             | Se não informado, usa `amount`          |
 
 ---
 
 **Status**: ✅ Frontend Pronto | 📋 Backend Documentado
-

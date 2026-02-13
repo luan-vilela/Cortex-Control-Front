@@ -156,9 +156,7 @@ export default function FinanceiroPage() {
       key: 'installmentNumber',
       label: 'Nº Parcela',
       render: (value) => (
-        <span className="text-gh-text-secondary text-sm">
-          {value ? `${value}` : '-'}
-        </span>
+        <span className="text-gh-text-secondary text-sm">{value ? `${value}` : '-'}</span>
       ),
     },
     {
