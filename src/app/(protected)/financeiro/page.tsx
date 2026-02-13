@@ -137,27 +137,36 @@ export default function FinanceiroPage() {
     {
       key: 'recurrenceConfig',
       label: 'Recorrência',
-      render: (_, row) => (
-        <span className="text-gh-text-secondary text-sm">
-          {row.recurrenceConfig ? 'Sim' : 'Não'}
-        </span>
-      ),
+      render: (_, row) => {
+        const isRecurrence = !!row.sourceMetadata?.recurrence?.occurrences
+
+        return (
+          <span className="text-gh-text-secondary text-sm">{isRecurrence ? 'Sim' : 'Não'}</span>
+        )
+      },
     },
     {
       key: 'installmentPlan',
       label: 'Parcelado',
-      render: (_, row) => (
-        <span className="text-gh-text-secondary text-sm">
-          {row.installmentPlan ? 'Sim' : 'Não'}
-        </span>
-      ),
+      render: (_, row) => {
+        const isInstallment = !!row.sourceMetadata?.installment
+        const isDownpayment = !!row.sourceMetadata?.downpayment
+        const isParcelado = isInstallment || isDownpayment
+
+        return <span className="text-gh-text-secondary text-sm">{isParcelado ? 'Sim' : 'Não'}</span>
+      },
     },
     {
       key: 'installmentNumber',
       label: 'Nº Parcela',
-      render: (value) => (
-        <span className="text-gh-text-secondary text-sm">{value ? `${value}` : '-'}</span>
-      ),
+      render: (_, row) => {
+        const installmentNumber = row.sourceMetadata?.installment?.number
+        return (
+          <span className="text-gh-text-secondary text-sm">
+            {installmentNumber ? `${installmentNumber}` : '-'}
+          </span>
+        )
+      },
     },
     {
       key: 'dueDate',
