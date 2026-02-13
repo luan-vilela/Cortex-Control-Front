@@ -126,6 +126,42 @@ export default function FinanceiroPage() {
       ),
     },
     {
+      key: 'originalAmount',
+      label: 'Valor Original',
+      render: (_, row) => (
+        <p className="text-gh-text text-sm">
+          {row.originalAmount ? formatCurrency(Number(row.originalAmount)) : '-'}
+        </p>
+      ),
+    },
+    {
+      key: 'recurrenceConfig',
+      label: 'Recorrência',
+      render: (_, row) => (
+        <span className="text-gh-text-secondary text-sm">
+          {row.recurrenceConfig ? 'Sim' : 'Não'}
+        </span>
+      ),
+    },
+    {
+      key: 'installmentPlan',
+      label: 'Parcelado',
+      render: (_, row) => (
+        <span className="text-gh-text-secondary text-sm">
+          {row.installmentPlan ? 'Sim' : 'Não'}
+        </span>
+      ),
+    },
+    {
+      key: 'installmentNumber',
+      label: 'Nº Parcela',
+      render: (value) => (
+        <span className="text-gh-text-secondary text-sm">
+          {value ? `${value}` : '-'}
+        </span>
+      ),
+    },
+    {
       key: 'dueDate',
       label: 'Vencimento',
       render: (value) => (
