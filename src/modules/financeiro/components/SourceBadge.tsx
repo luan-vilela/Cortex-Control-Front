@@ -39,7 +39,20 @@ export function SourceBadge({
   sourceType: TransactionSourceType
   showIcon?: boolean
 }) {
-  const config = sourceTypeConfig[sourceType]
+  if (!sourceType) {
+    return (
+      <div className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+        <span>-</span>
+      </div>
+    )
+  }
+
+  const config = sourceTypeConfig[sourceType] || {
+    label: sourceType,
+    bgColor: 'bg-gray-100',
+    textColor: 'text-gray-700',
+    icon: '❓',
+  }
 
   return (
     <div

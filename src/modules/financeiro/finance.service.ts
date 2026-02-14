@@ -6,25 +6,47 @@ import {
   type GetTransactionsFilters,
   type GetTransactionsResponse,
   type TransactionParty,
+  TransactionStatus,
   type TransactionSummary,
+  TransactionType,
   type UpdateTransactionPayload,
 } from './types'
+import { adaptCreateTransactionPayload } from './types/adapter'
 
 const FINANCEIRO_API = '/workspaces'
 
 export const financeService = {
   /**
    * Cria uma nova transação
+   * ADAPTADO para nova arquitetura - converte payload automaticamente
    */
   async createTransaction(
     workspaceId: string,
     payload: CreateTransactionPayload
   ): Promise<FinanceiroTransaction> {
+    // Usar nova API (transaction groups)
+    const adaptedPayload = adaptCreateTransactionPayload(payload)
     const response = await api.post(
-      `${FINANCEIRO_API}/${workspaceId}/finance/transactions`,
-      payload
+      `${FINANCEIRO_API}/${workspaceId}/finance/groups`,
+      adaptedPayload
     )
-    return response.data
+
+    // Converter resposta de volta para formato antigo
+    return {
+      id: parseInt(response.data.id) || 0,
+      workspaceId: response.data.workspaceId,
+      sourceType: payload.sourceType,
+      sourceId: payload.sourceId,
+      transactionType: payload.transactionType || TransactionType.EXPENSE,
+      amount: response.data.totalAmount,
+      description: response.data.description,
+      dueDate: response.data.firstDueDate || new Date().toISOString(),
+      status: TransactionStatus.PENDING,
+      createdAt: response.data.createdAt,
+      updatedAt: response.data.updatedAt,
+      parties: [],
+      isDownpayment: false,
+    } as FinanceiroTransaction
   },
 
   /**

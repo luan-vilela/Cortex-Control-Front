@@ -77,6 +77,7 @@ export interface TransactionParty {
   id: number
   transactionId: number
   workspaceId: string
+  partyType?: TransactionActorType // Tipo do ator (INCOME/EXPENSE)
   partyStatus?: string
   partyMetadata?: Record<string, any>
   user?: TransactionPartyUser

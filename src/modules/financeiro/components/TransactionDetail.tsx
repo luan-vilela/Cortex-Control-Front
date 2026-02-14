@@ -444,7 +444,7 @@ export function TransactionDetail({ transaction }: { transaction: FinanceiroTran
                       </div>
 
                       <p className="text-gh-text-secondary mb-3 text-xs font-medium">
-                        {partyTypeLabels[party.partyType]}
+                        {party.partyType && partyTypeLabels[party.partyType]}
                         {metadata.personType &&
                           ` • ${metadata.personType === 'PF' ? 'Pessoa Física' : 'Pessoa Jurídica'}`}
                       </p>

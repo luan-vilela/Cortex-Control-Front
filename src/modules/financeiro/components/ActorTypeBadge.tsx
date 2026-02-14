@@ -5,11 +5,15 @@ import { TransactionActorType } from '../types'
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react'
 
 interface ActorTypeBadgeProps {
-  partyType: TransactionActorType
+  partyType?: TransactionActorType
   showIcon?: boolean
 }
 
 export function ActorTypeBadge({ partyType, showIcon = false }: ActorTypeBadgeProps) {
+  if (!partyType) {
+    return <span className="text-gh-text-tertiary text-xs">-</span>
+  }
+
   const isIncome = partyType === TransactionActorType.INCOME
 
   return (
