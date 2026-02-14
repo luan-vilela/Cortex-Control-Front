@@ -111,16 +111,69 @@ export function TransactionDetail({ transaction }: { transaction: FinanceiroTran
             <p className="text-gh-text text-sm">
               <span className="font-medium">ID da Origem:</span> {transaction.sourceId}
             </p>
-            {transaction.sourceMetadata?.orderNumber && (
+            {transaction.orderNumber && (
               <p className="text-gh-text text-sm">
-                <span className="font-medium">Número do Pedido:</span>{' '}
-                {transaction.sourceMetadata.orderNumber}
+                <span className="font-medium">Número do Pedido:</span> {transaction.orderNumber}
               </p>
+            )}
+            {/* Informações de parcelamento */}
+            {transaction.installmentNumber && transaction.installmentTotal && (
+              <div className="border-gh-border mt-3 border-t pt-3">
+                <p className="text-gh-text text-sm">
+                  <span className="font-medium">Parcela:</span> {transaction.installmentNumber}/
+                  {transaction.installmentTotal}
+                </p>
+                {transaction.installmentInterest !== undefined &&
+                  transaction.installmentInterest > 0 && (
+                    <p className="text-gh-text text-sm">
+                      <span className="font-medium">Juros:</span>{' '}
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(transaction.installmentInterest)}
+                    </p>
+                  )}
+                {transaction.installmentAmortization !== undefined && (
+                  <p className="text-gh-text text-sm">
+                    <span className="font-medium">Amortização:</span>{' '}
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                      transaction.installmentAmortization
+                    )}
+                  </p>
+                )}
+                {transaction.outstandingBalance !== undefined && (
+                  <p className="text-gh-text text-sm">
+                    <span className="font-medium">Saldo Devedor:</span>{' '}
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                      transaction.outstandingBalance
+                    )}
+                  </p>
+                )}
+              </div>
+            )}
+            {/* Entrada (downpayment) */}
+            {transaction.isDownpayment && (
+              <div className="border-gh-border mt-3 border-t pt-3">
+                <p className="text-gh-text-secondary text-xs font-semibold">ENTRADA</p>
+                {transaction.originalAmount && (
+                  <p className="text-gh-text text-sm">
+                    <span className="font-medium">Valor Total:</span>{' '}
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                      transaction.originalAmount
+                    )}
+                  </p>
+                )}
+                {transaction.installmentTotal && (
+                  <p className="text-gh-text text-sm">
+                    <span className="font-medium">Parcelas:</span> {transaction.installmentTotal}x
+                  </p>
+                )}
+              </div>
             )}
             {transaction.sourceMetadata && Object.keys(transaction.sourceMetadata).length > 0 && (
               <details className="mt-3">
                 <summary className="text-gh-text-secondary hover:text-gh-text cursor-pointer text-xs">
-                  Ver metadados completos
+                  Ver metadados customizados
                 </summary>
                 <pre className="bg-gh-hover mt-2 overflow-auto rounded p-2 text-xs">
                   {JSON.stringify(transaction.sourceMetadata, null, 2)}

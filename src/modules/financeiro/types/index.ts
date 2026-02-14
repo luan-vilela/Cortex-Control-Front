@@ -149,6 +149,16 @@ export interface FinanceiroTransaction {
   installmentPlan?: InstallmentPlan
   recurrenceConfig?: RecurrenceConfigEntity
   interestConfig?: InterestConfigEntity
+  // ✨ Campos estruturados (novos - substituem sourceMetadata)
+  installmentNumber?: number // Número da parcela (1, 2, 3...)
+  personId?: string // ID da pessoa (cliente/fornecedor)
+  parentTransactionId?: number // ID da transação pai (para parcelas e recorrências)
+  isDownpayment: boolean // É entrada?
+  installmentTotal?: number // Total de parcelas do plano
+  installmentInterest?: number // Juros desta parcela
+  installmentAmortization?: number // Amortização desta parcela
+  outstandingBalance?: number // Saldo devedor após esta parcela
+  orderNumber?: string // Número do pedido/OS
 }
 
 export interface CreateTransactionPartyPayload {
