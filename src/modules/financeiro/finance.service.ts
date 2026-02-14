@@ -1,14 +1,16 @@
-import api from "@/lib/api";
-import {
-  FinanceiroTransaction,
-  CreateTransactionPayload,
-  UpdateTransactionPayload,
-  GetTransactionsFilters,
-  GetTransactionsResponse,
-  TransactionParty,
-} from "./types";
+import api from '@/lib/api'
 
-const FINANCEIRO_API = "/workspaces";
+import {
+  type CreateTransactionPayload,
+  type FinanceiroTransaction,
+  type GetTransactionsFilters,
+  type GetTransactionsResponse,
+  type TransactionParty,
+  type TransactionSummary,
+  type UpdateTransactionPayload,
+} from './types'
+
+const FINANCEIRO_API = '/workspaces'
 
 export const financeService = {
   /**
@@ -16,13 +18,13 @@ export const financeService = {
    */
   async createTransaction(
     workspaceId: string,
-    payload: CreateTransactionPayload,
+    payload: CreateTransactionPayload
   ): Promise<FinanceiroTransaction> {
     const response = await api.post(
       `${FINANCEIRO_API}/${workspaceId}/finance/transactions`,
-      payload,
-    );
-    return response.data;
+      payload
+    )
+    return response.data
   },
 
   /**
@@ -30,27 +32,20 @@ export const financeService = {
    */
   async getTransactions(
     workspaceId: string,
-    filters?: GetTransactionsFilters,
+    filters?: GetTransactionsFilters
   ): Promise<GetTransactionsResponse> {
-    const response = await api.get(
-      `${FINANCEIRO_API}/${workspaceId}/finance/transactions`,
-      {
-        params: {
-          sourceType: filters?.sourceType,
-          partyType: filters?.partyType,
-          status: filters?.status,
-          fromDate: filters?.fromDate
-            ? filters.fromDate.toISOString().split("T")[0]
-            : undefined,
-          toDate: filters?.toDate
-            ? filters.toDate.toISOString().split("T")[0]
-            : undefined,
-          page: filters?.page || 1,
-          limit: filters?.limit || 20,
-        },
+    const response = await api.get(`${FINANCEIRO_API}/${workspaceId}/finance/transactions`, {
+      params: {
+        sourceType: filters?.sourceType,
+        transactionType: filters?.transactionType,
+        status: filters?.status,
+        fromDate: filters?.fromDate ? filters.fromDate.toISOString().split('T')[0] : undefined,
+        toDate: filters?.toDate ? filters.toDate.toISOString().split('T')[0] : undefined,
+        page: filters?.page || 1,
+        limit: filters?.limit || 20,
       },
-    );
-    return response.data;
+    })
+    return response.data
   },
 
   /**
@@ -58,12 +53,12 @@ export const financeService = {
    */
   async getTransactionDetail(
     workspaceId: string,
-    transactionId: number,
+    transactionId: number
   ): Promise<FinanceiroTransaction> {
     const response = await api.get(
-      `${FINANCEIRO_API}/${workspaceId}/finance/transactions/${transactionId}`,
-    );
-    return response.data;
+      `${FINANCEIRO_API}/${workspaceId}/finance/transactions/${transactionId}`
+    )
+    return response.data
   },
 
   /**
@@ -72,37 +67,50 @@ export const financeService = {
   async updateTransaction(
     workspaceId: string,
     transactionId: number,
-    payload: UpdateTransactionPayload,
+    payload: UpdateTransactionPayload
   ): Promise<FinanceiroTransaction> {
     const response = await api.patch(
       `${FINANCEIRO_API}/${workspaceId}/finance/transactions/${transactionId}`,
-      payload,
-    );
-    return response.data;
+      payload
+    )
+    return response.data
   },
 
   /**
    * Deleta uma transação (soft delete)
    */
-  async deleteTransaction(
+  async deleteTransaction(workspaceId: string, transactionId: number): Promise<void> {
+    await api.delete(`${FINANCEIRO_API}/${workspaceId}/finance/transactions/${transactionId}`)
+  },
+
+  /**
+   * Obtém resumo das transações (totais de entrada, saída e balanço)
+   */
+  async getTransactionsSummary(
     workspaceId: string,
-    transactionId: number,
-  ): Promise<void> {
-    await api.delete(
-      `${FINANCEIRO_API}/${workspaceId}/finance/transactions/${transactionId}`,
-    );
+    filters?: GetTransactionsFilters
+  ): Promise<TransactionSummary> {
+    const response = await api.get(
+      `${FINANCEIRO_API}/${workspaceId}/finance/transactions/summary`,
+      {
+        params: {
+          fromDate: filters?.fromDate ? filters.fromDate.toISOString().split('T')[0] : undefined,
+          toDate: filters?.toDate ? filters.toDate.toISOString().split('T')[0] : undefined,
+          status: filters?.status,
+        },
+      }
+    )
+    return response.data
   },
 
   /**
    * Obtém atores de uma transação
    */
-  async getTransactionActors(
-    transactionId: number,
-  ): Promise<TransactionParty[]> {
+  async getTransactionActors(transactionId: number): Promise<TransactionParty[]> {
     const response = await api.get(
-      `${FINANCEIRO_API}/:workspaceId/finance/transactions/${transactionId}/actors`,
-    );
-    return response.data;
+      `${FINANCEIRO_API}/:workspaceId/finance/transactions/${transactionId}/actors`
+    )
+    return response.data
   },
 
   /**
@@ -112,14 +120,14 @@ export const financeService = {
     workspaceId: string,
     transactionId: number,
     payload: {
-      workspaceId: string;
-      actorType: string;
-    },
+      workspaceId: string
+      actorType: string
+    }
   ): Promise<TransactionParty> {
     const response = await api.post(
       `${FINANCEIRO_API}/${workspaceId}/finance/transactions/${transactionId}/actors`,
-      payload,
-    );
-    return response.data;
+      payload
+    )
+    return response.data
   },
-};
+}

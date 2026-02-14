@@ -24,13 +24,13 @@ const statusConfig: Record<
     textColor: 'text-green-700',
     icon: '✅',
   },
-  [TransactionStatus.PARTIALLY_PAID]: {
-    label: 'Parcialmente Pago',
-    bgColor: 'bg-blue-100',
-    textColor: 'text-blue-700',
-    icon: '📊',
-  },
-  [TransactionStatus.CANCELLED]: {
+  // [TransactionStatus.PARTIALLY_PAID]: {
+  //   label: 'Parcialmente Pago',
+  //   bgColor: 'bg-blue-100',
+  //   textColor: 'text-blue-700',
+  //   icon: '📊',
+  // },
+  [TransactionStatus.CANCELED]: {
     label: 'Cancelado',
     bgColor: 'bg-gray-100',
     textColor: 'text-gray-700',

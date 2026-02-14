@@ -5,6 +5,7 @@ import {
   type GetTransactionsFilters,
   type GetTransactionsResponse,
   type TransactionParty,
+  type TransactionSummary,
   type UpdateTransactionPayload,
 } from '../types'
 
@@ -26,6 +27,12 @@ export const financeQueryKeys = {
     workspaceId,
     filters,
   ],
+  transactionSummary: (workspaceId: string, filters?: GetTransactionsFilters) => [
+    ...financeQueryKeys.transactions(),
+    'summary',
+    workspaceId,
+    filters,
+  ],
   actors: (transactionId: number) => [...financeQueryKeys.all, 'actors', transactionId],
 }
 
@@ -40,6 +47,22 @@ export function useTransactions(
   return useQuery<GetTransactionsResponse>({
     queryKey: financeQueryKeys.transactionList(workspaceId, filters),
     queryFn: () => financeService.getTransactions(workspaceId, filters),
+    enabled: enabled && !!workspaceId,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  })
+}
+
+/**
+ * Hook para obter resumo das transações
+ */
+export function useTransactionsSummary(
+  workspaceId: string,
+  filters?: GetTransactionsFilters,
+  enabled = true
+) {
+  return useQuery<TransactionSummary>({
+    queryKey: financeQueryKeys.transactionSummary(workspaceId, filters),
+    queryFn: () => financeService.getTransactionsSummary(workspaceId, filters),
     enabled: enabled && !!workspaceId,
     staleTime: 5 * 60 * 1000, // 5 minutos
   })

@@ -4,8 +4,8 @@ import { useCreateTransaction } from '../hooks/useFinance'
 import {
   type CreateTransactionPayload,
   PaymentMode,
-  TransactionActorType,
   TransactionSourceType,
+  TransactionType,
 } from '../types'
 import { validatePayment } from '../utils/validatePayment'
 
@@ -47,7 +47,7 @@ interface TransactionFormProps {
 export function TransactionForm({ workspaceId, onSuccess, onCancel }: TransactionFormProps) {
   const { validate, setRef } = useFormRefValidation()
 
-  const [partyType, setPartyType] = useState<TransactionActorType>(TransactionActorType.INCOME)
+  const [transactionType, setTransactionType] = useState<TransactionType>(TransactionType.INCOME)
   const [infoConfig, setInfoConfig] = useState<InfoBlockFormValues>({
     description: '',
     amount: 0,
@@ -129,12 +129,11 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
       sourceType: TransactionSourceType.MANUAL,
       sourceId: 'manual-' + Date.now(),
       amount: infoConfig.amount,
-      // ✨ Registrar valor original da dívida (sempre é o amount na criação)
-      // Em parcelamentos, as parcelas filhas terão seu próprio amount mas herdarão originalAmount
       originalAmount: infoConfig.amount,
       description: infoConfig.description,
       dueDate: dueDateString, // Send as YYYY-MM-DD string, backend parses correctly
       notes: infoConfig.notes || undefined,
+      transactionType, // ← Tipo da transação agora é no nível da transação
       paymentConfig: apiPaymentConfig as any,
       interestConfig: interestConfig
         ? {
@@ -154,11 +153,9 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
             endDate: recurrenceConfig.endDate,
           }
         : undefined,
-      // Adiciona o workspace como ator com o tipo selecionado (INCOME/EXPENSE)
       actors: [
         {
           workspaceId,
-          actorType: partyType,
         },
       ],
     }
@@ -174,7 +171,7 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
         setPaymentConfig({ mode: PaymentMode.CASH })
         setRecurrenceConfig(undefined)
         setInterestConfig(undefined)
-        setPartyType(TransactionActorType.INCOME)
+        setTransactionType(TransactionType.INCOME)
         onSuccess?.()
       },
     })
@@ -242,8 +239,8 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
           <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
             <h3 className="text-gh-text font-semibold">Tipo de Transação</h3>
             <RadioGroup
-              value={partyType}
-              onValueChange={(value) => setPartyType(value as TransactionActorType)}
+              value={transactionType}
+              onValueChange={(value) => setTransactionType(value as TransactionType)}
               className="grid grid-cols-2 gap-4"
             >
               <FieldLabel htmlFor="income-type" className="cursor-pointer">
@@ -257,7 +254,7 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
                       <FieldDescription>Vendas, serviços, investimentos</FieldDescription>
                     </FieldContent>
                     <RadioGroupItem
-                      value={TransactionActorType.INCOME}
+                      value={TransactionType.INCOME}
                       id="income-type"
                       className="mt-1"
                     />
@@ -276,7 +273,7 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
                       <FieldDescription>Despesas, custos, pagamentos</FieldDescription>
                     </FieldContent>
                     <RadioGroupItem
-                      value={TransactionActorType.EXPENSE}
+                      value={TransactionType.EXPENSE}
                       id="expense-type"
                       className="mt-1"
                     />
@@ -351,7 +348,7 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
         <TransactionPreview
           open={isPreviewOpen}
           onOpenChange={setIsPreviewOpen}
-          partyType={partyType}
+          transactionType={transactionType}
           infoConfig={infoConfig}
           paymentConfig={paymentConfig}
           recurrenceConfig={recurrenceConfig}

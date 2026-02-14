@@ -1,6 +1,6 @@
 'use client'
 
-import { PaymentMode, TransactionActorType } from '../types'
+import { PaymentMode, TransactionType } from '../types'
 import {
   type InstallmentResult,
   calculateCashPaymentAdjustment,
@@ -37,7 +37,7 @@ import { type RecurrenceBlockFormValues } from './recurrence/recurrenceBlock.typ
 interface TransactionPreviewProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  partyType: TransactionActorType
+  transactionType: TransactionType
   infoConfig: InfoBlockFormValues
   paymentConfig: PaymentBlockFormValues
   recurrenceConfig?: RecurrenceBlockFormValues
@@ -47,7 +47,7 @@ interface TransactionPreviewProps {
 export function TransactionPreview({
   open,
   onOpenChange,
-  partyType,
+  transactionType,
   infoConfig,
   paymentConfig,
   recurrenceConfig,
@@ -154,7 +154,7 @@ export function TransactionPreview({
       <SheetContent side="right" className="w-full overflow-y-auto p-3 pb-12 sm:max-w-xl">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            {partyType === TransactionActorType.INCOME ? (
+            {transactionType === TransactionType.INCOME ? (
               <>
                 <TrendingUp className="h-5 w-5 text-green-600" />
                 Resumo da Entrada

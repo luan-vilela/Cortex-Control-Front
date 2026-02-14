@@ -34,7 +34,7 @@ export function ModuleGuard({ children, moduleId, fallback }: ModuleGuardProps) 
 
   const isEnabled = enabledModules.some((m: any) => m.id === moduleId)
 
-  console.log('Módulos habilitados:', enabledModules, workspaceId)
+  console.log('Módulos habilitados:', enabledModules, workspaceId, isEnabled)
 
   if (!isEnabled) {
     return fallback ? (

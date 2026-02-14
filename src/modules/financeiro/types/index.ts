@@ -9,10 +9,16 @@ export enum TransactionStatus {
   PENDING = 'PENDING',
   OVERDUE = 'OVERDUE',
   PAID = 'PAID',
-  PARTIALLY_PAID = 'PARTIALLY_PAID',
-  CANCELLED = 'CANCELLED',
+  CANCELED = 'CANCELED',
 }
 
+export enum TransactionType {
+  INCOME = 'INCOME',
+  EXPENSE = 'EXPENSE',
+  TRANSFER = 'TRANSFER',
+}
+
+// @deprecated Use TransactionType instead
 export enum TransactionActorType {
   INCOME = 'INCOME',
   EXPENSE = 'EXPENSE',
@@ -71,7 +77,6 @@ export interface TransactionParty {
   id: number
   transactionId: number
   workspaceId: string
-  partyType: TransactionActorType
   partyStatus?: string
   partyMetadata?: Record<string, any>
   user?: TransactionPartyUser
@@ -124,6 +129,7 @@ export interface FinanceiroTransaction {
   sourceType: TransactionSourceType
   sourceId: string
   sourceMetadata?: Record<string, any>
+  transactionType: TransactionType // ← Tipo da transação (INCOME, EXPENSE, TRANSFER)
   amount: number
   // ✨ Valor original da dívida (para referência em cálculos de multa/juros)
   // Útil em parcelamentos com entrada: originalAmount = totalValue, amount = parcela
@@ -148,7 +154,6 @@ export interface FinanceiroTransaction {
 export interface CreateTransactionPartyPayload {
   workspaceId: string
   userId?: string
-  actorType: TransactionActorType
   actorMetadata?: Record<string, any>
 }
 
@@ -156,6 +161,7 @@ export interface CreateTransactionPayload {
   sourceType: TransactionSourceType
   sourceId: string
   sourceMetadata?: Record<string, any>
+  transactionType?: TransactionType // ← Tipo da transação (opcional, default EXPENSE no backend)
   amount: number
   // ✨ Valor original da dívida (salvo na criação)
   // Se não informado, frontend assume que originalAmount = amount
@@ -192,7 +198,7 @@ export interface UpdateTransactionPayload {
 export interface GetTransactionsFilters {
   sourceType?: TransactionSourceType
   status?: TransactionStatus
-  partyType?: TransactionActorType
+  transactionType?: TransactionType
   fromDate?: Date
   toDate?: Date
   search?: string
@@ -205,4 +211,12 @@ export interface GetTransactionsResponse {
   total: number
   page: number
   limit: number
+}
+
+export interface TransactionSummary {
+  totalIncome: number
+  totalExpense: number
+  balance: number
+  incomeCount: number
+  expenseCount: number
 }

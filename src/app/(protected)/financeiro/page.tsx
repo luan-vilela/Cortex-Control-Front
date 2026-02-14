@@ -14,16 +14,18 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { ActorTypeBadge } from '@/modules/financeiro/components/ActorTypeBadge'
 import { SourceBadge } from '@/modules/financeiro/components/SourceBadge'
 import { StatusBadge } from '@/modules/financeiro/components/StatusBadge'
+import { TransactionSummaryCards } from '@/modules/financeiro/components/TransactionSummaryCards'
 import {
   useDeleteTransaction,
   useTransactions,
+  useTransactionsSummary,
   useUpdateTransactionGeneric,
 } from '@/modules/financeiro/hooks/useFinance'
 import {
   type GetTransactionsFilters,
-  TransactionActorType,
   TransactionSourceType,
   TransactionStatus,
+  TransactionType,
 } from '@/modules/financeiro/types'
 import { ModuleGuard } from '@/modules/workspace/components/ModuleGuard'
 import { useBreadcrumb } from '@/modules/workspace/hooks'
@@ -57,14 +59,11 @@ export default function FinanceiroPage() {
   const [advancedOptionsEnabled, setAdvancedOptionsEnabled] = useState(false)
   const [selectedRows, setSelectedRows] = useState<any[]>([])
 
-  // Use pendingFilters directly as active filters (apply immediately)
-  const activeFilters = filters
-
   const { data: transactionsData = { data: [], total: 0, page: 1, limit: 20 }, isLoading } =
     useTransactions(
       activeWorkspace?.id || '',
       {
-        ...activeFilters,
+        ...filters,
         search: searchTerm || undefined,
       },
       !!activeWorkspace?.id
@@ -72,6 +71,16 @@ export default function FinanceiroPage() {
 
   const { mutate: deleteTransaction } = useDeleteTransaction(activeWorkspace?.id || '')
   const { mutate: updateTransaction } = useUpdateTransactionGeneric(activeWorkspace?.id || '')
+
+  const { data: summaryData, isLoading: isSummaryLoading } = useTransactionsSummary(
+    activeWorkspace?.id || '',
+    {
+      fromDate: filters.fromDate,
+      toDate: filters.toDate,
+      status: filters.status,
+    },
+    !!activeWorkspace?.id
+  )
 
   const handleDeleteSelected = async () => {
     if (!activeWorkspace?.id || selectedRows.length === 0) return
@@ -99,13 +108,10 @@ export default function FinanceiroPage() {
   // Definir colunas
   const columns: Column[] = [
     {
-      key: 'partyType',
+      key: 'transactionType',
       label: 'Tipo',
       render: (_, row) => {
-        if (row.parties && row.parties.length > 0) {
-          return <ActorTypeBadge partyType={row.parties[0].partyType} />
-        }
-        return <span className="text-gh-text-secondary text-xs">-</span>
+        return <ActorTypeBadge partyType={row.transactionType} />
       },
     },
     {
@@ -230,6 +236,14 @@ export default function FinanceiroPage() {
           }}
         />
 
+        {/* Summary Cards */}
+        <TransactionSummaryCards
+          totalIncome={summaryData?.totalIncome || 0}
+          totalExpense={summaryData?.totalExpense || 0}
+          balance={summaryData?.balance || 0}
+          isLoading={isSummaryLoading}
+        />
+
         {/* Search Bar */}
         <DataTableToolbar
           searchPlaceholder="Pesquisar por descrição..."
@@ -290,24 +304,24 @@ export default function FinanceiroPage() {
             width="w-56"
           />
 
-          {/* Party Type Filter */}
+          {/* Transaction Type Filter */}
           <FilterWithBadge
             label="Tipo"
             options={[
               {
-                value: TransactionActorType.INCOME,
+                value: TransactionType.INCOME,
                 label: 'Entrada',
               },
               {
-                value: TransactionActorType.EXPENSE,
+                value: TransactionType.EXPENSE,
                 label: 'Saída',
               },
             ]}
-            value={filters.partyType}
+            value={filters.transactionType}
             onValueChange={(value) => {
               setFilters({
                 ...filters,
-                partyType: value as TransactionActorType | undefined,
+                transactionType: value as TransactionType | undefined,
               })
             }}
             width="w-48"
@@ -330,11 +344,7 @@ export default function FinanceiroPage() {
                 label: 'Pago',
               },
               {
-                value: TransactionStatus.PARTIALLY_PAID,
-                label: 'Parcialmente Pago',
-              },
-              {
-                value: TransactionStatus.CANCELLED,
+                value: TransactionStatus.CANCELED,
                 label: 'Cancelado',
               },
             ]}
@@ -367,7 +377,7 @@ export default function FinanceiroPage() {
 
           {/* Clear Filters Button */}
           {(filters.sourceType ||
-            filters.partyType ||
+            filters.transactionType ||
             filters.status ||
             filters.fromDate ||
             filters.toDate) && (
