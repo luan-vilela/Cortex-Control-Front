@@ -3,12 +3,12 @@
 import { useState } from 'react'
 
 import { Eye } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 
-import { type Column, DataTable } from '@/components/DataTable'
+import { type Column, DataTable, type RowAction } from '@/components/DataTable'
 import { DataTableToolbar, PageHeader } from '@/components/patterns'
 import { DateRangePicker } from '@/components/patterns/DateRangePicker'
 import { FilterWithBadge } from '@/components/patterns/FilterWithBadge'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -18,13 +18,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { formatDate } from '@/lib/utils'
 import { ActionBadge } from '@/modules/auditoria/components/ActionBadge'
 import { ModuleBadge } from '@/modules/auditoria/components/ModuleBadge'
@@ -35,7 +28,6 @@ import { useBreadcrumb } from '@/modules/workspace/hooks'
 import { useActiveWorkspace } from '@/modules/workspace/hooks/useActiveWorkspace'
 
 export default function AuditoriaPage() {
-  const router = useRouter()
   const { activeWorkspace } = useActiveWorkspace()
 
   useBreadcrumb([
@@ -50,12 +42,16 @@ export default function AuditoriaPage() {
     page: 1,
     limit: 20,
   })
+  const [searchTerm, setSearchTerm] = useState('')
   const [advancedOptionsEnabled, setAdvancedOptionsEnabled] = useState(false)
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null)
 
   const { data: auditData = { data: [], total: 0, page: 1, limit: 20 }, isLoading } = useAuditLogs(
     activeWorkspace?.id || '',
-    filters
+    {
+      ...filters,
+      entityName: searchTerm || undefined,
+    }
   )
 
   const handleResetFilters = () => {
@@ -63,6 +59,7 @@ export default function AuditoriaPage() {
       page: 1,
       limit: 20,
     })
+    setSearchTerm('')
   }
 
   const handleViewDetails = (log: AuditLog) => {
@@ -128,8 +125,9 @@ export default function AuditoriaPage() {
     },
   ]
 
-  const rowActions = [
+  const rowActions: RowAction[] = [
     {
+      id: 'view-details',
       label: 'Ver Detalhes',
       icon: <Eye className="h-4 w-4" />,
       onClick: handleViewDetails,
@@ -144,149 +142,212 @@ export default function AuditoriaPage() {
           description="Registro completo de ações realizadas no sistema"
         />
 
-        {/* Filtros */}
+        {/* Barra de Busca */}
         <DataTableToolbar
           searchPlaceholder="Buscar por entidade..."
-          searchValue={''}
-          onSearchChange={() => {}}
-          onResetFilters={handleResetFilters}
-          advancedOptionsEnabled={advancedOptionsEnabled}
-          onAdvancedOptionsChange={setAdvancedOptionsEnabled}
-        >
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Módulo */}
-            <FilterWithBadge
-              label="Módulo"
-              value={filters.module}
-              onRemove={() => setFilters({ ...filters, module: undefined })}
-            >
-              <Select
-                value={filters.module || 'all'}
-                onValueChange={(value) =>
-                  setFilters({ ...filters, module: value === 'all' ? undefined : value })
-                }
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Todos os módulos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="financeiro">Financeiro</SelectItem>
-                  <SelectItem value="contatos">Contatos</SelectItem>
-                  <SelectItem value="ordem-servico">Ordem de Serviço</SelectItem>
-                  <SelectItem value="workspace">Workspace</SelectItem>
-                </SelectContent>
-              </Select>
-            </FilterWithBadge>
+          onSearch={setSearchTerm}
+          exportData={auditData.data || []}
+          exportFilename="auditoria"
+        />
 
-            {/* Ação */}
-            <FilterWithBadge
-              label="Ação"
-              value={filters.action}
-              onRemove={() => setFilters({ ...filters, action: undefined })}
-            >
-              <Select
-                value={filters.action || 'all'}
-                onValueChange={(value) =>
+        {/* Filtros */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Módulo */}
+          <FilterWithBadge
+            label="Módulo"
+            options={[
+              { value: 'financeiro', label: 'Financeiro' },
+              { value: 'contatos', label: 'Contatos' },
+              { value: 'ordem-servico', label: 'Ordem de Serviço' },
+              { value: 'workspace', label: 'Workspace' },
+            ]}
+            value={filters.module}
+            onValueChange={(value) =>
+              setFilters({ ...filters, module: value as string | undefined })
+            }
+            width="w-48"
+          />
+
+          {/* Ação */}
+          <FilterWithBadge
+            label="Ação"
+            options={[
+              { value: AuditAction.CREATE, label: 'Criação' },
+              { value: AuditAction.UPDATE, label: 'Atualização' },
+              { value: AuditAction.DELETE, label: 'Deleção' },
+              { value: AuditAction.STATUS_CHANGE, label: 'Mudança de Status' },
+            ]}
+            value={filters.action}
+            onValueChange={(value) =>
+              setFilters({ ...filters, action: value as AuditAction | undefined })
+            }
+            width="w-52"
+          />
+
+          {/* Data Range */}
+          <DateRangePicker
+            value={{
+              from: filters.startDate,
+              to: filters.endDate,
+            }}
+            onValueChange={(range) => {
+              setFilters({
+                ...filters,
+                startDate: range?.from,
+                endDate: range?.to,
+              })
+            }}
+            placeholder="Selecionar período"
+          />
+        </div>
+
+        {/* Filtros Avançados */}
+        {advancedOptionsEnabled && (
+          <div className="border-gh-border bg-gh-surface-secondary grid grid-cols-1 gap-4 rounded-md border p-4 md:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="entityName">Nome da Entidade</Label>
+              <Input
+                id="entityName"
+                placeholder="Ex: Transaction, Contact"
+                value={filters.entityName || ''}
+                onChange={(e) =>
                   setFilters({
                     ...filters,
-                    action: value === 'all' ? undefined : (value as AuditAction),
+                    entityName: e.target.value || undefined,
                   })
                 }
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Todas as ações" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value={AuditAction.CREATE}>Criação</SelectItem>
-                  <SelectItem value={AuditAction.UPDATE}>Atualização</SelectItem>
-                  <SelectItem value={AuditAction.DELETE}>Deleção</SelectItem>
-                  <SelectItem value={AuditAction.STATUS_CHANGE}>Mudança de Status</SelectItem>
-                </SelectContent>
-              </Select>
-            </FilterWithBadge>
-
-            {/* Data Range */}
-            <DateRangePicker
-              fromDate={filters.startDate}
-              toDate={filters.endDate}
-              onSelect={(range) => {
-                setFilters({
-                  ...filters,
-                  startDate: range?.from,
-                  endDate: range?.to,
-                })
-              }}
-            />
-          </div>
-
-          {/* Filtros Avançados */}
-          {advancedOptionsEnabled && (
-            <div className="border-gh-border bg-gh-surface-secondary mt-4 grid grid-cols-1 gap-4 rounded-md border p-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="entityName">Nome da Entidade</Label>
-                <Input
-                  id="entityName"
-                  placeholder="Ex: Transaction, Contact"
-                  value={filters.entityName || ''}
-                  onChange={(e) =>
-                    setFilters({
-                      ...filters,
-                      entityName: e.target.value || undefined,
-                    })
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="entityId">ID da Entidade</Label>
-                <Input
-                  id="entityId"
-                  type="number"
-                  placeholder="Ex: 123"
-                  value={filters.entityId || ''}
-                  onChange={(e) =>
-                    setFilters({
-                      ...filters,
-                      entityId: e.target.value ? Number(e.target.value) : undefined,
-                    })
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="feature">Feature</Label>
-                <Input
-                  id="feature"
-                  placeholder="Ex: controle-contas"
-                  value={filters.feature || ''}
-                  onChange={(e) =>
-                    setFilters({
-                      ...filters,
-                      feature: e.target.value || undefined,
-                    })
-                  }
-                />
-              </div>
+              />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="entityId">ID da Entidade</Label>
+              <Input
+                id="entityId"
+                placeholder="Ex: 123"
+                value={filters.entityId || ''}
+                onChange={(e) =>
+                  setFilters({
+                    ...filters,
+                    entityId: e.target.value ? Number(e.target.value) : undefined,
+                  })
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="feature">Feature</Label>
+              <Input
+                id="feature"
+                placeholder="Ex: controle-contas"
+                value={filters.feature || ''}
+                onChange={(e) =>
+                  setFilters({
+                    ...filters,
+                    feature: e.target.value || undefined,
+                  })
+                }
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Botão de Opções Avançadas */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setAdvancedOptionsEnabled(!advancedOptionsEnabled)}
+            className="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+          >
+            {advancedOptionsEnabled ? 'Desabilitar Opções Avançadas' : 'Opções Avançadas'}
+          </button>
+          {(filters.module ||
+            filters.action ||
+            filters.startDate ||
+            filters.endDate ||
+            filters.entityName ||
+            filters.entityId ||
+            filters.feature) && (
+            <button
+              onClick={handleResetFilters}
+              className="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+            >
+              Limpar Filtros
+            </button>
           )}
-        </DataTableToolbar>
+        </div>
 
         {/* Tabela */}
         <DataTable
-          columns={columns}
+          headers={columns}
           data={auditData.data}
           isLoading={isLoading}
-          pagination={{
-            currentPage: auditData.page,
-            totalPages: Math.ceil(auditData.total / auditData.limit),
-            pageSize: auditData.limit,
-            totalItems: auditData.total,
-            onPageChange: (page) => setFilters({ ...filters, page }),
-          }}
           rowActions={rowActions}
+          stickyPagination={false}
         />
+
+        {/* Paginação Manual */}
+        {auditData.total > 0 && (
+          <div className="border-gh-border flex items-center justify-between border-t px-4 py-4">
+            <p className="text-gh-text-secondary text-sm">
+              Mostrando <strong>{(auditData.page - 1) * auditData.limit + 1}</strong> até{' '}
+              <strong>{Math.min(auditData.page * auditData.limit, auditData.total)}</strong> de{' '}
+              <strong>{auditData.total}</strong> resultados
+            </p>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setFilters({ ...filters, page: Math.max(1, auditData.page - 1) })}
+                disabled={auditData.page === 1}
+              >
+                ‹ Anterior
+              </Button>
+
+              <div className="flex items-center gap-1">
+                {Array.from(
+                  { length: Math.min(5, Math.ceil(auditData.total / auditData.limit)) },
+                  (_, i) => {
+                    const totalPages = Math.ceil(auditData.total / auditData.limit)
+                    let pageNum = i + 1
+                    if (totalPages > 5 && auditData.page > 3) {
+                      pageNum = Math.max(1, auditData.page - 2) + i
+                    }
+                    return pageNum <= totalPages ? pageNum : null
+                  }
+                )
+                  .filter(Boolean)
+                  .map((pageNum) => (
+                    <Button
+                      key={pageNum}
+                      variant={auditData.page === pageNum ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setFilters({ ...filters, page: pageNum as number })}
+                      className="h-8 w-8 p-0"
+                    >
+                      {pageNum}
+                    </Button>
+                  ))}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setFilters({
+                    ...filters,
+                    page: Math.min(
+                      Math.ceil(auditData.total / auditData.limit),
+                      auditData.page + 1
+                    ),
+                  })
+                }
+                disabled={auditData.page === Math.ceil(auditData.total / auditData.limit)}
+              >
+                Próxima ›
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Dialog de Detalhes */}
         <Dialog open={!!selectedLog} onOpenChange={() => setSelectedLog(null)}>

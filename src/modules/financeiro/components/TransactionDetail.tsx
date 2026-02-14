@@ -6,6 +6,7 @@ import {
   PaymentMode,
   RecurrenceType,
   TransactionActorType,
+  TransactionType,
 } from '../types'
 
 import {
@@ -53,7 +54,7 @@ const recurrenceTypeLabels: Record<RecurrenceType, string> = {
 }
 
 export function TransactionDetail({ transaction }: { transaction: FinanceiroTransaction }) {
-  const isIncome = transaction.parties.some((p) => p.partyType === TransactionActorType.INCOME)
+  const isIncome = transaction.transactionType === TransactionType.INCOME
 
   return (
     <div className="space-y-6">

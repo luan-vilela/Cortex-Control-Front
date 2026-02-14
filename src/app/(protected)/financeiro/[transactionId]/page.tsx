@@ -163,8 +163,7 @@ export default function TransactionDetailPage() {
     [TransactionStatus.PENDING]: 'Pendente',
     [TransactionStatus.OVERDUE]: 'Atrasado',
     [TransactionStatus.PAID]: 'Pago',
-    [TransactionStatus.PARTIALLY_PAID]: 'Parcialmente Pago',
-    [TransactionStatus.CANCELLED]: 'Cancelado',
+    [TransactionStatus.CANCELED]: 'Cancelado',
   }
 
   return (
@@ -207,7 +206,7 @@ export default function TransactionDetailPage() {
                   <DropdownMenuSeparator />
 
                   {/* Alterar Status */}
-                  {[TransactionStatus.PENDING, TransactionStatus.PARTIALLY_PAID].includes(
+                  {[TransactionStatus.PENDING, TransactionStatus.OVERDUE].includes(
                     transaction.status
                   ) && (
                     <>
