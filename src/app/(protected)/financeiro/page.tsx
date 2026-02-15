@@ -141,37 +141,56 @@ export default function FinanceiroPage() {
       ),
     },
     {
-      key: 'recurrenceConfig',
-      label: 'Recorrência',
+      key: 'groupType',
+      label: 'Tipo de Grupo',
       render: (_, row) => {
-        const isRecurrence = !!row.sourceMetadata?.recurrence?.occurrences
+        if (!row.groupType) {
+          return <span className="text-gh-text-secondary text-sm">-</span>
+        }
 
-        return (
-          <span className="text-gh-text-secondary text-sm">{isRecurrence ? 'Sim' : 'Não'}</span>
-        )
-      },
-    },
-    {
-      key: 'installmentPlan',
-      label: 'Parcelado',
-      render: (_, row) => {
-        const isInstallment = !!row.sourceMetadata?.installment
-        const isDownpayment = !!row.sourceMetadata?.downPayment
-        const isParcelado = isInstallment || isDownpayment
+        const labels = {
+          SINGLE: 'Única',
+          INSTALLMENT: 'Parcelamento',
+          RECURRENT: 'Recorrência',
+          CONTRACT: 'Contrato',
+        }
 
-        return <span className="text-gh-text-secondary text-sm">{isParcelado ? 'Sim' : 'Não'}</span>
-      },
-    },
-    {
-      key: 'installmentNumber',
-      label: 'Nº Parcela',
-      render: (_, row) => {
-        const installmentNumber = row.sourceMetadata?.installment?.number
         return (
           <span className="text-gh-text-secondary text-sm">
-            {installmentNumber ? `${installmentNumber}` : '-'}
+            {labels[row.groupType as keyof typeof labels] || row.groupType}
           </span>
         )
+      },
+    },
+    {
+      key: 'installmentDisplay',
+      label: 'Parcela/Recorrência',
+      render: (_, row) => {
+        if (row.groupType === 'SINGLE') {
+          return <span className="text-gh-text-secondary text-sm">-</span>
+        }
+
+        if (row.groupType === 'INSTALLMENT' && row.installmentNumber && row.totalInstallments) {
+          return (
+            <span className="text-gh-text-secondary text-sm">
+              {row.installmentNumber}/{row.totalInstallments}
+            </span>
+          )
+        }
+
+        if (row.groupType === 'RECURRENT' && row.installmentNumber && row.totalInstallments) {
+          return (
+            <span className="text-gh-text-secondary text-sm">
+              {row.installmentNumber}/{row.totalInstallments}
+            </span>
+          )
+        }
+
+        if (row.installmentNumber) {
+          return <span className="text-gh-text-secondary text-sm">{row.installmentNumber}</span>
+        }
+
+        return <span className="text-gh-text-secondary text-sm">-</span>
       },
     },
     {

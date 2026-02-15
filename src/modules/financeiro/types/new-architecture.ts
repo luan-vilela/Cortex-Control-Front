@@ -219,10 +219,34 @@ export interface SettlementItem {
 
 // -------------------- DTOs --------------------
 
+export interface CreateChargeConfigDto {
+  chargeType: 'PERCENTAGE' | 'FLAT'
+  chargeValue: number
+  description?: string
+}
+
+export interface CreateInterestConfigDto {
+  fineType?: FineType
+  fineValue?: number
+  interestType?: InterestType
+  interestValue?: number
+  graceDays?: number
+  maxInterest?: number
+  description?: string
+}
+
+export interface CreateRecurrenceRuleDto {
+  frequency: Frequency
+  occurrences?: number
+  endDate?: string
+  description?: string
+}
+
 export interface CreateTransactionGroupDto {
   downPaymentIsPaid: boolean
   personId: string
   groupType: GroupType
+  transactionType: TransactionType
   sourceType: SourceType
   sourceId?: string
   totalAmount: number
@@ -233,7 +257,11 @@ export interface CreateTransactionGroupDto {
   firstDueDate?: string
   intervalDays?: number
   recurrenceRuleId?: number
+  recurrenceConfig?: CreateRecurrenceRuleDto
   interestConfigId?: number
+  interestConfig?: CreateInterestConfigDto
+  chargeConfigId?: number
+  chargeConfig?: CreateChargeConfigDto
   description?: string
 }
 

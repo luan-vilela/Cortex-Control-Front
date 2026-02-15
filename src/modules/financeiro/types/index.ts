@@ -161,6 +161,9 @@ export interface FinanceiroTransaction {
   installmentAmortization?: number // Amortização desta parcela
   outstandingBalance?: number // Saldo devedor após esta parcela
   orderNumber?: string // Número do pedido/OS
+  // ✨ Informações do grupo (para identificar tipo de transação)
+  groupType?: 'SINGLE' | 'INSTALLMENT' | 'RECURRENT' | 'CONTRACT'
+  totalInstallments?: number // Total de parcelas/recorrências do grupo
 }
 
 export interface CreateTransactionPartyPayload {

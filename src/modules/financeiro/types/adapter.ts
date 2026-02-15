@@ -105,6 +105,48 @@ export function adaptCreateTransactionPayload(
       : new Date().toISOString().split('T')[0]
   }
 
+  // Adicionar recorrência se existir
+  if (oldPayload.recurrenceConfig?.type) {
+    adapted.recurrenceConfig = {
+      frequency: oldPayload.recurrenceConfig.type as any,
+      // Enviar apenas occurrences OU endDate, nunca ambos
+      occurrences: oldPayload.recurrenceConfig.endDate
+        ? undefined
+        : oldPayload.recurrenceConfig.occurrences,
+      endDate: oldPayload.recurrenceConfig.endDate
+        ? new Date(oldPayload.recurrenceConfig.endDate).toISOString().split('T')[0]
+        : undefined,
+    }
+  }
+
+  // Aplicar taxas imediatas (Aba 1 - "Taxas e Ajustes")
+  if (oldPayload.interestConfig?.type) {
+    adapted.chargeConfig = {
+      chargeType: oldPayload.interestConfig.type,
+      chargeValue:
+        oldPayload.interestConfig.type === 'PERCENTAGE'
+          ? oldPayload.interestConfig.percentage!
+          : oldPayload.interestConfig.flatAmount!,
+      description: oldPayload.interestConfig.description || undefined,
+    }
+  }
+
+  // Adicionar configuração de juros/multa de atraso (Aba 2 - "Multa e Mora")
+  // Apenas se tiver penaltyPercentage OU interestPercentage
+  if (
+    oldPayload.interestConfig &&
+    (oldPayload.interestConfig.penaltyPercentage || oldPayload.interestConfig.interestPercentage)
+  ) {
+    adapted.interestConfig = {
+      fineType: 'PERCENTAGE', // Multa sempre em percentual
+      fineValue: oldPayload.interestConfig.penaltyPercentage || 0,
+      interestType: oldPayload.interestConfig.interestPeriod === 'DAILY' ? 'DAILY' : 'MONTHLY',
+      interestValue: oldPayload.interestConfig.interestPercentage || 0,
+      graceDays: 0,
+      description: oldPayload.interestConfig.description,
+    }
+  }
+
   return adapted
 }
 

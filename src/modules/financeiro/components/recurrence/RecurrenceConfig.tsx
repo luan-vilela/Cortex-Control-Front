@@ -144,7 +144,7 @@ export const RecurrenceConfigComponent = forwardRef<
                 checked={watch('endDateType') === 'date'}
                 onChange={() => {
                   handleChange('endDateType', 'date')
-                  handleChange('occurrences', 1)
+                  handleChange('occurrences', undefined)
                 }}
                 className="h-3 w-3"
               />
