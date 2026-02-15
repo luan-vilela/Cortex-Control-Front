@@ -93,8 +93,7 @@ export default function AuditoriaPage() {
       label: 'Usuário',
       render: (_, row) => (
         <div className="text-sm">
-          <p className="text-gh-text font-medium">{row.user?.name || 'N/A'}</p>
-          <p className="text-gh-text-secondary truncate text-xs">{row.user?.email || '-'}</p>
+          <p className="text-gh-text font-medium">{row.userName || row.user?.name || 'N/A'}</p>
         </div>
       ),
     },

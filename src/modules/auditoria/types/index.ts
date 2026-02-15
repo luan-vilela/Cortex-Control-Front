@@ -15,6 +15,7 @@ export interface AuditLog {
   oldValue?: Record<string, any>
   newValue?: Record<string, any>
   userId: string
+  userName: string
   workspaceId: string
   ipAddress?: string
   userAgent?: string
