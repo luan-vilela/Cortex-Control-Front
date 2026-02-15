@@ -54,6 +54,7 @@ export interface CashPaymentConfig {
 
 // Payment configuration for INSTALLMENT mode (parcelado)
 export interface InstallmentPaymentConfig {
+  downPaymentIsPaid: boolean
   mode: PaymentMode.INSTALLMENT
   numberOfInstallments: number // Mínimo 2
   downPayment?: number // Valor de entrada (opcional)
@@ -89,8 +90,8 @@ export interface InstallmentPlan {
   transactionId: number
   planType: InstallmentPlanType
   numberOfInstallments: number
-  downpayment?: number
-  downpaymentDate?: Date
+  downPayment?: number
+  downPaymentDate?: Date
   firstInstallmentDate: Date
   installmentIntervalDays: number
   createdAt: Date

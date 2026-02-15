@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  FinanceiroTransaction,
+  type FinanceiroTransaction,
   InstallmentPlanType,
   PaymentMode,
   RecurrenceType,
@@ -13,7 +13,6 @@ import {
   Calendar,
   Clock,
   CreditCard,
-  DollarSign,
   FileText,
   Info,
   Percent,
@@ -268,11 +267,11 @@ export function TransactionDetail({ transaction }: { transaction: FinanceiroTran
                     {planTypeLabels[transaction.installmentPlan.planType]}
                   </p>
                 </div>
-                {transaction.installmentPlan.downpayment && (
+                {transaction.installmentPlan.downPayment && (
                   <div>
                     <p className="text-gh-text-secondary text-xs">Entrada</p>
                     <p className="text-gh-text text-sm font-medium">
-                      {formatCurrency(Number(transaction.installmentPlan.downpayment))}
+                      {formatCurrency(Number(transaction.installmentPlan.downPayment))}
                     </p>
                   </div>
                 )}
@@ -396,7 +395,7 @@ export function TransactionDetail({ transaction }: { transaction: FinanceiroTran
           </span>
         </div>
         <div className="space-y-3">
-          {transaction.parties.map((party, index) => {
+          {transaction.parties.map((party) => {
             const metadata = party.partyMetadata || {}
             const user = party.user
 

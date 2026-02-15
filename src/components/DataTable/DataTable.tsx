@@ -140,7 +140,6 @@ export function DataTable({
       onSelectionChange?.(paginatedData)
     }
   }
-  console.log('DataTable render', { data, paginatedData, selectedRows, selectAll })
 
   if (isLoading) {
     return (

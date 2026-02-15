@@ -34,8 +34,8 @@ export enum PlanType {
 }
 
 export enum CalculationMethod {
-  PRO_RATA = 'PRO_RATA',
-  EQUAL_INSTALLMENTS = 'EQUAL_INSTALLMENTS',
+  FIXED = 'FIXED',
+  VARIABLE = 'VARIABLE',
 }
 
 export enum TransactionType {
@@ -220,6 +220,7 @@ export interface SettlementItem {
 // -------------------- DTOs --------------------
 
 export interface CreateTransactionGroupDto {
+  downPaymentIsPaid: boolean
   personId: string
   groupType: GroupType
   sourceType: SourceType

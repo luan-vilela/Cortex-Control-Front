@@ -156,7 +156,7 @@ export default function FinanceiroPage() {
       label: 'Parcelado',
       render: (_, row) => {
         const isInstallment = !!row.sourceMetadata?.installment
-        const isDownpayment = !!row.sourceMetadata?.downpayment
+        const isDownpayment = !!row.sourceMetadata?.downPayment
         const isParcelado = isInstallment || isDownpayment
 
         return <span className="text-gh-text-secondary text-sm">{isParcelado ? 'Sim' : 'Não'}</span>

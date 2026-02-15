@@ -5,14 +5,14 @@
  * e a nova arquitetura event-sourcing do backend.
  */
 import {
-  CreateTransactionPayload,
+  type CreateTransactionPayload,
   InstallmentPlanType,
-  TransactionType as OldTransactionType,
+  type TransactionType as OldTransactionType,
   PaymentMode,
 } from './index'
 import {
   CalculationMethod,
-  CreateTransactionGroupDto,
+  type CreateTransactionGroupDto,
   GroupType,
   TransactionType as NewTransactionType,
   PlanType,
@@ -91,8 +91,9 @@ export function adaptCreateTransactionPayload(
   if (paymentConfig.mode === PaymentMode.INSTALLMENT && 'numberOfInstallments' in paymentConfig) {
     adapted.numberOfInstallments = paymentConfig.numberOfInstallments
     adapted.downpaymentAmount = paymentConfig.downPayment || 0
+    adapted.downPaymentIsPaid = paymentConfig.downPaymentIsPaid ?? false
     adapted.planType = mapPlanType(paymentConfig.planType || InstallmentPlanType.SIMPLE)
-    adapted.calculationMethod = CalculationMethod.EQUAL_INSTALLMENTS
+    adapted.calculationMethod = CalculationMethod.FIXED // Por enquanto, usar FIXED como default
     adapted.firstDueDate = paymentConfig.firstInstallmentDate
       ? new Date(paymentConfig.firstInstallmentDate).toISOString().split('T')[0]
       : undefined

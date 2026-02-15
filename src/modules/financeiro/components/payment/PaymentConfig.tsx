@@ -217,7 +217,7 @@ export const PaymentConfigComponent = forwardRef<PaymentConfigRef, PaymentConfig
             <div className="flex w-full gap-3">
               {/* Data da Primeira Parcela */}
               <div className="flex-1 space-y-2">
-                <Label htmlFor="firstInstallmentDate">Data da Primeira Parcela</Label>
+                <Label htmlFor="firstInstallmentDate">Data da Entrada ou 1ª Parcela</Label>
                 <DatePicker
                   value={(watch as any)('firstInstallmentDate')}
                   onValueChange={(date) => {

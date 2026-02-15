@@ -86,7 +86,7 @@ export function useTransactionDetail(workspaceId: string, transactionId: number,
 export function useCreateTransaction(workspaceId: string) {
   const queryClient = useQueryClient()
   const { addAlert } = useAlerts()
-
+  // Log para debug
   return useMutation({
     mutationFn: (payload: CreateTransactionPayload) =>
       financeService.createTransaction(workspaceId, payload),

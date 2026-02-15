@@ -117,11 +117,11 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
             numberOfInstallments: paymentConfig.numberOfInstallments,
             firstInstallmentDate: paymentConfig.firstInstallmentDate,
             installmentIntervalDays: paymentConfig.installmentIntervalDays,
-            downpayment: paymentConfig.downPayment || 0,
-            downpaymentDate: paymentConfig.downPaymentDate,
-            downpaymentIsPaid: paymentConfig.downPaymentIsPaid ?? true,
+            downPayment: paymentConfig.downPayment || 0,
+            downPaymentDate: paymentConfig.downPaymentDate,
+            downPaymentIsPaid: paymentConfig.downPaymentIsPaid ?? false,
           }
-
+    console.log('API Payment Config:', apiPaymentConfig)
     // Formata a data para string YYYY-MM-DD
     const dueDateString = formatDateToLocalISO(infoConfig.dueDate)
 
@@ -160,6 +160,7 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
       ],
     }
 
+    console.log('Payload to API:', payload)
     createTransaction(payload, {
       onSuccess: () => {
         setInfoConfig({

@@ -29,18 +29,11 @@ export function DatePicker({
   const [open, setOpen] = React.useState(false)
   const [tempDate, setTempDate] = React.useState<Date | undefined>(value)
 
-  console.log('[DatePicker] value prop:', value)
-  console.log('[DatePicker] value?.toString():', value?.toString())
-  console.log('[DatePicker] value?.toISOString():', value?.toISOString())
-
   // Sincroniza tempDate quando o value muda (ex: via props)
   React.useEffect(() => {
-    console.log('[DatePicker] useEffect - value changed:', value)
     if (open) {
-      console.log('[DatePicker] Popover open, setting tempDate to:', value)
       setTempDate(value)
     } else {
-      console.log('[DatePicker] Popover closed, syncing tempDate')
       setTempDate(value)
     }
   }, [value, open])
@@ -48,25 +41,18 @@ export function DatePicker({
   const formatDate = (date: Date | undefined) => {
     if (!date) return placeholder
     const formatted = date.toLocaleDateString('pt-BR')
-    console.log('[DatePicker] formatDate - input:', date, 'output:', formatted)
     return formatted
   }
 
   const handleOpenChange = (newOpen: boolean) => {
-    console.log('[DatePicker] handleOpenChange - newOpen:', newOpen, 'tempDate:', tempDate)
     if (!newOpen && tempDate) {
       // Popover está fechando, aplica a mudança
-      console.log('[DatePicker] Calling onValueChange with:', tempDate)
-      console.log('[DatePicker] tempDate.toISOString():', tempDate.toISOString())
       onValueChange?.(tempDate)
     }
     setOpen(newOpen)
   }
 
   const handleSelect = (date: Date | undefined) => {
-    console.log('[DatePicker] onSelect from Calendar - date:', date)
-    console.log('[DatePicker] onSelect - date?.toString():', date?.toString())
-    console.log('[DatePicker] onSelect - date?.toISOString():', date?.toISOString())
     setTempDate(date)
   }
 
