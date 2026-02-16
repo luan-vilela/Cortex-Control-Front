@@ -1,12 +1,9 @@
 import React from "react";
 import {
-  AllContacts,
+  type AllContacts,
   EntityType,
   PhoneType,
-  Lead,
-  Cliente,
-  Fornecedor,
-  Parceiro,
+
 } from "../types/person.types";
 import { Mail, Phone, MapPin, FileText } from "lucide-react";
 
