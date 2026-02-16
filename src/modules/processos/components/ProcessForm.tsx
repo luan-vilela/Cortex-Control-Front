@@ -17,6 +17,7 @@ import {
   Scale,
   Truck,
   UserPlus,
+  Wrench,
 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -56,6 +57,7 @@ const TEMPLATE_ICONS: Record<string, React.ReactNode> = {
   Package: <Package className="h-6 w-6" />,
   Building: <Building className="h-6 w-6" />,
   FileText: <FileText className="h-6 w-6" />,
+  Wrench: <Wrench className="h-6 w-6" />,
 }
 
 // ─── SCHEMA DO FORMULÁRIO ─────────────────────────────────

@@ -51,6 +51,42 @@ export interface ProcessTemplate {
   schema: {
     fields: ProcessTemplateField[]
   }
+  /** Configuração padrão de quais seções/campos aparecem na impressão */
+  printDefaults: PrintConfig
+}
+
+/** Configuração de impressão: quais seções e campos dinâmicos aparecem no documento */
+export interface PrintConfig {
+  /** Seções fixas do documento */
+  sections: {
+    header: boolean
+    infoGerais: boolean
+    envolvidosClientes: boolean
+    envolvidosUsuarios: boolean
+    endereco: boolean
+    dadosProcesso: boolean
+    subprocessos: boolean
+    assinatura: boolean
+    rodape: boolean
+  }
+  /** Chaves dos campos dinâmicos (do schema) habilitados para impressão. null = todos */
+  enabledFields: string[] | null
+}
+
+/** Configuração padrão: tudo habilitado */
+export const DEFAULT_PRINT_CONFIG: PrintConfig = {
+  sections: {
+    header: true,
+    infoGerais: true,
+    envolvidosClientes: true,
+    envolvidosUsuarios: true,
+    endereco: true,
+    dadosProcesso: true,
+    subprocessos: true,
+    assinatura: true,
+    rodape: true,
+  },
+  enabledFields: null,
 }
 
 // ─── HELPER DE CRIAÇÃO ──────────────────────────────────────
@@ -65,6 +101,8 @@ interface CreateTemplateConfig {
   obrigatorio?: boolean
   impeditivo?: boolean
   fields: ProcessTemplateField[]
+  /** Seções/campos habilitados por padrão na impressão. Se omitido, usa DEFAULT_PRINT_CONFIG */
+  printDefaults?: Partial<PrintConfig>
 }
 
 /**
@@ -83,6 +121,13 @@ export function createTemplate(config: CreateTemplateConfig): ProcessTemplate {
     impeditivo: config.impeditivo ?? false,
     schema: {
       fields: config.fields,
+    },
+    printDefaults: {
+      sections: {
+        ...DEFAULT_PRINT_CONFIG.sections,
+        ...config.printDefaults?.sections,
+      },
+      enabledFields: config.printDefaults?.enabledFields ?? null,
     },
   }
 }
@@ -272,6 +317,76 @@ export const PROCESS_TEMPLATES: ProcessTemplate[] = [
       }),
       FIELDS.prazo('Prazo', 'prazo'),
       FIELDS.observacoes(),
+    ],
+  }),
+
+  // ── Conserto de Equipamento ─────────────────────
+  createTemplate({
+    id: 'conserto-equipamento',
+    name: 'Conserto de Equipamento',
+    description:
+      'Ordem de serviço para oficinas mecânicas, eletrônicas, celulares e assistências técnicas',
+    type: ProcessType.ATENDIMENTO,
+    icon: 'Wrench',
+    color: 'bg-cyan-50 border-cyan-200 text-cyan-700',
+    obrigatorio: true,
+    printDefaults: {
+      sections: {
+        header: true,
+        infoGerais: true,
+        envolvidosClientes: true,
+        envolvidosUsuarios: true,
+        endereco: true,
+        dadosProcesso: true,
+        subprocessos: false,
+        assinatura: true,
+        rodape: true,
+      },
+      enabledFields: null,
+    },
+    fields: [
+      FIELDS.texto('equipamento', 'Equipamento / Aparelho', {
+        required: true,
+        placeholder: 'Ex: iPhone 15 Pro Max, Notebook Dell, Motor V8...',
+      }),
+      FIELDS.texto('marca_modelo', 'Marca / Modelo', {
+        required: true,
+        placeholder: 'Ex: Apple iPhone 15, Samsung Galaxy S24...',
+      }),
+      FIELDS.texto('numero_serie', 'Número de Série / IMEI', {
+        placeholder: 'Nº de série, IMEI ou identificação do equipamento',
+      }),
+      FIELDS.descricao('Defeito / Solicitação do Cliente', 'defeito_relatado', {
+        required: true,
+        placeholder:
+          'Descreva o defeito relatado pelo cliente ou a solicitação de serviço...',
+      }),
+      FIELDS.descricao('Itens / Acessórios Deixados', 'itens_deixados', {
+        required: false,
+        placeholder:
+          'Liste os itens e acessórios entregues junto (carregador, capa, cabos, chaves, peças soltas...)',
+      }),
+      FIELDS.selecao(
+        'estado_aparelho',
+        'Estado do Equipamento na Entrada',
+        [
+          { label: 'Bom estado (apenas defeito relatado)', value: 'bom' },
+          { label: 'Marcas de uso visíveis', value: 'marcas_uso' },
+          { label: 'Avariado / Danos físicos', value: 'avariado' },
+          { label: 'Não liga', value: 'nao_liga' },
+        ],
+        { required: true }
+      ),
+      FIELDS.prioridade({ required: true }),
+      FIELDS.valor('Orçamento Estimado (R$)', 'orcamento', {
+        placeholder: '0,00',
+      }),
+      FIELDS.prazo('Previsão de Entrega', 'previsao_entrega'),
+      FIELDS.simNao('garantia', 'Equipamento em Garantia?'),
+      FIELDS.observacoes('Observações Técnicas', {
+        placeholder:
+          'Observações do técnico sobre o equipamento, condições especiais, etc...',
+      }),
     ],
   }),
 ]

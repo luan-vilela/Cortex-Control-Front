@@ -19,6 +19,7 @@ import {
   Trash2,
   Truck,
   UserPlus,
+  Wrench,
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -46,6 +47,7 @@ const TEMPLATE_ICONS: Record<string, React.ReactNode> = {
   Package: <Package className="h-4 w-4" />,
   Building: <Building className="h-4 w-4" />,
   FileText: <FileText className="h-4 w-4" />,
+  Wrench: <Wrench className="h-4 w-4" />,
 }
 
 // ─── TIPO INTERNO (subprocesso no form) ──────────────────

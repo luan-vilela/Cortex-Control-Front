@@ -8,17 +8,20 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock,
+  ExternalLink,
   FileText,
   GitBranch,
   Loader2,
   MoreVertical,
   Plus,
+  Printer,
   Shield,
   Trash2,
   User,
   Users,
   XCircle,
 } from 'lucide-react'
+import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 
 import { Badge } from '@/components/ui/badge'
@@ -33,14 +36,17 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Separator } from '@/components/ui/separator'
 import { formatDate } from '@/lib/utils'
+import { openPrintWindow } from '@/modules/processos/components/ProcessDocument'
+import { PrintConfigModal } from '@/modules/processos/components/PrintConfigModal'
 import { ProcessStatusBadge } from '@/modules/processos/components/ProcessStatusBadge'
 import { ProcessTypeBadge } from '@/modules/processos/components/ProcessTypeBadge'
 import {
   useDeleteProcesso,
   useProcesso,
+  useProcessoTree,
   useUpdateProcesso,
 } from '@/modules/processos/hooks/useProcessos'
-import { type ActorRole, type Process, ProcessStatus } from '@/modules/processos/types'
+import { type Process, type ProcessActor, ProcessStatus } from '@/modules/processos/types'
 import { ModuleGuard } from '@/modules/workspace/components/ModuleGuard'
 import { useBreadcrumb } from '@/modules/workspace/hooks'
 import { useActiveWorkspace } from '@/modules/workspace/hooks/useActiveWorkspace'
@@ -72,6 +78,7 @@ export default function ProcessoDetailPage() {
   const { activeWorkspace } = useActiveWorkspace()
   const [isChangingStatus, setIsChangingStatus] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [printModalOpen, setPrintModalOpen] = useState(false)
 
   const processId = params.id as string
   const workspaceId = activeWorkspace?.id || ''
@@ -82,6 +89,8 @@ export default function ProcessoDetailPage() {
     error,
     refetch,
   } = useProcesso(workspaceId, processId, !!workspaceId && !!processId)
+
+  const { data: processoTree } = useProcessoTree(workspaceId, processId, !!workspaceId && !!processId)
 
   useBreadcrumb(
     processo
@@ -221,6 +230,32 @@ export default function ProcessoDetailPage() {
             </Button>
 
             <div className="flex items-center gap-2">
+              {/* Imprimir Documento */}
+              {processoTree && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => setPrintModalOpen(true)}
+                >
+                  <Printer size={16} />
+                  Imprimir
+                </Button>
+              )}
+
+              {/* Modal de configuração de impressão */}
+              {processoTree && (
+                <PrintConfigModal
+                  open={printModalOpen}
+                  onOpenChange={setPrintModalOpen}
+                  processo={processoTree}
+                  onPrint={(config) => {
+                    setPrintModalOpen(false)
+                    openPrintWindow(processoTree, config)
+                  }}
+                />
+              )}
+
               {/* Ação rápida: Novo Subprocesso */}
               <Button
                 onClick={() => router.push(`/processos/new?parentId=${processId}`)}
@@ -517,7 +552,7 @@ function ActorSection({
   actors,
 }: {
   title: string
-  actors: { id: string; actorId: string; actorType: string; papel: ActorRole; responsavel: boolean }[]
+  actors: ProcessActor[]
 }) {
   return (
     <div>
@@ -525,30 +560,54 @@ function ActorSection({
         {title}
       </p>
       <div className="space-y-2">
-        {actors.map((actor) => (
-          <div
-            key={actor.id}
-            className="bg-gh-canvas border-gh-border flex items-center gap-3 rounded-md border p-3"
-          >
-            <div className="bg-gh-border flex h-8 w-8 items-center justify-center rounded-full">
-              <User size={14} className="text-gh-text-secondary" />
+        {actors.map((actor) => {
+          const name = actor.actorName || actor.actorId.slice(0, 8) + '...'
+          const phones =
+            actor.actorPhones && actor.actorPhones.length > 0
+              ? actor.actorPhones.map((p) => p.number).join(', ')
+              : null
+          const isContact = actor.actorType === 'person'
+          const href = isContact
+            ? `/contatos/${actor.actorId}`
+            : undefined
+
+          return (
+            <div
+              key={actor.id}
+              className="bg-gh-canvas border-gh-border flex items-center gap-3 rounded-md border p-3"
+            >
+              <div className="bg-gh-border flex h-8 w-8 items-center justify-center rounded-full">
+                <User size={14} className="text-gh-text-secondary" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  {href ? (
+                    <Link
+                      href={href}
+                      className="text-gh-text truncate text-sm font-medium hover:underline hover:text-blue-600 transition-colors"
+                    >
+                      {name}
+                    </Link>
+                  ) : (
+                    <p className="text-gh-text truncate text-sm font-medium">{name}</p>
+                  )}
+                  {href && <ExternalLink size={12} className="text-gh-text-secondary shrink-0" />}
+                </div>
+                <p className="text-gh-text-secondary text-xs">
+                  {isContact ? 'Contato' : 'Membro'} ·{' '}
+                  {actorRoleLabels[actor.papel] || actor.papel}
+                  {actor.actorEmail && ` · ${actor.actorEmail}`}
+                  {phones && ` · ${phones}`}
+                </p>
+              </div>
+              {actor.responsavel && (
+                <Badge variant="default" className="shrink-0 text-xs">
+                  Responsável
+                </Badge>
+              )}
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-gh-text truncate text-sm font-medium">
-                {actor.actorId.slice(0, 8)}...
-              </p>
-              <p className="text-gh-text-secondary text-xs">
-                {actor.actorType === 'person' ? 'Contato' : 'Membro'} ·{' '}
-                {actorRoleLabels[actor.papel] || actor.papel}
-              </p>
-            </div>
-            {actor.responsavel && (
-              <Badge variant="default" className="shrink-0 text-xs">
-                Responsável
-              </Badge>
-            )}
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

@@ -26,6 +26,13 @@ export enum ActorRole {
   RESPONSAVEL = 'RESPONSAVEL',
 }
 
+export interface ProcessActorPhone {
+  number: string
+  type: string
+  isPrimary: boolean
+  isWhatsapp: boolean
+}
+
 export interface ProcessActor {
   id: string
   processId: string
@@ -34,6 +41,14 @@ export interface ProcessActor {
   responsavel: boolean
   papel: ActorRole
   createdAt: string
+  // Dados hidratados pelo backend (via findTree)
+  actorName?: string
+  actorEmail?: string
+  actorPhones?: ProcessActorPhone[]
+  actorAddress?: string
+  actorCity?: string
+  actorState?: string
+  actorDocument?: string
 }
 
 export interface Process {
