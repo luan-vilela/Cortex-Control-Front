@@ -72,6 +72,7 @@ export interface Process {
   createdAt: string
   updatedAt: string
   closedAt: string | null
+  invoicedAt: string | null
 }
 
 export interface SubProcessActorPayload {
@@ -144,6 +145,8 @@ export interface GetProcessesFilters {
   actorType?: string
   search?: string
   rootOnly?: string
+  startDate?: string
+  endDate?: string
   page?: number
   limit?: number
 }
@@ -156,4 +159,115 @@ export interface GetProcessesResponse {
     limit: number
     totalPages: number
   }
+}
+
+// ─── FINANCEIRO DO PROCESSO (tabela própria) ────────────────
+
+export interface ProcessFinanceEntry {
+  id: string
+  workspaceId: string
+  processId: string
+  transactionType: 'INCOME' | 'EXPENSE'
+  amount: number
+  description: string | null
+  dueDate: string | null
+  archivedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ProcessFinanceResponse {
+  entries: ProcessFinanceEntry[]
+  currentProcessId: string
+}
+
+export interface ProcessFinanceSummary {
+  totalIncome: number
+  totalExpense: number
+  balance: number
+  count: number
+}
+
+export interface CreateProcessFinanceEntryPayload {
+  transactionType: 'INCOME' | 'EXPENSE'
+  amount: number
+  description?: string
+  dueDate?: string
+}
+
+// ─── RELATÓRIOS ─────────────────────────────────────────────
+
+export interface ProcessReportTotals {
+  total: number
+  root: number
+  sub: number
+  open: number
+  concluded: number
+  canceled: number
+  overdue: number
+}
+
+export interface ProcessReportByStatus {
+  status: string
+  count: number
+}
+
+export interface ProcessReportByType {
+  type: string
+  count: number
+}
+
+export interface ProcessReportTimeline {
+  month: string
+  count: number
+  expense: number
+  income: number
+}
+
+export interface ProcessReportFinanceSummary {
+  transactionType: string
+  total: number
+  count: number
+}
+
+export interface ProcessReportTopExpense {
+  processId: string
+  processName: string
+  totalExpense: number
+  entryCount: number
+}
+
+export interface ProcessReportDailyOpened {
+  date: string
+  rootCount: number
+  subCount: number
+}
+
+export interface ProcessReportAvgLifetimeByType {
+  type: string
+  avgDays: number
+  count: number
+}
+
+export type { Period as ReportPeriod } from '@/components/patterns/PeriodPicker'
+import type { Period } from '@/components/patterns/PeriodPicker'
+
+export interface ProcessReportsFilters {
+  startDate?: string
+  endDate?: string
+  period?: Period
+}
+
+export interface ProcessReportsData {
+  totals: ProcessReportTotals
+  avgConclusionDays: number | null
+  byStatus: ProcessReportByStatus[]
+  byType: ProcessReportByType[]
+  timeline: ProcessReportTimeline[]
+  finance: {
+    summary: ProcessReportFinanceSummary[]
+    topByExpense: ProcessReportTopExpense[]
+  }
+  dailyOpened: ProcessReportDailyOpened[]
+  avgLifetimeByType: ProcessReportAvgLifetimeByType[]
 }

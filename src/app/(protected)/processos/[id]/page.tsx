@@ -38,6 +38,7 @@ import { Separator } from '@/components/ui/separator'
 import { formatDate } from '@/lib/utils'
 import { openPrintWindow } from '@/modules/processos/components/ProcessDocument'
 import { PrintConfigModal } from '@/modules/processos/components/PrintConfigModal'
+import { ProcessFinanceCard } from '@/modules/processos/components/ProcessFinanceCard'
 import { ProcessStatusBadge } from '@/modules/processos/components/ProcessStatusBadge'
 import { ProcessTypeBadge } from '@/modules/processos/components/ProcessTypeBadge'
 import {
@@ -464,6 +465,9 @@ export default function ProcessoDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* ─── CARD: FINANCEIRO ───────────────────────────── */}
+          <ProcessFinanceCard workspaceId={workspaceId} processId={processId} isRoot={!processo.parentId} invoicedAt={processo.invoicedAt} />
 
           {/* ─── CARD: DADOS DINÂMICOS (schema/data) ─────────── */}
           {(schemaFields.length > 0 || dataFields.length > 0) && (

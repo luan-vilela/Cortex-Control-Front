@@ -1,7 +1,8 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 
+import { endOfMonth, startOfMonth } from 'date-fns'
 import {
   Check,
   CheckCircle2,
@@ -14,9 +15,11 @@ import {
   X,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import type { DateRange } from 'react-day-picker'
 
 import { type Column, DataTable, type RowAction } from '@/components/DataTable'
 import { DataTableToolbar, PageHeader } from '@/components/patterns'
+import { DateRangePicker } from '@/components/patterns/DateRangePicker'
 import { FilterWithBadge } from '@/components/patterns/FilterWithBadge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -83,8 +86,13 @@ export default function ProcessosPage() {
   const [impeditivoFilter, setImpeditivoFilter] = useState<string | undefined>()
   const [contactFilter, setContactFilter] = useState<string | undefined>()
   const [memberFilter, setMemberFilter] = useState<string | undefined>()
+  const defaultDateRange = useMemo<DateRange>(() => {
+    const now = new Date()
+    return { from: startOfMonth(now), to: endOfMonth(now) }
+  }, [])
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(defaultDateRange)
 
-  const hasActiveFilters = !!(statusFilter || typeFilter || obrigatorioFilter || impeditivoFilter || contactFilter || memberFilter)
+  const hasActiveFilters = !!(statusFilter || typeFilter || obrigatorioFilter || impeditivoFilter || contactFilter || memberFilter || (dateRange && (dateRange.from?.getTime() !== defaultDateRange.from?.getTime() || dateRange.to?.getTime() !== defaultDateRange.to?.getTime())))
 
   const handleResetFilters = () => {
     setStatusFilter(undefined)
@@ -93,6 +101,7 @@ export default function ProcessosPage() {
     setImpeditivoFilter(undefined)
     setContactFilter(undefined)
     setMemberFilter(undefined)
+    setDateRange(defaultDateRange)
   }
 
   // Debounce para a busca
@@ -100,6 +109,12 @@ export default function ProcessosPage() {
   const handleSearch = (value: string) => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
     searchTimeoutRef.current = setTimeout(() => setDebouncedSearch(value), 400)
+  }
+
+  // Helper para formatar Date para YYYY-MM-DD
+  const formatDateToISO = (date: Date | undefined) => {
+    if (!date) return undefined
+    return date.toISOString().split('T')[0]
   }
 
   // Montar filtros para API (aba 'Todos' mostra apenas processos raiz)
@@ -114,6 +129,8 @@ export default function ProcessosPage() {
     ...(debouncedSearch && { search: debouncedSearch }),
     ...(contactFilter && { actorId: contactFilter, actorType: 'person' }),
     ...(memberFilter && { actorId: memberFilter, actorType: 'user' }),
+    ...(dateRange?.from && { startDate: formatDateToISO(dateRange.from) }),
+    ...(dateRange?.to && { endDate: formatDateToISO(dateRange.to) }),
   }
 
   const { data: allProcessosData = { data: [], meta: { total: 0, page: 1, limit: 50, totalPages: 1 } }, isLoading: isLoadingAll } =
@@ -129,6 +146,8 @@ export default function ProcessosPage() {
     ...(statusFilter && { status: statusFilter }),
     ...(typeFilter && { type: typeFilter }),
     ...(debouncedSearch && { search: debouncedSearch }),
+    ...(dateRange?.from && { startDate: formatDateToISO(dateRange.from) }),
+    ...(dateRange?.to && { endDate: formatDateToISO(dateRange.to) }),
   }
 
   const { data: myProcessosData = { data: [], meta: { total: 0, page: 1, limit: 50, totalPages: 1 } }, isLoading: isLoadingMy } =
@@ -378,7 +397,13 @@ export default function ProcessosPage() {
             width="w-40"
           />
 
-
+          <DateRangePicker
+            value={dateRange}
+            onValueChange={setDateRange}
+            placeholder="Período de criação"
+            maxDays={31}
+            className="h-8 w-64 text-sm"
+          />
 
           <Popover>
             <PopoverTrigger asChild>

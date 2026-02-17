@@ -3,6 +3,10 @@ export enum TransactionSourceType {
   PURCHASE_ORDER = 'PURCHASE_ORDER',
   INVOICE = 'INVOICE',
   MANUAL = 'MANUAL',
+  PROCESS = 'PROCESS',
+  ORDER = 'ORDER',
+  CONTRACT = 'CONTRACT',
+  EXPENSE = 'EXPENSE',
 }
 
 export enum TransactionStatus {
@@ -126,7 +130,7 @@ export interface InterestConfigEntity {
 }
 
 export interface FinanceiroTransaction {
-  id: number
+  id: string
   workspaceId: string
   sourceType: TransactionSourceType
   sourceId: string
@@ -154,7 +158,7 @@ export interface FinanceiroTransaction {
   // ✨ Campos estruturados (novos - substituem sourceMetadata)
   installmentNumber?: number // Número da parcela (1, 2, 3...)
   personId?: string // ID da pessoa (cliente/fornecedor)
-  parentTransactionId?: number // ID da transação pai (para parcelas e recorrências)
+  parentTransactionId?: string // ID da transação pai (para parcelas e recorrências)
   isDownpayment: boolean // É entrada?
   installmentTotal?: number // Total de parcelas do plano
   installmentInterest?: number // Juros desta parcela
@@ -208,6 +212,10 @@ export interface UpdateTransactionPayload {
   status?: TransactionStatus
   paidDate?: Date
   notes?: string
+  description?: string
+  amount?: number
+  dueDate?: string
+  transactionType?: TransactionType
 }
 
 export interface GetTransactionsFilters {

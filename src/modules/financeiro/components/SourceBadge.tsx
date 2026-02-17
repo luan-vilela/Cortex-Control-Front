@@ -30,6 +30,30 @@ const sourceTypeConfig: Record<
     textColor: 'text-gray-700',
     icon: '✏️',
   },
+  [TransactionSourceType.PROCESS]: {
+    label: 'Processo',
+    bgColor: 'bg-cyan-100',
+    textColor: 'text-cyan-700',
+    icon: '⚙️',
+  },
+  [TransactionSourceType.ORDER]: {
+    label: 'Pedido',
+    bgColor: 'bg-orange-100',
+    textColor: 'text-orange-700',
+    icon: '📋',
+  },
+  [TransactionSourceType.CONTRACT]: {
+    label: 'Contrato',
+    bgColor: 'bg-teal-100',
+    textColor: 'text-teal-700',
+    icon: '📑',
+  },
+  [TransactionSourceType.EXPENSE]: {
+    label: 'Despesa',
+    bgColor: 'bg-rose-100',
+    textColor: 'text-rose-700',
+    icon: '💸',
+  },
 }
 
 export function SourceBadge({

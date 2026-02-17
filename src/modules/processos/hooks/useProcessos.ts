@@ -5,11 +5,17 @@ import { useAlerts } from '@/contexts/AlertContext'
 import { processosService } from '../processos.service'
 import type {
   CreateProcessActorPayload,
+  CreateProcessFinanceEntryPayload,
   CreateProcessPayload,
   GetProcessesFilters,
   GetProcessesResponse,
   Process,
   ProcessActor,
+  ProcessFinanceEntry,
+  ProcessFinanceResponse,
+  ProcessFinanceSummary,
+  ProcessReportsData,
+  ProcessReportsFilters,
   UpdateProcessActorPayload,
   UpdateProcessPayload,
 } from '../types'
@@ -45,6 +51,30 @@ export const processosQueryKeys = {
     'actors',
     workspaceId,
     processId,
+  ],
+  finance: (workspaceId: string, processId: string) => [
+    ...processosQueryKeys.all,
+    'finance',
+    workspaceId,
+    processId,
+  ],
+  financeSummary: (workspaceId: string, processId: string) => [
+    ...processosQueryKeys.all,
+    'finance-summary',
+    workspaceId,
+    processId,
+  ],
+  financeArchived: (workspaceId: string, processId: string) => [
+    ...processosQueryKeys.all,
+    'finance-archived',
+    workspaceId,
+    processId,
+  ],
+  reports: (workspaceId: string, filters?: ProcessReportsFilters) => [
+    ...processosQueryKeys.all,
+    'reports',
+    workspaceId,
+    filters,
   ],
 }
 
@@ -128,14 +158,38 @@ export function useUpdateProcesso() {
       processId: string
       payload: UpdateProcessPayload
     }) => processosService.updateProcess(workspaceId, processId, payload),
-    onSuccess: (_, { workspaceId, processId }) => {
+    onSuccess: (data: any, { workspaceId, processId }) => {
       queryClient.invalidateQueries({
         queryKey: processosQueryKeys.processoList(workspaceId),
       })
       queryClient.invalidateQueries({
         queryKey: processosQueryKeys.processo(workspaceId, processId),
       })
-      addAlert('success', 'Processo atualizado com sucesso.', 'Processo atualizado')
+
+      if (data?.autoInvoice?.invoiced) {
+        // Invalidar queries de finance para atualizar o card financeiro
+        queryClient.invalidateQueries({
+          queryKey: processosQueryKeys.finance(workspaceId, processId),
+        })
+        queryClient.invalidateQueries({
+          queryKey: processosQueryKeys.financeSummary(workspaceId, processId),
+        })
+
+        const parts: string[] = []
+        if (data.autoInvoice.totalExpenses > 0) {
+          parts.push(`Despesas: ${Number(data.autoInvoice.totalExpenses).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`)
+        }
+        if (data.autoInvoice.totalIncomes > 0) {
+          parts.push(`Receitas: ${Number(data.autoInvoice.totalIncomes).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`)
+        }
+        addAlert(
+          'success',
+          `Processo concluído e faturado automaticamente. ${parts.join(' | ')}`,
+          'Processo concluído e faturado'
+        )
+      } else {
+        addAlert('success', 'Processo atualizado com sucesso.', 'Processo atualizado')
+      }
     },
     onError: (error: any) => {
       addAlert(
@@ -244,5 +298,142 @@ export function useRemoveProcessoActor() {
         'Erro ao remover ator'
       )
     },
+  })
+}
+
+// ─── FINANCEIRO ─────────────────────────────────────────────
+
+export function useProcessoFinance(workspaceId: string, processId: string, enabled = true) {
+  return useQuery<ProcessFinanceResponse>({
+    queryKey: processosQueryKeys.finance(workspaceId, processId),
+    queryFn: () => processosService.getProcessFinance(workspaceId, processId),
+    enabled: enabled && !!workspaceId && !!processId,
+    staleTime: 2 * 60 * 1000,
+  })
+}
+
+export function useProcessoFinanceSummary(workspaceId: string, processId: string, enabled = true) {
+  return useQuery<ProcessFinanceSummary>({
+    queryKey: processosQueryKeys.financeSummary(workspaceId, processId),
+    queryFn: () => processosService.getProcessFinanceSummary(workspaceId, processId),
+    enabled: enabled && !!workspaceId && !!processId,
+    staleTime: 2 * 60 * 1000,
+  })
+}
+
+export function useCreateProcessoTransaction() {
+  const { addAlert } = useAlerts()
+
+  return useMutation({
+    mutationFn: ({
+      workspaceId,
+      processId,
+      payload,
+    }: {
+      workspaceId: string
+      processId: string
+      payload: CreateProcessFinanceEntryPayload
+    }) => processosService.createProcessTransaction(workspaceId, processId, payload),
+    onSuccess: () => {
+      addAlert('success', 'Lançamento financeiro criado com sucesso.', 'Lançamento criado')
+    },
+    onError: (error: any) => {
+      addAlert(
+        'error',
+        error?.response?.data?.message || 'Ocorreu um erro ao criar o lançamento.',
+        'Erro ao criar lançamento'
+      )
+    },
+  })
+}
+
+export function useInvoiceProcessTree() {
+  const { addAlert } = useAlerts()
+
+  return useMutation({
+    mutationFn: ({
+      workspaceId,
+      processId,
+      payload,
+    }: {
+      workspaceId: string
+      processId: string
+      payload: { dueDate: string; description?: string; personId?: string }
+    }) => processosService.invoiceProcessTree(workspaceId, processId, payload),
+    onSuccess: () => {
+      addAlert('success', 'Processo faturado com sucesso!', 'Fatura gerada')
+    },
+    onError: (error: any) => {
+      addAlert(
+        'error',
+        error?.response?.data?.message || 'Ocorreu um erro ao faturar o processo.',
+        'Erro ao faturar'
+      )
+    },
+  })
+}
+
+export function useArchivedProcessoEntries(workspaceId: string, processId: string, enabled = true) {
+  return useQuery<ProcessFinanceResponse>({
+    queryKey: processosQueryKeys.financeArchived(workspaceId, processId),
+    queryFn: () => processosService.getArchivedEntries(workspaceId, processId),
+    enabled: enabled && !!workspaceId && !!processId,
+    staleTime: 2 * 60 * 1000,
+  })
+}
+
+export function useArchiveProcessoEntry() {
+  const queryClient = useQueryClient()
+  const { addAlert } = useAlerts()
+
+  return useMutation({
+    mutationFn: ({
+      workspaceId,
+      processId,
+      entryId,
+      archive,
+    }: {
+      workspaceId: string
+      processId: string
+      entryId: string
+      archive: boolean
+    }) => processosService.archiveFinanceEntry(workspaceId, processId, entryId, archive),
+    onSuccess: (_, { workspaceId, processId, archive }) => {
+      queryClient.invalidateQueries({
+        queryKey: processosQueryKeys.finance(workspaceId, processId),
+      })
+      queryClient.invalidateQueries({
+        queryKey: processosQueryKeys.financeSummary(workspaceId, processId),
+      })
+      queryClient.invalidateQueries({
+        queryKey: processosQueryKeys.financeArchived(workspaceId, processId),
+      })
+      addAlert(
+        'success',
+        archive ? 'Lançamento arquivado com sucesso.' : 'Lançamento restaurado com sucesso.',
+        archive ? 'Lançamento arquivado' : 'Lançamento restaurado'
+      )
+    },
+    onError: (error: any) => {
+      addAlert(
+        'error',
+        error?.response?.data?.message || 'Ocorreu um erro ao arquivar/restaurar o lançamento.',
+        'Erro'
+      )
+    },
+  })
+}
+
+// ─── RELATÓRIOS ──────────────────────────────────────────────
+
+export function useProcessoReports(
+  workspaceId: string,
+  filters?: ProcessReportsFilters,
+  enabled = true
+) {
+  return useQuery<ProcessReportsData>({
+    queryKey: processosQueryKeys.reports(workspaceId, filters),
+    queryFn: () => processosService.getReports(workspaceId, filters),
+    enabled: enabled && !!workspaceId,
   })
 }

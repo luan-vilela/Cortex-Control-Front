@@ -24,6 +24,7 @@ export function PaymentModeConfig({ config, onChange, error }: PaymentModeConfig
         numberOfInstallments: 1,
         firstInstallmentDate: new Date(),
         installmentIntervalDays: 30,
+        downPaymentIsPaid: false
       }
       onChange(newConfig)
     }

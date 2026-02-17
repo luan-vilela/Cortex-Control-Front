@@ -20,7 +20,7 @@ export function TransactionList({
   transactions: FinanceiroTransaction[]
   workspaceId: string
   isLoading?: boolean
-  onDelete?: (id: number) => void
+  onDelete?: (id: string) => void
 }) {
   if (isLoading) {
     return (
@@ -96,13 +96,13 @@ export function TransactionList({
               <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
                 <div className="flex justify-end gap-2">
                   <Link
-                    href={`/finance/${transaction.id}`}
+                    href={`/financeiro/${transaction.id}`}
                     className="inline-flex items-center gap-1 rounded px-3 py-1 text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-800"
                   >
                     <Eye className="h-4 w-4" />
                     Ver
                   </Link>
-                  {onDelete && (
+                  {onDelete && transaction.sourceType === 'MANUAL' && (
                     <button
                       onClick={(e) => {
                         e.preventDefault()

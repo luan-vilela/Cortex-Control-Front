@@ -1,6 +1,6 @@
 import type React from 'react'
 
-import { BarChart3, DollarSign, MessageSquare, TrendingUp, Users, Zap } from 'lucide-react'
+import { BarChart3, DollarSign, GitBranch, MessageSquare, TrendingUp, Users, Zap } from 'lucide-react'
 
 export interface ModuleConfig {
   moduleRoutes: Record<string, string>
@@ -29,6 +29,7 @@ export function useModuleConfig(workspaceId?: string): ModuleConfig {
     sales: TrendingUp,
     finance: DollarSign,
     reports: BarChart3,
+    processos: GitBranch,
   }
 
   return {

@@ -11,6 +11,10 @@ import {
   Bell,
   Package,
   FileCheck,
+  GitBranch,
+  ClipboardList,
+  PieChart,
+  Cog,
 } from "lucide-react";
 import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
 import { useAuthStore } from "@/modules/auth/store/auth.store";
@@ -108,6 +112,32 @@ function buildDynamicSidebarData(
   // enabledModules agora já vem com {id, name, category, domain, favorite}
   const moduleItems = enabledModules.map((module: any) => {
     const icon = moduleIcons[module.id] || Package;
+
+    // Processos tem sub-menu com Gerenciar, Relatórios e Configurações
+    if (module.id === "processos") {
+      return {
+        title: module.name,
+        icon: GitBranch,
+        items: [
+          {
+            title: "Gerenciar",
+            url: "/processos",
+            icon: ClipboardList,
+          },
+          {
+            title: "Relatórios",
+            url: "/processos/relatorios",
+            icon: PieChart,
+          },
+          {
+            title: "Configurações",
+            url: "/processos/configuracoes",
+            icon: Cog,
+          },
+        ],
+      };
+    }
+
     return {
       title: module.name,
       url: module.domain,

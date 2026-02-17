@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 
+import { addDays, differenceInDays } from 'date-fns'
 import { Calendar as CalendarIcon } from 'lucide-react'
 import { DateRange } from 'react-day-picker'
 
@@ -16,6 +17,8 @@ interface DateRangePickerProps {
   placeholder?: string
   disabled?: boolean
   className?: string
+  /** Limite máximo de dias selecionáveis no range. Ex: 31 */
+  maxDays?: number
 }
 
 /**
@@ -40,9 +43,20 @@ export function DateRangePicker({
   placeholder = 'Selecionar período',
   disabled = false,
   className,
+  maxDays,
 }: DateRangePickerProps) {
   const [open, setOpen] = React.useState(false)
   const [tempRange, setTempRange] = React.useState<DateRange | undefined>(value)
+
+  // Calcula os limites de data quando maxDays está definido e o from já foi selecionado
+  const disabledDays = React.useMemo(() => {
+    if (!maxDays || !tempRange?.from) return undefined
+    const from = tempRange.from
+    return [
+      { before: from },
+      { after: addDays(from, maxDays - 1) },
+    ] as any
+  }, [maxDays, tempRange?.from])
 
   // Sincroniza tempRange quando o value muda (ex: via props)
   React.useEffect(() => {
@@ -97,10 +111,47 @@ export function DateRangePicker({
           mode="range"
           selected={tempRange}
           onSelect={(range) => {
+            // Se o usuário está selecionando um novo "from" (clicou em data sem ter range completo, ou reset)
+            if (range?.from && !range.to && maxDays && tempRange?.from && tempRange?.to) {
+              // Reset: novo from, sem to — permite nova seleção
+              setTempRange({ from: range.from, to: undefined })
+              return
+            }
+            // Validação de maxDays quando ambas datas estão selecionadas
+            if (maxDays && range?.from && range?.to) {
+              const diff = differenceInDays(range.to, range.from)
+              if (diff >= maxDays) {
+                // Forçar o to para o máximo permitido
+                setTempRange({ from: range.from, to: addDays(range.from, maxDays - 1) })
+                return
+              }
+            }
             setTempRange(range)
           }}
+          disabled={disabledDays}
           initialFocus
         />
+        <div className="flex items-center justify-between border-t px-3 py-2">
+          {maxDays && (
+            <p className="text-muted-foreground text-xs">
+              Máximo de {maxDays} dias
+            </p>
+          )}
+          {(tempRange?.from || value?.from) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground ml-auto h-7 text-xs hover:text-foreground"
+              onClick={() => {
+                setTempRange(undefined)
+                onValueChange?.(undefined)
+                setOpen(false)
+              }}
+            >
+              Limpar
+            </Button>
+          )}
+        </div>
       </PopoverContent>
     </Popover>
   )

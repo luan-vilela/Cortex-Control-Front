@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { ArrowLeft, CheckCircle2, DollarSign, MoreVertical, Trash2, XCircle } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, DollarSign, MoreVertical, Pencil, Trash2, XCircle } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 
 import { Button } from '@/components/ui/button'
@@ -33,14 +33,14 @@ export default function TransactionDetailPage() {
   const [isChangingStatus, setIsChangingStatus] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const transactionId = parseInt(params.transactionId as string, 10)
+  const transactionId = params.transactionId as string
   const workspaceId = activeWorkspace?.id || ''
 
   const {
     data: transaction,
     isLoading,
     error,
-  } = useTransactionDetail(workspaceId, transactionId, !!workspaceId && !isNaN(transactionId))
+  } = useTransactionDetail(workspaceId, transactionId)
 
   // Atualizar breadcrumb quando transação carrega
   useBreadcrumb(
@@ -52,7 +52,7 @@ export default function TransactionDetailPage() {
             icon: DollarSign,
           },
           {
-            label: `${transaction.sourceType} #${transaction.id}`,
+            label: transaction.description || 'Transação',
           },
         ]
       : [
@@ -183,6 +183,16 @@ export default function TransactionDetailPage() {
             </Button>
 
             <div className="flex items-center gap-2">
+              {/* Botão Editar */}
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => router.push(`/financeiro/${transactionId}/editar`)}
+              >
+                <Pencil size={16} />
+                Editar
+              </Button>
+
               {/* Botão de Ação Rápida */}
               {transaction.status === TransactionStatus.PENDING && (
                 <Button
@@ -203,6 +213,15 @@ export default function TransactionDetailPage() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+
+                  {/* Editar */}
+                  <DropdownMenuItem
+                    onClick={() => router.push(`/financeiro/${transactionId}/editar`)}
+                  >
+                    <Pencil size={16} className="mr-2" />
+                    Editar Transação
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
 
                   {/* Alterar Status */}
@@ -228,25 +247,23 @@ export default function TransactionDetailPage() {
                     </>
                   )}
 
-                  <DropdownMenuItem
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                    className="text-red-600 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/20"
-                  >
-                    <Trash2 size={16} className="mr-2" />
-                    Deletar Transação
-                  </DropdownMenuItem>
+                  {(!transaction.sourceType || transaction.sourceType === 'MANUAL') && (
+                    <DropdownMenuItem
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                      className="text-red-600 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/20"
+                    >
+                      <Trash2 size={16} className="mr-2" />
+                      Deletar Transação
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
 
-          {/* Main Content Card */}
-          <div className="bg-gh-card border-gh-border rounded-lg border shadow-sm">
-            <div className="p-6 sm:p-8">
-              <TransactionDetail transaction={transaction} />
-            </div>
-          </div>
+          {/* Main Content */}
+          <TransactionDetail transaction={transaction} />
 
           {/* Debug Info (development only) */}
           {process.env.NODE_ENV === 'development' && (

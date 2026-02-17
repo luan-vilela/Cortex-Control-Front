@@ -41,6 +41,7 @@ export enum CalculationMethod {
 export enum TransactionType {
   INCOME = 'INCOME',
   EXPENSE = 'EXPENSE',
+  RECEIVABLE = "RECEIVABLE",
 }
 
 export enum EventType {
@@ -79,6 +80,8 @@ export enum SettlementStatus {
 export enum FineType {
   FIXED = 'FIXED',
   PERCENTAGE = 'PERCENTAGE',
+  DAILY = "DAILY",
+  MONTHLY = "MONTHLY",
 }
 
 export enum InterestType {

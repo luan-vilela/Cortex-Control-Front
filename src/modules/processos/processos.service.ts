@@ -2,11 +2,15 @@ import api from '@/lib/api'
 
 import type {
   CreateProcessActorPayload,
+  CreateProcessFinanceEntryPayload,
   CreateProcessPayload,
   GetProcessesFilters,
   GetProcessesResponse,
   Process,
   ProcessActor,
+  ProcessFinanceEntry,
+  ProcessFinanceResponse,
+  ProcessFinanceSummary,
   UpdateProcessActorPayload,
   UpdateProcessPayload,
 } from './types'
@@ -30,6 +34,8 @@ export const processosService = {
     if (filters?.actorType) params.actorType = filters.actorType
     if (filters?.search) params.search = filters.search
     if (filters?.rootOnly) params.rootOnly = filters.rootOnly
+    if (filters?.startDate) params.startDate = filters.startDate
+    if (filters?.endDate) params.endDate = filters.endDate
     if (filters?.page) params.page = filters.page
     if (filters?.limit) params.limit = filters.limit
 
@@ -51,6 +57,8 @@ export const processosService = {
     if (filters?.status) params.status = filters.status
     if (filters?.type) params.type = filters.type
     if (filters?.search) params.search = filters.search
+    if (filters?.startDate) params.startDate = filters.startDate
+    if (filters?.endDate) params.endDate = filters.endDate
     if (filters?.page) params.page = filters.page
     if (filters?.limit) params.limit = filters.limit
 
@@ -124,5 +132,89 @@ export const processosService = {
     actorId: string
   ): Promise<void> {
     await api.delete(`${BASE_API}/${workspaceId}/processos/${processId}/actors/${actorId}`)
+  },
+
+  // ─── FINANCEIRO ─────────────────────────────────────────────
+
+  async getProcessFinance(
+    workspaceId: string,
+    processId: string
+  ): Promise<ProcessFinanceResponse> {
+    const response = await api.get(
+      `${BASE_API}/${workspaceId}/processos/${processId}/finance`
+    )
+    return response.data
+  },
+
+  async getProcessFinanceSummary(
+    workspaceId: string,
+    processId: string
+  ): Promise<ProcessFinanceSummary> {
+    const response = await api.get(
+      `${BASE_API}/${workspaceId}/processos/${processId}/finance/summary`
+    )
+    return response.data
+  },
+
+  async createProcessTransaction(
+    workspaceId: string,
+    processId: string,
+    data: CreateProcessFinanceEntryPayload
+  ): Promise<any> {
+    const response = await api.post(
+      `${BASE_API}/${workspaceId}/processos/${processId}/finance`,
+      data
+    )
+    return response.data
+  },
+
+  async archiveFinanceEntry(
+    workspaceId: string,
+    processId: string,
+    entryId: string,
+    archive: boolean
+  ): Promise<any> {
+    const response = await api.patch(
+      `${BASE_API}/${workspaceId}/processos/${processId}/finance/${entryId}/archive`,
+      { archive }
+    )
+    return response.data
+  },
+
+  async getArchivedEntries(
+    workspaceId: string,
+    processId: string
+  ): Promise<ProcessFinanceResponse> {
+    const response = await api.get(
+      `${BASE_API}/${workspaceId}/processos/${processId}/finance/archived`
+    )
+    return response.data
+  },
+
+  async invoiceProcessTree(
+    workspaceId: string,
+    processId: string,
+    data: { dueDate: string; description?: string; personId?: string }
+  ): Promise<any> {
+    const response = await api.post(
+      `${BASE_API}/${workspaceId}/processos/${processId}/finance/invoice`,
+      data
+    )
+    return response.data
+  },
+
+  // ─── RELATÓRIOS ─────────────────────────────────────────────
+
+  async getReports(
+    workspaceId: string,
+    filters?: { startDate?: string; endDate?: string; period?: string }
+  ): Promise<any> {
+    const params: Record<string, string> = {}
+    if (filters?.startDate) params.startDate = filters.startDate
+    if (filters?.endDate) params.endDate = filters.endDate
+    if (filters?.period) params.period = filters.period
+
+    const response = await api.get(`${BASE_API}/${workspaceId}/processos/reports`, { params })
+    return response.data
   },
 }

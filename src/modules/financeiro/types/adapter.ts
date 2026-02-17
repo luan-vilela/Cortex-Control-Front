@@ -17,6 +17,8 @@ import {
   TransactionType as NewTransactionType,
   PlanType,
   SourceType,
+  FineType,
+  InterestType,
 } from './new-architecture'
 
 // ========================================
@@ -73,11 +75,13 @@ export function adaptCreateTransactionPayload(
   // Base do payload
   const adapted: CreateTransactionGroupDto = {
     groupType,
-    transactionType: mapTransactionType(oldPayload.transactionType || 'EXPENSE'),
+    transactionType: mapTransactionType(oldPayload.transactionType || ('EXPENSE' as OldTransactionType)),
     sourceType: mapSourceType(oldPayload.sourceType),
     sourceId: oldPayload.sourceId,
     totalAmount: oldPayload.amount,
     description: oldPayload.description,
+    downPaymentIsPaid: false,
+    personId: ''
   }
 
   // Adicionar personId apenas se existir e for válido
@@ -138,9 +142,9 @@ export function adaptCreateTransactionPayload(
     (oldPayload.interestConfig.penaltyPercentage || oldPayload.interestConfig.interestPercentage)
   ) {
     adapted.interestConfig = {
-      fineType: 'PERCENTAGE', // Multa sempre em percentual
+      fineType: FineType.PERCENTAGE, // Multa sempre em percentual
       fineValue: oldPayload.interestConfig.penaltyPercentage || 0,
-      interestType: oldPayload.interestConfig.interestPeriod === 'DAILY' ? 'DAILY' : 'MONTHLY',
+      interestType: oldPayload.interestConfig.interestPeriod === 'ANNUAL' ? InterestType.MONTHLY : InterestType.DAILY,
       interestValue: oldPayload.interestConfig.interestPercentage || 0,
       graceDays: 0,
       description: oldPayload.interestConfig.description,
@@ -165,7 +169,7 @@ export function adaptTransactionGroupToOldFormat(group: any): any {
     workspaceId: group.workspaceId,
     sourceType: 'MANUAL',
     sourceId: group.sourceId || '',
-    transactionType: group.transactionType === NewTransactionType.RECEIVABLE ? 'INCOME' : 'EXPENSE',
+    transactionType: group.transactionType === NewTransactionType.INCOME ? 'INCOME' : 'EXPENSE',
     amount: group.totalAmount,
     description: group.description,
     dueDate: group.firstDueDate,

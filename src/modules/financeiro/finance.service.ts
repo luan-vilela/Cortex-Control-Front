@@ -33,7 +33,7 @@ export const financeService = {
 
     // Converter resposta de volta para formato antigo
     return {
-      id: parseInt(response.data.id) || 0,
+      id: String(response.data.id),
       workspaceId: response.data.workspaceId,
       sourceType: payload.sourceType,
       sourceId: payload.sourceId,
@@ -75,7 +75,7 @@ export const financeService = {
    */
   async getTransactionDetail(
     workspaceId: string,
-    transactionId: number
+    transactionId: string
   ): Promise<FinanceiroTransaction> {
     const response = await api.get(
       `${FINANCEIRO_API}/${workspaceId}/finance/transactions/${transactionId}`
@@ -88,7 +88,7 @@ export const financeService = {
    */
   async updateTransaction(
     workspaceId: string,
-    transactionId: number,
+    transactionId: string,
     payload: UpdateTransactionPayload
   ): Promise<FinanceiroTransaction> {
     const response = await api.patch(
@@ -101,7 +101,7 @@ export const financeService = {
   /**
    * Deleta uma transação (soft delete)
    */
-  async deleteTransaction(workspaceId: string, transactionId: number): Promise<void> {
+  async deleteTransaction(workspaceId: string, transactionId: string): Promise<void> {
     await api.delete(`${FINANCEIRO_API}/${workspaceId}/finance/transactions/${transactionId}`)
   },
 
@@ -128,7 +128,7 @@ export const financeService = {
   /**
    * Obtém atores de uma transação
    */
-  async getTransactionActors(transactionId: number): Promise<TransactionParty[]> {
+  async getTransactionActors(transactionId: string): Promise<TransactionParty[]> {
     const response = await api.get(
       `${FINANCEIRO_API}/:workspaceId/finance/transactions/${transactionId}/actors`
     )
@@ -140,7 +140,7 @@ export const financeService = {
    */
   async addActorToTransaction(
     workspaceId: string,
-    transactionId: number,
+    transactionId: string,
     payload: {
       workspaceId: string
       actorType: string
