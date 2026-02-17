@@ -131,7 +131,7 @@ function buildDynamicSidebarData(
         icon: GitBranch,
         items: [
           {
-            title: "Gerenciar",
+            title: "Processos",
             url: "/processos",
             icon: ClipboardList,
           },
