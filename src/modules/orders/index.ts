@@ -1,5 +1,0 @@
-export { ordersService } from './orders.service'
-export * from './services/order-status.service'
-export * from './types'
-export * from './hooks'
-export * from './components'

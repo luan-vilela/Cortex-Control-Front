@@ -157,7 +157,6 @@ export default function AuditoriaPage() {
             options={[
               { value: 'financeiro', label: 'Financeiro' },
               { value: 'contatos', label: 'Contatos' },
-              { value: 'ordem-servico', label: 'Ordem de Serviço' },
               { value: 'workspace', label: 'Workspace' },
             ]}
             value={filters.module}

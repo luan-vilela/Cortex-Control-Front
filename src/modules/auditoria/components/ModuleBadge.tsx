@@ -9,7 +9,6 @@ export function ModuleBadge({ module, feature }: ModuleBadgeProps) {
   const moduleLabels: Record<string, string> = {
     financeiro: 'Financeiro',
     contatos: 'Contatos',
-    'ordem-servico': 'Ordem de Serviço',
     workspace: 'Workspace',
     auth: 'Autenticação',
   }

@@ -1,5 +1,4 @@
 export enum TransactionSourceType {
-  SERVICE_ORDER = 'SERVICE_ORDER',
   PURCHASE_ORDER = 'PURCHASE_ORDER',
   INVOICE = 'INVOICE',
   MANUAL = 'MANUAL',

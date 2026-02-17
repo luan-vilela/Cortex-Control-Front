@@ -6,12 +6,6 @@ const sourceTypeConfig: Record<
   TransactionSourceType,
   { label: string; bgColor: string; textColor: string; icon: string }
 > = {
-  [TransactionSourceType.SERVICE_ORDER]: {
-    label: 'Ordem de Serviço',
-    bgColor: 'bg-blue-100',
-    textColor: 'text-blue-700',
-    icon: '🔧',
-  },
   [TransactionSourceType.PURCHASE_ORDER]: {
     label: 'Pedido de Compra',
     bgColor: 'bg-purple-100',

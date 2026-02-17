@@ -301,10 +301,6 @@ export default function FinanceiroPage() {
                 label: 'Manual',
               },
               {
-                value: TransactionSourceType.SERVICE_ORDER,
-                label: 'Ordem de Serviço',
-              },
-              {
                 value: TransactionSourceType.PURCHASE_ORDER,
                 label: 'Pedido de Compra',
               },
