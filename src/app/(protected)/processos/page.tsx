@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   ChevronsUpDown,
   Eye,
+  LayoutGrid,
   List,
   Plus,
   Trash2,
@@ -35,6 +36,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/utils'
 import { usePersons } from '@/modules/person/hooks/usePersonQueries'
+import { ProcessosKanban } from '@/modules/processos/components/ProcessosKanban'
 import { ProcessStatusBadge } from '@/modules/processos/components/ProcessStatusBadge'
 import { ProcessTypeBadge } from '@/modules/processos/components/ProcessTypeBadge'
 import {
@@ -82,6 +84,7 @@ export default function ProcessosPage() {
 
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [viewMode, setViewMode] = useState<'all' | 'my'>('all')
+  const [displayMode, setDisplayMode] = useState<'list' | 'kanban'>('list')
   const [statusFilter, setStatusFilter] = useState<ProcessStatus | undefined>()
   const [typeFilter, setTypeFilter] = useState<ProcessType | undefined>()
   const [obrigatorioFilter, setObrigatorioFilter] = useState<string | undefined>()
@@ -321,7 +324,8 @@ export default function ProcessosPage() {
           }
         />
 
-        {/* Toggle: Todos vs Meus Processos */}
+        {/* Toggle: Todos vs Meus Processos + Lista vs Kanban */}
+        <div className="flex items-center justify-between">
         <div className="flex items-center gap-1 rounded-lg border border-gh-border bg-gh-card p-1 w-fit">
           <button
             onClick={() => setViewMode('all')}
@@ -347,6 +351,37 @@ export default function ProcessosPage() {
             <User size={14} />
             Meus Processos
           </button>
+        </div>
+
+        {/* Toggle: Lista vs Kanban */}
+        <div className="flex items-center gap-1 rounded-lg border border-gh-border bg-gh-card p-1">
+          <button
+            onClick={() => setDisplayMode('list')}
+            className={cn(
+              'flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors',
+              displayMode === 'list'
+                ? 'bg-gh-canvas text-gh-text shadow-sm'
+                : 'text-gh-text-secondary hover:text-gh-text'
+            )}
+            title="Visualização em lista"
+          >
+            <List size={14} />
+            Lista
+          </button>
+          <button
+            onClick={() => setDisplayMode('kanban')}
+            className={cn(
+              'flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors',
+              displayMode === 'kanban'
+                ? 'bg-gh-canvas text-gh-text shadow-sm'
+                : 'text-gh-text-secondary hover:text-gh-text'
+            )}
+            title="Visualização em kanban"
+          >
+            <LayoutGrid size={14} />
+            Kanban
+          </button>
+        </div>
         </div>
 
         <DataTableToolbar
@@ -538,15 +573,23 @@ export default function ProcessosPage() {
           )}
         </div>
 
-        <DataTable
-          headers={columns}
-          data={processosData.data || []}
-          isLoading={isLoading}
-          emptyMessage="Nenhum processo encontrado"
-          rowActions={rowActions}
-          pageSize={10}
-          maxPageSize={100}
-        />
+        {displayMode === 'list' ? (
+          <DataTable
+            headers={columns}
+            data={processosData.data || []}
+            isLoading={isLoading}
+            emptyMessage="Nenhum processo encontrado"
+            rowActions={rowActions}
+            pageSize={10}
+            maxPageSize={100}
+          />
+        ) : (
+          <ProcessosKanban
+            data={processosData.data || []}
+            workspaceId={activeWorkspace?.id || ''}
+            isLoading={isLoading}
+          />
+        )}
       </div>
     </ModuleGuard>
   )
