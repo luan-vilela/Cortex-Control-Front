@@ -89,7 +89,7 @@ function getDefaultSidebarData(): SidebarData {
 
 /**
  * Constrói os dados do sidebar dinamicamente baseado no workspace ativo
- * Filtra módulos instalados e exibe apenas os que estão habilitados
+ * Filtra módulos instalados e exibe apenas os que estão habilitados E permitidos
  */
 function buildDynamicSidebarData(
   activeWorkspace: any,
@@ -99,6 +99,15 @@ function buildDynamicSidebarData(
   invites: any[] = [],
   onOpenInvites: () => void = () => {},
 ): SidebarData {
+  const permissions = activeWorkspace.permissions || {};
+  const isOwner = activeWorkspace.isOwner === true;
+
+  /** Checa se um módulo tem acesso permitido */
+  const canAccessModule = (moduleId: string): boolean => {
+    if (isOwner) return true;
+    return permissions[moduleId]?.access === true;
+  };
+
   // Base items que sempre aparecem
   const baseItems = [
     {
@@ -108,9 +117,11 @@ function buildDynamicSidebarData(
     },
   ];
 
-  // Converter módulos habilitados em itens de menu
+  // Converter módulos habilitados em itens de menu (filtrando por permissão)
   // enabledModules agora já vem com {id, name, category, domain, favorite}
-  const moduleItems = enabledModules.map((module: any) => {
+  const moduleItems = enabledModules
+    .filter((module: any) => canAccessModule(module.id))
+    .map((module: any) => {
     const icon = moduleIcons[module.id] || Package;
 
     // Processos tem sub-menu com Gerenciar, Relatórios e Configurações
@@ -201,11 +212,15 @@ function buildDynamicSidebarData(
       {
         title: "Administração",
         items: [
-          {
-            title: "Configurações",
-            url: "/settings",
-            icon: Settings,
-          },
+          ...(canAccessModule("settings")
+            ? [
+                {
+                  title: "Configurações",
+                  url: "/settings",
+                  icon: Settings,
+                },
+              ]
+            : []),
           {
             title: "Ajuda",
             url: "/help",

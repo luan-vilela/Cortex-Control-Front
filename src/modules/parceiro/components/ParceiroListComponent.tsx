@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
+import { usePermission } from "@/modules/workspace/hooks/usePermission";
 import {
   useParceiros,
   useDeleteParceiro,
@@ -45,6 +46,7 @@ export function ParceiroListComponent() {
   const router = useRouter();
   const { activeWorkspace } = useWorkspaceStore();
   const alerts = useAlerts();
+  const { hasPermission } = usePermission();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [tipoFilter, setTipoFilter] = useState<ParceiroTipo | "">("");
@@ -161,13 +163,17 @@ export function ParceiroListComponent() {
       icon: <Edit className="w-4 h-4" />,
       onClick: (row: any) => router.push(`/contatos/${row.personId}`),
     },
-    {
-      id: "delete",
-      label: "Deletar",
-      icon: <Trash2 className="w-4 h-4" />,
-      onClick: (row: any) => handleDelete(row.id, row.person?.name),
-      variant: "destructive",
-    },
+    ...(hasPermission('contacts', 'delete')
+      ? [
+          {
+            id: "delete",
+            label: "Deletar",
+            icon: <Trash2 className="w-4 h-4" />,
+            onClick: (row: any) => handleDelete(row.id, row.person?.name),
+            variant: "destructive" as const,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -175,11 +181,15 @@ export function ParceiroListComponent() {
       <PageHeader
         title="Parceiros"
         description="Gerenciar e visualizar parceiros"
-        action={{
-          label: "Novo Contato",
-          onClick: () => router.push(`/contatos/new`),
-          icon: <Plus className="w-4 h-4" />,
-        }}
+        action={
+          hasPermission('contacts', 'create')
+            ? {
+                label: "Novo Contato",
+                onClick: () => router.push(`/contatos/new`),
+                icon: <Plus className="w-4 h-4" />,
+              }
+            : undefined
+        }
       />
 
       <DataTableToolbar

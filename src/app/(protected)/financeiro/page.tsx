@@ -28,12 +28,14 @@ import {
   TransactionType,
 } from '@/modules/financeiro/types'
 import { ModuleGuard } from '@/modules/workspace/components/ModuleGuard'
+import { usePermission } from '@/modules/workspace/hooks/usePermission'
 import { useBreadcrumb } from '@/modules/workspace/hooks'
 import { useActiveWorkspace } from '@/modules/workspace/hooks/useActiveWorkspace'
 
 export default function FinanceiroPage() {
   const router = useRouter()
   const { activeWorkspace } = useActiveWorkspace()
+  const { hasPermission } = usePermission()
 
   useBreadcrumb([
     {
@@ -215,30 +217,38 @@ export default function FinanceiroPage() {
       icon: <Eye className="h-4 w-4" />,
       onClick: (row) => router.push(`/financeiro/${row.id}`),
     },
-    {
-      id: 'mark-paid',
-      label: 'Marcar como Pago',
-      icon: <CheckCircle2 className="h-4 w-4" />,
-      onClick: (row) => {
-        if (row.status !== TransactionStatus.PAID) {
-          updateTransaction({
-            transactionId: row.id,
-            payload: { status: TransactionStatus.PAID, paidDate: new Date() },
-          })
-        }
-      },
-    },
-    {
-      id: 'delete',
-      label: 'Deletar',
-      icon: <Trash2 className="h-4 w-4" />,
-      onClick: (row) => {
-        if (confirm('Tem certeza que deseja deletar esta transação?')) {
-          deleteTransaction(row.id)
-        }
-      },
-      variant: 'destructive',
-    },
+    ...(hasPermission('finance', 'update')
+      ? [
+          {
+            id: 'mark-paid',
+            label: 'Marcar como Pago',
+            icon: <CheckCircle2 className="h-4 w-4" />,
+            onClick: (row: any) => {
+              if (row.status !== TransactionStatus.PAID) {
+                updateTransaction({
+                  transactionId: row.id,
+                  payload: { status: TransactionStatus.PAID, paidDate: new Date() },
+                })
+              }
+            },
+          },
+        ]
+      : []),
+    ...(hasPermission('finance', 'delete')
+      ? [
+          {
+            id: 'delete',
+            label: 'Deletar',
+            icon: <Trash2 className="h-4 w-4" />,
+            onClick: (row: any) => {
+              if (confirm('Tem certeza que deseja deletar esta transação?')) {
+                deleteTransaction(row.id)
+              }
+            },
+            variant: 'destructive' as const,
+          },
+        ]
+      : []),
   ]
 
   return (
@@ -248,11 +258,15 @@ export default function FinanceiroPage() {
         <PageHeader
           title="Financeiro"
           description="Gerencie suas transações e receitas/despesas"
-          action={{
-            label: 'Nova Transação',
-            onClick: () => router.push(`/financeiro/new`),
-            icon: <Plus className="h-4 w-4" />,
-          }}
+          action={
+            hasPermission('finance', 'create')
+              ? {
+                  label: 'Nova Transação',
+                  onClick: () => router.push(`/financeiro/new`),
+                  icon: <Plus className="h-4 w-4" />,
+                }
+              : undefined
+          }
         />
 
         {/* Summary Cards */}
@@ -279,7 +293,7 @@ export default function FinanceiroPage() {
           >
             {advancedOptionsEnabled ? 'Desabilitar Opções Avançadas' : 'Opções Avançadas'}
           </button>
-          {advancedOptionsEnabled && selectedRows.length > 0 && (
+          {advancedOptionsEnabled && selectedRows.length > 0 && hasPermission('finance', 'delete') && (
             <button
               onClick={handleDeleteSelected}
               className="flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"

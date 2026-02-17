@@ -1,113 +1,52 @@
 'use client'
 
 import { useState } from 'react'
-
-import { AlertCircle, ChevronDown, ChevronRight, RotateCcw, Save, Shield } from 'lucide-react'
-
-import {
-  useDefaultMemberPermissions,
-  useEnabledModules,
-  useSetDefaultMemberPermissions,
-} from '@/modules/workspace/hooks'
+import { ChevronDown, ChevronRight, Shield, Save, RotateCcw } from 'lucide-react'
+import { Modal } from '@/components/ui/Modal'
 import {
   MODULE_PERMISSIONS,
+  getPermissionPreset,
   type WorkspacePermissions,
 } from '@/modules/workspace/config/permissions.config'
 
-interface DefaultPermissionsConfigProps {
-  workspaceId: string
+interface MemberPermissionsModalProps {
+  isOpen: boolean
+  onClose: () => void
+  memberName: string
+  memberEmail: string
+  role: string
+  permissions: WorkspacePermissions
+  onRoleChange: (role: string) => void
+  onTogglePermission: (moduleId: string, actionKey: string) => void
+  onSetPermissions: (permissions: WorkspacePermissions) => void
+  onSave: () => void
+  isSaving: boolean
+  isOwner?: boolean
+  /** IDs dos módulos habilitados no workspace. Se informado, filtra a lista. */
+  enabledModuleIds?: string[]
 }
 
-export function DefaultPermissionsConfig({ workspaceId }: DefaultPermissionsConfigProps) {
-  const { data: defaultPermissions = [] } = useDefaultMemberPermissions(workspaceId)
-  const { data: enabledModules = [] } = useEnabledModules(workspaceId)
-  const setDefaultPermissionsMutation = useSetDefaultMemberPermissions(workspaceId)
-
-  const [editingRole, setEditingRole] = useState<string | null>(null)
-  const [editingPermissions, setEditingPermissions] = useState<WorkspacePermissions | null>(null)
+export function MemberPermissionsModal({
+  isOpen,
+  onClose,
+  memberName,
+  memberEmail,
+  role,
+  permissions,
+  onRoleChange,
+  onTogglePermission,
+  onSetPermissions,
+  onSave,
+  isSaving,
+  isOwner = false,
+  enabledModuleIds,
+}: MemberPermissionsModalProps) {
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({})
 
   // Filtra módulos: mostra apenas os instalados no workspace
-  const enabledModuleIds = enabledModules.map((m: any) => m.id)
-  const visibleModules = MODULE_PERMISSIONS.filter((m) => enabledModuleIds.includes(m.moduleId))
-
-  const memberConfig = defaultPermissions?.find((p: any) => p.role === 'member')
-
-  const handleEditMember = () => {
-    if (memberConfig) {
-      setEditingRole('member')
-      setEditingPermissions({ ...memberConfig.permissions })
-      // Expandir todos os módulos ao editar
-      const expanded: Record<string, boolean> = {}
-      visibleModules.forEach((m) => {
-        expanded[m.moduleId] = true
-      })
-      setExpandedModules(expanded)
-    }
-  }
-
-  const handleSave = () => {
-    if (!editingRole || !editingPermissions) return
-
-    setDefaultPermissionsMutation.mutate(
-      {
-        role: editingRole,
-        permissions: editingPermissions,
-      },
-      {
-        onSuccess: () => {
-          setEditingRole(null)
-          setEditingPermissions(null)
-        },
-        onError: (error: any) => {
-          console.error('Erro ao atualizar permissões padrão:', error)
-          alert('Erro ao atualizar permissões padrão')
-        },
-      }
-    )
-  }
-
-  const handleCancel = () => {
-    setEditingRole(null)
-    setEditingPermissions(null)
-  }
-
-  const togglePermission = (moduleId: string, actionKey: string) => {
-    if (!editingPermissions) return
-
-    const modulePerms = editingPermissions[moduleId] || {}
-    const newValue = !modulePerms[actionKey]
-
-    // Se está desativando "access", desativa TODAS as ações do módulo
-    if (actionKey === 'access' && !newValue) {
-      const allFalse: Record<string, boolean> = {}
-      const config = MODULE_PERMISSIONS.find((m) => m.moduleId === moduleId)
-      if (config) {
-        config.actions.forEach((a) => {
-          allFalse[a.key] = false
-        })
-      }
-      setEditingPermissions({
-        ...editingPermissions,
-        [moduleId]: allFalse,
-      })
-      return
-    }
-
-    // Se está ativando qualquer ação, garante que "access" esteja ativo
-    const updatedPerms = {
-      ...modulePerms,
-      [actionKey]: newValue,
-    }
-    if (newValue && actionKey !== 'access') {
-      updatedPerms.access = true
-    }
-
-    setEditingPermissions({
-      ...editingPermissions,
-      [moduleId]: updatedPerms,
-    })
-  }
+  const visibleModules = enabledModuleIds
+    ? MODULE_PERMISSIONS.filter((m) => enabledModuleIds.includes(m.moduleId))
+    : MODULE_PERMISSIONS
 
   const toggleModuleExpanded = (moduleId: string) => {
     setExpandedModules((prev) => ({
@@ -116,23 +55,75 @@ export function DefaultPermissionsConfig({ workspaceId }: DefaultPermissionsConf
     }))
   }
 
+  const expandAll = () => {
+    const expanded: Record<string, boolean> = {}
+    visibleModules.forEach((m) => {
+      expanded[m.moduleId] = true
+    })
+    setExpandedModules(expanded)
+  }
+
+  const collapseAll = () => {
+    setExpandedModules({})
+  }
+
   const toggleAllActions = (moduleId: string, enable: boolean) => {
-    if (!editingPermissions) return
     const config = MODULE_PERMISSIONS.find((m) => m.moduleId === moduleId)
     if (!config) return
 
-    const newPerms: Record<string, boolean> = {}
+    const newModulePerms: Record<string, boolean> = {}
     config.actions.forEach((a) => {
-      newPerms[a.key] = enable
+      newModulePerms[a.key] = enable
     })
 
-    setEditingPermissions({
-      ...editingPermissions,
-      [moduleId]: newPerms,
+    onSetPermissions({
+      ...permissions,
+      [moduleId]: newModulePerms,
     })
   }
 
-  const isEditing = editingRole === 'member'
+  const applyPreset = (preset: string) => {
+    const presetPermissions = getPermissionPreset(preset)
+    onSetPermissions(presetPermissions)
+    onRoleChange(preset)
+  }
+
+  const handleTogglePermission = (moduleId: string, actionKey: string) => {
+    const modulePerms = permissions[moduleId] || {}
+    const newValue = !modulePerms[actionKey]
+
+    // Se está desativando "access", desativa TODAS as ações do módulo
+    if (actionKey === 'access' && !newValue) {
+      const config = MODULE_PERMISSIONS.find((m) => m.moduleId === moduleId)
+      if (config) {
+        const allFalse: Record<string, boolean> = {}
+        config.actions.forEach((a) => {
+          allFalse[a.key] = false
+        })
+        onSetPermissions({
+          ...permissions,
+          [moduleId]: allFalse,
+        })
+      }
+      return
+    }
+
+    // Se está ativando qualquer ação, garante que "access" esteja ativo
+    if (newValue && actionKey !== 'access') {
+      const updatedPerms = {
+        ...modulePerms,
+        [actionKey]: newValue,
+        access: true,
+      }
+      onSetPermissions({
+        ...permissions,
+        [moduleId]: updatedPerms,
+      })
+      return
+    }
+
+    onTogglePermission(moduleId, actionKey)
+  }
 
   const categoryLabels: Record<string, string> = {
     access: 'Acesso',
@@ -140,22 +131,88 @@ export function DefaultPermissionsConfig({ workspaceId }: DefaultPermissionsConf
     feature: 'Funcionalidades',
   }
 
+  const initials = memberName
+    ?.split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2) || '?'
+
   return (
-    <div className="mb-6 rounded-lg bg-white p-6 shadow">
-      <div className="mb-4 flex items-center gap-3">
-        <AlertCircle className="h-5 w-5 text-blue-600" />
-        <h3 className="text-lg font-semibold text-gray-900">Permissões Padrão para Membros</h3>
-      </div>
+    <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-3xl" blur="sm">
+      <Modal.Header onClose={onClose}>Editar Permissões</Modal.Header>
 
-      <p className="mb-4 text-sm text-gray-600">
-        Configure as permissões padrão que novos membros receberão ao serem convidados.
-      </p>
+      <Modal.Body>
+        <div className="max-h-[70vh] overflow-y-auto space-y-4">
+          {/* Info do membro */}
+          <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
+            <div className={`h-10 w-10 rounded-full flex items-center justify-center text-sm font-medium text-white ${
+              isOwner ? 'bg-purple-500' : 'bg-blue-500'
+            }`}>
+              {initials}
+            </div>
+            <div>
+              <p className="font-medium text-gh-text">{memberName}</p>
+              <p className="text-sm text-gh-text-secondary">{memberEmail}</p>
+            </div>
+          </div>
 
-      {isEditing && editingPermissions ? (
-        <div className="space-y-4">
+          {/* Seletor de função */}
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="block text-sm font-medium text-gh-text mb-1">Função</label>
+              <select
+                value={role}
+                onChange={(e) => onRoleChange(e.target.value)}
+                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white"
+                disabled={isOwner}
+              >
+                <option value="owner">Owner</option>
+                <option value="admin">Admin</option>
+                <option value="member">Member</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gh-text-secondary mr-1">Preset:</span>
+              <button
+                onClick={() => applyPreset('admin')}
+                className="rounded px-2.5 py-1 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-colors"
+              >
+                Admin
+              </button>
+              <button
+                onClick={() => applyPreset('member')}
+                className="rounded px-2.5 py-1 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors"
+              >
+                Member
+              </button>
+            </div>
+          </div>
+
+          {/* Controle de expandir/recolher */}
+          <div className="flex items-center justify-between pt-2">
+            <h4 className="text-sm font-semibold text-gh-text">Permissões por Módulo</h4>
+            <div className="flex gap-2">
+              <button
+                onClick={expandAll}
+                className="text-xs text-blue-600 hover:text-blue-800"
+              >
+                Expandir tudo
+              </button>
+              <span className="text-xs text-gray-300">|</span>
+              <button
+                onClick={collapseAll}
+                className="text-xs text-gray-500 hover:text-gray-700"
+              >
+                Recolher tudo
+              </button>
+            </div>
+          </div>
+
+          {/* Módulos */}
           <div className="space-y-2">
             {visibleModules.map((moduleConfig) => {
-              const modulePerms = editingPermissions[moduleConfig.moduleId] || {}
+              const modulePerms = permissions[moduleConfig.moduleId] || {}
               const isExpanded = expandedModules[moduleConfig.moduleId] ?? false
               const hasAccess = modulePerms.access === true
               const enabledCount = Object.values(modulePerms).filter(Boolean).length
@@ -213,9 +270,7 @@ export function DefaultPermissionsConfig({ workspaceId }: DefaultPermissionsConf
                           <input
                             type="checkbox"
                             checked={hasAccess}
-                            onChange={() =>
-                              togglePermission(moduleConfig.moduleId, 'access')
-                            }
+                            onChange={() => handleTogglePermission(moduleConfig.moduleId, 'access')}
                             className="h-4 w-4 rounded border-gray-300 text-blue-600"
                           />
                           <span className="text-sm font-medium text-gray-900">
@@ -246,7 +301,7 @@ export function DefaultPermissionsConfig({ workspaceId }: DefaultPermissionsConf
                                       type="checkbox"
                                       checked={modulePerms[action.key] === true}
                                       onChange={() =>
-                                        togglePermission(moduleConfig.moduleId, action.key)
+                                        handleTogglePermission(moduleConfig.moduleId, action.key)
                                       }
                                       className="h-4 w-4 rounded border-gray-300 text-blue-600"
                                     />
@@ -274,7 +329,7 @@ export function DefaultPermissionsConfig({ workspaceId }: DefaultPermissionsConf
                                       type="checkbox"
                                       checked={modulePerms[action.key] === true}
                                       onChange={() =>
-                                        togglePermission(moduleConfig.moduleId, action.key)
+                                        handleTogglePermission(moduleConfig.moduleId, action.key)
                                       }
                                       className="h-4 w-4 rounded border-gray-300 text-blue-600"
                                     />
@@ -292,75 +347,27 @@ export function DefaultPermissionsConfig({ workspaceId }: DefaultPermissionsConf
               )
             })}
           </div>
-
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={handleCancel}
-              className="flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200"
-              disabled={setDefaultPermissionsMutation.isPending}
-            >
-              <RotateCcw className="h-4 w-4" />
-              Cancelar
-            </button>
-            <button
-              onClick={handleSave}
-              className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
-              disabled={setDefaultPermissionsMutation.isPending}
-            >
-              <Save className="h-4 w-4" />
-              {setDefaultPermissionsMutation.isPending ? 'Salvando...' : 'Salvar'}
-            </button>
-          </div>
         </div>
-      ) : (
-        <div className="space-y-3">
-          {memberConfig ? (
-            <div className="rounded-lg border border-gray-200 p-4">
-              <div className="mb-4 space-y-2">
-                {visibleModules.map((moduleConfig) => {
-                  const modulePerms =
-                    (memberConfig.permissions as WorkspacePermissions)?.[moduleConfig.moduleId] || {}
-                  const hasAccess = modulePerms.access === true
-                  const activeActions = moduleConfig.actions
-                    .filter((a) => a.key !== 'access' && modulePerms[a.key] === true)
-                    .map((a) => a.label)
+      </Modal.Body>
 
-                  return (
-                    <div key={moduleConfig.moduleId} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`inline-block h-2 w-2 rounded-full ${hasAccess ? 'bg-green-500' : 'bg-gray-300'}`}
-                        />
-                        <span className="text-gray-900">{moduleConfig.label}</span>
-                      </div>
-                      <span className="text-sm text-gray-600">
-                        {hasAccess
-                          ? activeActions.length > 0
-                            ? activeActions.join(', ')
-                            : 'Somente acesso'
-                          : 'Sem acesso'}
-                      </span>
-                    </div>
-                  )
-                })}
-              </div>
-              <button
-                onClick={handleEditMember}
-                className="w-full rounded-lg border border-blue-600 px-4 py-2 text-blue-600 transition-colors hover:bg-blue-50"
-              >
-                Editar Permissões
-              </button>
-            </div>
-          ) : (
-            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-              <p className="text-sm text-yellow-800">
-                Nenhuma configuração de permissões padrão definida. As permissões padrão do sistema
-                serão usadas.
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+      <Modal.Footer>
+        <button
+          onClick={onClose}
+          className="flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200"
+          disabled={isSaving}
+        >
+          <RotateCcw className="h-4 w-4" />
+          Cancelar
+        </button>
+        <button
+          onClick={onSave}
+          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+          disabled={isSaving}
+        >
+          <Save className="h-4 w-4" />
+          {isSaving ? 'Salvando...' : 'Salvar'}
+        </button>
+      </Modal.Footer>
+    </Modal>
   )
 }

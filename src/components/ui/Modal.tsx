@@ -8,6 +8,7 @@ interface ModalProps {
   onClose: () => void;
   children: ReactNode;
   blur?: "none" | "sm" | "md" | "lg";
+  maxWidth?: string;
 }
 
 interface ModalHeaderProps {
@@ -28,6 +29,7 @@ export function Modal({
   onClose,
   children,
   blur = "none",
+  maxWidth = "max-w-md",
 }: ModalProps) {
   if (!isOpen) return null;
 
@@ -49,7 +51,7 @@ export function Modal({
       {/* Modal Container */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div
-          className="relative bg-gh-card rounded-lg shadow-xl max-w-md w-full"
+          className={`relative bg-gh-card rounded-lg shadow-xl ${maxWidth} w-full`}
           onClick={(e) => e.stopPropagation()}
         >
           {children}

@@ -49,6 +49,7 @@ import {
   ProcessType,
 } from '@/modules/processos/types'
 import { ModuleGuard } from '@/modules/workspace/components/ModuleGuard'
+import { usePermission } from '@/modules/workspace/hooks/usePermission'
 import { useBreadcrumb } from '@/modules/workspace/hooks'
 import { useActiveWorkspace } from '@/modules/workspace/hooks/useActiveWorkspace'
 import { useWorkspaceMembers } from '@/modules/workspace/hooks/useWorkspaceQueries'
@@ -56,6 +57,7 @@ import { useWorkspaceMembers } from '@/modules/workspace/hooks/useWorkspaceQueri
 export default function ProcessosPage() {
   const router = useRouter()
   const { activeWorkspace } = useActiveWorkspace()
+  const { hasPermission } = usePermission()
 
   useBreadcrumb([
     {
@@ -265,31 +267,39 @@ export default function ProcessosPage() {
       icon: <Eye className="h-4 w-4" />,
       onClick: (row) => router.push(`/processos/${row.id}`),
     },
-    {
-      id: 'mark-done',
-      label: 'Marcar como Concluído',
-      icon: <CheckCircle2 className="h-4 w-4" />,
-      onClick: (row) => {
-        if (row.status !== ProcessStatus.CONCLUIDO) {
-          updateProcesso({
-            workspaceId: activeWorkspace?.id || '',
-            processId: row.id,
-            payload: { status: ProcessStatus.CONCLUIDO },
-          })
-        }
-      },
-    },
-    {
-      id: 'delete',
-      label: 'Deletar',
-      icon: <Trash2 className="h-4 w-4" />,
-      onClick: (row) => {
-        if (confirm('Tem certeza que deseja deletar este processo?')) {
-          deleteProcesso({ workspaceId: activeWorkspace?.id || '', processId: row.id })
-        }
-      },
-      variant: 'destructive',
-    },
+    ...(hasPermission('processos', 'update')
+      ? [
+          {
+            id: 'mark-done',
+            label: 'Marcar como Concluído',
+            icon: <CheckCircle2 className="h-4 w-4" />,
+            onClick: (row: any) => {
+              if (row.status !== ProcessStatus.CONCLUIDO) {
+                updateProcesso({
+                  workspaceId: activeWorkspace?.id || '',
+                  processId: row.id,
+                  payload: { status: ProcessStatus.CONCLUIDO },
+                })
+              }
+            },
+          },
+        ]
+      : []),
+    ...(hasPermission('processos', 'delete')
+      ? [
+          {
+            id: 'delete',
+            label: 'Deletar',
+            icon: <Trash2 className="h-4 w-4" />,
+            onClick: (row: any) => {
+              if (confirm('Tem certeza que deseja deletar este processo?')) {
+                deleteProcesso({ workspaceId: activeWorkspace?.id || '', processId: row.id })
+              }
+            },
+            variant: 'destructive' as const,
+          },
+        ]
+      : []),
   ]
 
 
@@ -300,11 +310,15 @@ export default function ProcessosPage() {
         <PageHeader
           title="Processos"
           description="Gerencie processos, fluxos e subprocessos do seu workspace"
-          action={{
-            label: 'Novo Processo',
-            onClick: () => router.push('/processos/new'),
-            icon: <Plus className="h-4 w-4" />,
-          }}
+          action={
+            hasPermission('processos', 'create')
+              ? {
+                  label: 'Novo Processo',
+                  onClick: () => router.push('/processos/new'),
+                  icon: <Plus className="h-4 w-4" />,
+                }
+              : undefined
+          }
         />
 
         {/* Toggle: Todos vs Meus Processos */}
