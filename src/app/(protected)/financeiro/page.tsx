@@ -14,24 +14,28 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { ActorTypeBadge } from '@/modules/financeiro/components/ActorTypeBadge'
 import { SourceBadge } from '@/modules/financeiro/components/SourceBadge'
 import { StatusBadge } from '@/modules/financeiro/components/StatusBadge'
+import { TransactionSummaryCards } from '@/modules/financeiro/components/TransactionSummaryCards'
 import {
   useDeleteTransaction,
   useTransactions,
+  useTransactionsSummary,
   useUpdateTransactionGeneric,
 } from '@/modules/financeiro/hooks/useFinance'
 import {
   type GetTransactionsFilters,
-  TransactionActorType,
   TransactionSourceType,
   TransactionStatus,
+  TransactionType,
 } from '@/modules/financeiro/types'
 import { ModuleGuard } from '@/modules/workspace/components/ModuleGuard'
+import { usePermission } from '@/modules/workspace/hooks/usePermission'
 import { useBreadcrumb } from '@/modules/workspace/hooks'
 import { useActiveWorkspace } from '@/modules/workspace/hooks/useActiveWorkspace'
 
 export default function FinanceiroPage() {
   const router = useRouter()
   const { activeWorkspace } = useActiveWorkspace()
+  const { hasPermission } = usePermission()
 
   useBreadcrumb([
     {
@@ -57,14 +61,11 @@ export default function FinanceiroPage() {
   const [advancedOptionsEnabled, setAdvancedOptionsEnabled] = useState(false)
   const [selectedRows, setSelectedRows] = useState<any[]>([])
 
-  // Use pendingFilters directly as active filters (apply immediately)
-  const activeFilters = filters
-
   const { data: transactionsData = { data: [], total: 0, page: 1, limit: 20 }, isLoading } =
     useTransactions(
       activeWorkspace?.id || '',
       {
-        ...activeFilters,
+        ...filters,
         search: searchTerm || undefined,
       },
       !!activeWorkspace?.id
@@ -72,6 +73,16 @@ export default function FinanceiroPage() {
 
   const { mutate: deleteTransaction } = useDeleteTransaction(activeWorkspace?.id || '')
   const { mutate: updateTransaction } = useUpdateTransactionGeneric(activeWorkspace?.id || '')
+
+  const { data: summaryData, isLoading: isSummaryLoading } = useTransactionsSummary(
+    activeWorkspace?.id || '',
+    {
+      fromDate: filters.fromDate,
+      toDate: filters.toDate,
+      status: filters.status,
+    },
+    !!activeWorkspace?.id
+  )
 
   const handleDeleteSelected = async () => {
     if (!activeWorkspace?.id || selectedRows.length === 0) return
@@ -99,13 +110,10 @@ export default function FinanceiroPage() {
   // Definir colunas
   const columns: Column[] = [
     {
-      key: 'partyType',
+      key: 'transactionType',
       label: 'Tipo',
       render: (_, row) => {
-        if (row.parties && row.parties.length > 0) {
-          return <ActorTypeBadge partyType={row.parties[0].partyType} />
-        }
-        return <span className="text-gh-text-secondary text-xs">-</span>
+        return <ActorTypeBadge partyType={row.transactionType} />
       },
     },
     {
@@ -124,6 +132,68 @@ export default function FinanceiroPage() {
       render: (value) => (
         <p className="text-gh-text text-sm font-semibold">{formatCurrency(Number(value))}</p>
       ),
+    },
+    {
+      key: 'originalAmount',
+      label: 'Valor Original',
+      render: (_, row) => (
+        <p className="text-gh-text text-sm">
+          {row.originalAmount ? formatCurrency(Number(row.originalAmount)) : '-'}
+        </p>
+      ),
+    },
+    {
+      key: 'groupType',
+      label: 'Tipo de Grupo',
+      render: (_, row) => {
+        if (!row.groupType) {
+          return <span className="text-gh-text-secondary text-sm">-</span>
+        }
+
+        const labels = {
+          SINGLE: 'Única',
+          INSTALLMENT: 'Parcelamento',
+          RECURRENT: 'Recorrência',
+          CONTRACT: 'Contrato',
+        }
+
+        return (
+          <span className="text-gh-text-secondary text-sm">
+            {labels[row.groupType as keyof typeof labels] || row.groupType}
+          </span>
+        )
+      },
+    },
+    {
+      key: 'installmentDisplay',
+      label: 'Parcela/Recorrência',
+      render: (_, row) => {
+        if (row.groupType === 'SINGLE') {
+          return <span className="text-gh-text-secondary text-sm">-</span>
+        }
+
+        if (row.groupType === 'INSTALLMENT' && row.installmentNumber && row.totalInstallments) {
+          return (
+            <span className="text-gh-text-secondary text-sm">
+              {row.installmentNumber}/{row.totalInstallments}
+            </span>
+          )
+        }
+
+        if (row.groupType === 'RECURRENT' && row.installmentNumber && row.totalInstallments) {
+          return (
+            <span className="text-gh-text-secondary text-sm">
+              {row.installmentNumber}/{row.totalInstallments}
+            </span>
+          )
+        }
+
+        if (row.installmentNumber) {
+          return <span className="text-gh-text-secondary text-sm">{row.installmentNumber}</span>
+        }
+
+        return <span className="text-gh-text-secondary text-sm">-</span>
+      },
     },
     {
       key: 'dueDate',
@@ -147,30 +217,38 @@ export default function FinanceiroPage() {
       icon: <Eye className="h-4 w-4" />,
       onClick: (row) => router.push(`/financeiro/${row.id}`),
     },
-    {
-      id: 'mark-paid',
-      label: 'Marcar como Pago',
-      icon: <CheckCircle2 className="h-4 w-4" />,
-      onClick: (row) => {
-        if (row.status !== TransactionStatus.PAID) {
-          updateTransaction({
-            transactionId: row.id,
-            payload: { status: TransactionStatus.PAID, paidDate: new Date() },
-          })
-        }
-      },
-    },
-    {
-      id: 'delete',
-      label: 'Deletar',
-      icon: <Trash2 className="h-4 w-4" />,
-      onClick: (row) => {
-        if (confirm('Tem certeza que deseja deletar esta transação?')) {
-          deleteTransaction(row.id)
-        }
-      },
-      variant: 'destructive',
-    },
+    ...(hasPermission('finance', 'update')
+      ? [
+          {
+            id: 'mark-paid',
+            label: 'Marcar como Pago',
+            icon: <CheckCircle2 className="h-4 w-4" />,
+            onClick: (row: any) => {
+              if (row.status !== TransactionStatus.PAID) {
+                updateTransaction({
+                  transactionId: row.id,
+                  payload: { status: TransactionStatus.PAID, paidDate: new Date() },
+                })
+              }
+            },
+          },
+        ]
+      : []),
+    ...(hasPermission('finance', 'delete')
+      ? [
+          {
+            id: 'delete',
+            label: 'Deletar',
+            icon: <Trash2 className="h-4 w-4" />,
+            onClick: (row: any) => {
+              if (confirm('Tem certeza que deseja deletar esta transação?')) {
+                deleteTransaction(row.id)
+              }
+            },
+            variant: 'destructive' as const,
+          },
+        ]
+      : []),
   ]
 
   return (
@@ -180,11 +258,23 @@ export default function FinanceiroPage() {
         <PageHeader
           title="Financeiro"
           description="Gerencie suas transações e receitas/despesas"
-          action={{
-            label: 'Nova Transação',
-            onClick: () => router.push(`/financeiro/new`),
-            icon: <Plus className="h-4 w-4" />,
-          }}
+          action={
+            hasPermission('finance', 'create')
+              ? {
+                  label: 'Nova Transação',
+                  onClick: () => router.push(`/financeiro/new`),
+                  icon: <Plus className="h-4 w-4" />,
+                }
+              : undefined
+          }
+        />
+
+        {/* Summary Cards */}
+        <TransactionSummaryCards
+          totalIncome={summaryData?.totalIncome || 0}
+          totalExpense={summaryData?.totalExpense || 0}
+          balance={summaryData?.balance || 0}
+          isLoading={isSummaryLoading}
         />
 
         {/* Search Bar */}
@@ -203,7 +293,7 @@ export default function FinanceiroPage() {
           >
             {advancedOptionsEnabled ? 'Desabilitar Opções Avançadas' : 'Opções Avançadas'}
           </button>
-          {advancedOptionsEnabled && selectedRows.length > 0 && (
+          {advancedOptionsEnabled && selectedRows.length > 0 && hasPermission('finance', 'delete') && (
             <button
               onClick={handleDeleteSelected}
               className="flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
@@ -225,10 +315,6 @@ export default function FinanceiroPage() {
                 label: 'Manual',
               },
               {
-                value: TransactionSourceType.SERVICE_ORDER,
-                label: 'Ordem de Serviço',
-              },
-              {
                 value: TransactionSourceType.PURCHASE_ORDER,
                 label: 'Pedido de Compra',
               },
@@ -247,24 +333,24 @@ export default function FinanceiroPage() {
             width="w-56"
           />
 
-          {/* Party Type Filter */}
+          {/* Transaction Type Filter */}
           <FilterWithBadge
             label="Tipo"
             options={[
               {
-                value: TransactionActorType.INCOME,
+                value: TransactionType.INCOME,
                 label: 'Entrada',
               },
               {
-                value: TransactionActorType.EXPENSE,
+                value: TransactionType.EXPENSE,
                 label: 'Saída',
               },
             ]}
-            value={filters.partyType}
+            value={filters.transactionType}
             onValueChange={(value) => {
               setFilters({
                 ...filters,
-                partyType: value as TransactionActorType | undefined,
+                transactionType: value as TransactionType | undefined,
               })
             }}
             width="w-48"
@@ -287,11 +373,7 @@ export default function FinanceiroPage() {
                 label: 'Pago',
               },
               {
-                value: TransactionStatus.PARTIALLY_PAID,
-                label: 'Parcialmente Pago',
-              },
-              {
-                value: TransactionStatus.CANCELLED,
+                value: TransactionStatus.CANCELED,
                 label: 'Cancelado',
               },
             ]}
@@ -324,7 +406,7 @@ export default function FinanceiroPage() {
 
           {/* Clear Filters Button */}
           {(filters.sourceType ||
-            filters.partyType ||
+            filters.transactionType ||
             filters.status ||
             filters.fromDate ||
             filters.toDate) && (

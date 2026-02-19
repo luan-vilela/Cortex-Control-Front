@@ -12,6 +12,7 @@ import { useWorkspaceStore } from "@/modules/workspace/store/workspace.store";
 import * as LucideIcons from "lucide-react";
 import React from "react";
 import {
+  Calendar,
   Users,
   MessageSquare,
   Zap,
@@ -46,6 +47,7 @@ export default function DashboardPage() {
     finance: DollarSign,
     settings: Settings,
     members: Users2,
+    agenda: Calendar,
   };
 
   const moduleColors: Record<string, string> = {

@@ -1,8 +1,6 @@
-export interface ModulePermissions {
-  read: boolean;
-  write: boolean;
-  delete: boolean;
-}
+import type { ModulePermissions, WorkspacePermissions } from "../config/permissions.config";
+
+export type { ModulePermissions, WorkspacePermissions };
 
 export interface EnabledModule {
   id: string;
@@ -20,15 +18,6 @@ export interface ModuleConfig {
   category: "core" | "communication" | "automation" | "integration";
   required?: boolean;
   dependencies?: string[];
-}
-
-export interface WorkspacePermissions {
-  contacts: ModulePermissions;
-  conversations: ModulePermissions;
-  automations: ModulePermissions;
-  sales: ModulePermissions;
-  settings: ModulePermissions;
-  members: ModulePermissions;
 }
 
 export enum WorkspaceStatus {

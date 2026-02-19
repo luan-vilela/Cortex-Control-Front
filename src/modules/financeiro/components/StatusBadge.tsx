@@ -24,13 +24,7 @@ const statusConfig: Record<
     textColor: 'text-green-700',
     icon: '✅',
   },
-  [TransactionStatus.PARTIALLY_PAID]: {
-    label: 'Parcialmente Pago',
-    bgColor: 'bg-blue-100',
-    textColor: 'text-blue-700',
-    icon: '📊',
-  },
-  [TransactionStatus.CANCELLED]: {
+  [TransactionStatus.CANCELED]: {
     label: 'Cancelado',
     bgColor: 'bg-gray-100',
     textColor: 'text-gray-700',
@@ -45,7 +39,20 @@ export function StatusBadge({
   status: TransactionStatus
   showIcon?: boolean
 }) {
-  const config = statusConfig[status]
+  if (!status) {
+    return (
+      <div className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+        <span>-</span>
+      </div>
+    )
+  }
+
+  const config = statusConfig[status] || {
+    label: status,
+    bgColor: 'bg-gray-100',
+    textColor: 'text-gray-700',
+    icon: '❓',
+  }
 
   return (
     <div

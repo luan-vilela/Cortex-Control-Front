@@ -1,18 +1,27 @@
 export enum TransactionSourceType {
-  SERVICE_ORDER = 'SERVICE_ORDER',
   PURCHASE_ORDER = 'PURCHASE_ORDER',
   INVOICE = 'INVOICE',
   MANUAL = 'MANUAL',
+  PROCESS = 'PROCESS',
+  ORDER = 'ORDER',
+  CONTRACT = 'CONTRACT',
+  EXPENSE = 'EXPENSE',
 }
 
 export enum TransactionStatus {
   PENDING = 'PENDING',
   OVERDUE = 'OVERDUE',
   PAID = 'PAID',
-  PARTIALLY_PAID = 'PARTIALLY_PAID',
-  CANCELLED = 'CANCELLED',
+  CANCELED = 'CANCELED',
 }
 
+export enum TransactionType {
+  INCOME = 'INCOME',
+  EXPENSE = 'EXPENSE',
+  TRANSFER = 'TRANSFER',
+}
+
+// @deprecated Use TransactionType instead
 export enum TransactionActorType {
   INCOME = 'INCOME',
   EXPENSE = 'EXPENSE',
@@ -23,63 +32,59 @@ export enum PaymentMode {
   INSTALLMENT = 'INSTALLMENT',
 }
 
+export enum InstallmentPlanType {
+  SIMPLE = 'SIMPLE', // Parcelamento Simples: divisão simples
+  SAC = 'SAC', // SAC: amortização fixa, juros decrescentes (futuro)
+  PRICE_TABLE = 'PRICE_TABLE', // Tabela Price: juros + amortização constante (futuro)
+}
+
 export enum RecurrenceType {
   DAILY = 'DAILY',
   WEEKLY = 'WEEKLY',
-  BIWEEKLY = 'BIWEEKLY',
   MONTHLY = 'MONTHLY',
-  QUARTERLY = 'QUARTERLY',
-  SEMIANNUAL = 'SEMIANNUAL',
-  ANNUAL = 'ANNUAL',
-}
-
-export enum InstallmentPlanType {
-  PRICE_TABLE = 'PRICE_TABLE', // Tabela Price: juros + amortização constante
-  SAC = 'SAC', // SAC: amortização fixa, juros decrescentes
-  SIMPLE = 'SIMPLE', // Parcelamento Simples: divisão simples
+  YEARLY = 'YEARLY',
 }
 
 export enum InterestType {
-  PERCENTAGE = 'PERCENTAGE', // Percentual (ex: 5%)
-  FLAT = 'FLAT', // Valor fixo (ex: R$100)
-}
-
-// Recurrence configuration (only for CASH mode)
-export interface RecurrenceConfig {
-  type: RecurrenceType
-  occurrences?: number // NULL = infinite
-  endDate?: Date // Optional end date
+  PERCENTAGE = 'PERCENTAGE',
+  FLAT = 'FLAT',
 }
 
 // Payment configuration for CASH mode (à vista)
 export interface CashPaymentConfig {
   mode: PaymentMode.CASH
-  recurrence?: RecurrenceConfig
-  interest?: any
 }
 
 // Payment configuration for INSTALLMENT mode (parcelado)
 export interface InstallmentPaymentConfig {
+  downPaymentIsPaid: boolean
   mode: PaymentMode.INSTALLMENT
-  planType: InstallmentPlanType
-  numberOfInstallments: number
-  downpayment?: number
-  downpaymentDate?: Date
-  firstInstallmentDate: Date
-  installmentIntervalDays?: number
-  interest?: any
+  numberOfInstallments: number // Mínimo 2
+  downPayment?: number // Valor de entrada (opcional)
+  downPaymentDate?: Date // Data da entrada (opcional)
+  planType: InstallmentPlanType // Tipo de plano (padrão SIMPLE)
+  firstInstallmentDate: Date // Data da primeira parcela
+  installmentIntervalDays: number // Intervalo entre parcelas em dias
 }
 
 // Union type for payment configuration
 export type PaymentConfig = CashPaymentConfig | InstallmentPaymentConfig
 
+export interface TransactionPartyUser {
+  id: string
+  name: string
+  email: string
+  createdVia?: string
+}
+
 export interface TransactionParty {
   id: number
   transactionId: number
   workspaceId: string
-  partyType: TransactionActorType
+  partyType?: TransactionActorType // Tipo do ator (INCOME/EXPENSE)
   partyStatus?: string
   partyMetadata?: Record<string, any>
+  user?: TransactionPartyUser
 }
 
 export interface InstallmentPlan {
@@ -88,8 +93,8 @@ export interface InstallmentPlan {
   transactionId: number
   planType: InstallmentPlanType
   numberOfInstallments: number
-  downpayment?: number
-  downpaymentDate?: Date
+  downPayment?: number
+  downPaymentDate?: Date
   firstInstallmentDate: Date
   installmentIntervalDays: number
   createdAt: Date
@@ -115,17 +120,25 @@ export interface InterestConfigEntity {
   percentage?: number
   flatAmount?: number
   description?: string
+  // ✨ Novos campos para multa e mora
+  penaltyPercentage?: number
+  interestPercentage?: number
+  interestPeriod: 'MONTHLY' | 'ANNUAL'
   createdAt: Date
   updatedAt: Date
 }
 
 export interface FinanceiroTransaction {
-  id: number
+  id: string
   workspaceId: string
   sourceType: TransactionSourceType
   sourceId: string
   sourceMetadata?: Record<string, any>
+  transactionType: TransactionType // ← Tipo da transação (INCOME, EXPENSE, TRANSFER)
   amount: number
+  // ✨ Valor original da dívida (para referência em cálculos de multa/juros)
+  // Útil em parcelamentos com entrada: originalAmount = totalValue, amount = parcela
+  originalAmount?: number
   description: string
   dueDate: string | Date
   paidDate?: string | Date
@@ -141,12 +154,24 @@ export interface FinanceiroTransaction {
   installmentPlan?: InstallmentPlan
   recurrenceConfig?: RecurrenceConfigEntity
   interestConfig?: InterestConfigEntity
+  // ✨ Campos estruturados (novos - substituem sourceMetadata)
+  installmentNumber?: number // Número da parcela (1, 2, 3...)
+  personId?: string // ID da pessoa (cliente/fornecedor)
+  parentTransactionId?: string // ID da transação pai (para parcelas e recorrências)
+  isDownpayment: boolean // É entrada?
+  installmentTotal?: number // Total de parcelas do plano
+  installmentInterest?: number // Juros desta parcela
+  installmentAmortization?: number // Amortização desta parcela
+  outstandingBalance?: number // Saldo devedor após esta parcela
+  orderNumber?: string // Número do pedido/OS
+  // ✨ Informações do grupo (para identificar tipo de transação)
+  groupType?: 'SINGLE' | 'INSTALLMENT' | 'RECURRENT' | 'CONTRACT'
+  totalInstallments?: number // Total de parcelas/recorrências do grupo
 }
 
 export interface CreateTransactionPartyPayload {
   workspaceId: string
   userId?: string
-  actorType: TransactionActorType
   actorMetadata?: Record<string, any>
 }
 
@@ -154,12 +179,31 @@ export interface CreateTransactionPayload {
   sourceType: TransactionSourceType
   sourceId: string
   sourceMetadata?: Record<string, any>
+  transactionType?: TransactionType // ← Tipo da transação (opcional, default EXPENSE no backend)
   amount: number
+  // ✨ Valor original da dívida (salvo na criação)
+  // Se não informado, frontend assume que originalAmount = amount
+  originalAmount?: number
   description: string
   dueDate: string | Date // Accept both string (YYYY-MM-DD) and Date
   paidDate?: Date
   notes?: string
   paymentConfig: PaymentConfig // Now required
+  interestConfig?: {
+    type: InterestType
+    percentage?: number
+    flatAmount?: number
+    description?: string
+    // ✨ Novos campos para multa e mora
+    penaltyPercentage?: number
+    interestPercentage?: number
+    interestPeriod?: 'MONTHLY' | 'ANNUAL'
+  }
+  recurrenceConfig?: {
+    type: RecurrenceType
+    occurrences?: number
+    endDate?: Date
+  }
   actors?: CreateTransactionPartyPayload[]
 }
 
@@ -167,12 +211,16 @@ export interface UpdateTransactionPayload {
   status?: TransactionStatus
   paidDate?: Date
   notes?: string
+  description?: string
+  amount?: number
+  dueDate?: string
+  transactionType?: TransactionType
 }
 
 export interface GetTransactionsFilters {
   sourceType?: TransactionSourceType
   status?: TransactionStatus
-  partyType?: TransactionActorType
+  transactionType?: TransactionType
   fromDate?: Date
   toDate?: Date
   search?: string
@@ -185,4 +233,12 @@ export interface GetTransactionsResponse {
   total: number
   page: number
   limit: number
+}
+
+export interface TransactionSummary {
+  totalIncome: number
+  totalExpense: number
+  balance: number
+  incomeCount: number
+  expenseCount: number
 }

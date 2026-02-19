@@ -1,40 +1,41 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 // Rotas públicas que NÃO requerem autenticação
 const publicRoutes = [
-  "/",
-  "/auth",
-  "/auth/login",
-  "/auth/register",
-  "/auth/callback",
-  "/auth/oauth",
-];
+  '/',
+  '/auth',
+  '/auth/login',
+  '/auth/register',
+  '/auth/callback',
+  '/auth/oauth',
+  '/logout',
+]
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname } = request.nextUrl
 
   // Verifica se a rota atual é pública
   const isPublicRoute = publicRoutes.some(
-    (route) => pathname === route || pathname.startsWith(route + "/"),
-  );
+    (route) => pathname === route || pathname.startsWith(route + '/')
+  )
 
   // Se é rota pública, permite acesso
   if (isPublicRoute) {
-    return NextResponse.next();
+    return NextResponse.next()
   }
 
   // Verifica se há token de autenticação no cookie
-  const authCookie = request.cookies.get("cortex-auth-token");
+  const authCookie = request.cookies.get('cortex-auth-token')
 
   // Se NÃO há cookie de autenticação, redireciona para login
   if (!authCookie) {
-    const loginUrl = new URL("/auth/login", request.url);
-    loginUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(loginUrl);
+    const loginUrl = new URL('/auth/login', request.url)
+    loginUrl.searchParams.set('redirect', pathname)
+    return NextResponse.redirect(loginUrl)
   }
 
-  return NextResponse.next();
+  return NextResponse.next()
 }
 
 export const config = {
@@ -47,6 +48,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\..*|public).*)",
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*|public).*)',
   ],
-};
+}

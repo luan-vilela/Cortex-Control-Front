@@ -3,21 +3,17 @@
 import { useCreateTransaction } from '../hooks/useFinance'
 import {
   type CreateTransactionPayload,
-  type InstallmentPaymentConfig,
-  type PaymentConfig,
   PaymentMode,
-  TransactionActorType,
   TransactionSourceType,
+  TransactionType,
 } from '../types'
+import { validatePayment } from '../utils/validatePayment'
 
 import { useState } from 'react'
 
-import { TrendingDown, TrendingUp } from 'lucide-react'
+import { AlertCircle, Eye, TrendingDown, TrendingUp, X } from 'lucide-react'
 
-import { FormInput } from '@/components/FormInput'
-import { FormTextarea } from '@/components/FormTextarea'
-import { DatePicker } from '@/components/patterns/DatePicker'
-import { InputNumber } from '@/components/ui/InputNumber'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
   Field,
@@ -29,9 +25,18 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useFormRefValidation } from '@/hooks/useFormRefValidation'
 
-import { InterestConfigComponent, PaymentModeConfig, RecurrenceConfigComponent } from './index'
-import { InterestBlockFormValues } from './interest/interestBlock.types'
-import { RecurrenceBlockFormValues } from './recurrence/recurrenceBlock.types'
+import { TransactionPreview } from './TransactionPreview'
+import {
+  InfoBlockComponent,
+  InterestConfigComponent,
+  PaymentConfigComponent,
+  RecurrenceConfigComponent,
+} from './index'
+import { type InfoBlockFormValues } from './info/infoBlock.types'
+import { InterestType } from './interest/interestBlock.types'
+import { type InterestBlockFormValues } from './interest/interestBlock.types'
+import { type PaymentBlockFormValues } from './payment'
+import { type RecurrenceBlockFormValues } from './recurrence/recurrenceBlock.types'
 
 interface TransactionFormProps {
   workspaceId: string
@@ -40,34 +45,16 @@ interface TransactionFormProps {
 }
 
 export function TransactionForm({ workspaceId, onSuccess, onCancel }: TransactionFormProps) {
-  const { validate, setRef, getRef } = useFormRefValidation()
+  const { validate, setRef } = useFormRefValidation()
 
-  // Função helper para gerar data inicial em hora local
-  const getInitialLocalDate = (): string => {
-    const today = new Date()
-    const year = today.getFullYear()
-    const month = String(today.getMonth() + 1).padStart(2, '0')
-    const day = String(today.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
-
-  const [formData, setFormData] = useState({
+  const [transactionType, setTransactionType] = useState<TransactionType>(TransactionType.INCOME)
+  const [infoConfig, setInfoConfig] = useState<InfoBlockFormValues>({
     description: '',
-    amount: '',
-    dueDate: getInitialLocalDate(),
+    amount: 0,
+    dueDate: new Date(),
     notes: '',
   })
-
-  const [errors, setErrors] = useState({
-    description: '',
-    amount: '',
-    installments: '',
-    recurrence: '',
-    interest: '',
-  })
-
-  const [partyType, setPartyType] = useState<TransactionActorType>(TransactionActorType.INCOME)
-  const [paymentConfig, setPaymentConfig] = useState<PaymentConfig>({
+  const [paymentConfig, setPaymentConfig] = useState<PaymentBlockFormValues>({
     mode: PaymentMode.CASH,
   })
   const [recurrenceConfig, setRecurrenceConfig] = useState<RecurrenceBlockFormValues | undefined>(
@@ -76,40 +63,28 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
   const [interestConfig, setInterestConfig] = useState<InterestBlockFormValues | undefined>(
     undefined
   )
+  const [validationErrors, setValidationErrors] = useState<string[]>([])
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
 
   const { mutate: createTransaction, isPending } = useCreateTransaction(workspaceId)
 
-  const handlePaymentConfigChange = (config: PaymentConfig) => {
+  const handlePaymentConfigChange = (config: PaymentBlockFormValues | undefined) => {
+    if (!config) return
     setPaymentConfig(config)
+
     // Se for Parcelado, desabilita recorrência
     if (config.mode === PaymentMode.INSTALLMENT) {
       setRecurrenceConfig(undefined)
-      // Limpar erro se o valor for válido
-      const numInstallments = (config as InstallmentPaymentConfig).numberOfInstallments
-      if (numInstallments && numInstallments >= 1) {
-        setErrors((prev) => ({ ...prev, installments: '' }))
-      }
-    } else {
-      // Limpar erro quando não for parcelado
-      setErrors((prev) => ({ ...prev, installments: '' }))
     }
   }
 
-  /**
-   * Converte string de data (YYYY-MM-DD) para Date em timezone local
-   * Evita problema onde new Date("2026-02-08") cria data em UTC
-   */
-  const parseLocalDateString = (dateStr: string): Date => {
-    const [year, month, day] = dateStr.split('-').map(Number)
-    const date = new Date(year, month - 1, day)
-    return date
-  }
   /**
    * Converte Date para string ISO local (YYYY-MM-DD)
    * IMPORTANTE: Usa getFullYear/getMonth/getDate (local) não UTC!
    * Isso preserva a data local sem conversão para UTC
    */
-  const formatDateToLocalISO = (date: Date): string => {
+  const formatDateToLocalISO = (date?: Date): string => {
+    if (!date) return ''
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
@@ -122,69 +97,82 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
     const isFormValid = await validate('TransactionForm')
 
     if (!isFormValid) return
-    // Limpar erros anteriores
-    setErrors({ description: '', amount: '', installments: '', recurrence: '', interest: '' })
 
-    let hasErrors = false
-
-    if (!formData.description.trim()) {
-      setErrors((prev) => ({ ...prev, description: 'Descrição é obrigatória' }))
-      hasErrors = true
-    }
-
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      setErrors((prev) => ({ ...prev, amount: 'Valor deve ser maior que zero' }))
-      hasErrors = true
-    }
-
-    if (paymentConfig.mode === PaymentMode.INSTALLMENT) {
-      const numInstallments = (paymentConfig as InstallmentPaymentConfig).numberOfInstallments
-      if (!numInstallments || numInstallments < 1) {
-        setErrors((prev) => ({ ...prev, installments: 'Número de parcelas deve ser pelo menos 1' }))
-        hasErrors = true
-      }
-    }
-
-    if (recurrenceConfig) {
-      if (!recurrenceConfig.occurrences || recurrenceConfig.occurrences < 1) {
-        setErrors((prev) => ({ ...prev, recurrence: 'Número de repetições deve ser pelo menos 1' }))
-        hasErrors = true
-      }
-    }
-
-    if (hasErrors) {
+    // Validar regras de negócio de pagamento e descontos
+    const paymentValidation = validatePayment(infoConfig, paymentConfig, interestConfig)
+    if (!paymentValidation.isValid) {
+      setValidationErrors(paymentValidation.errors)
+      // Scroll para o topo para ver o banner
+      window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
+
+    // Converter PaymentBlockFormValues para PaymentConfig (tipo esperado pela API)
+    const apiPaymentConfig =
+      paymentConfig.mode === PaymentMode.CASH
+        ? { mode: PaymentMode.CASH }
+        : {
+            mode: PaymentMode.INSTALLMENT,
+            planType: paymentConfig.planType,
+            numberOfInstallments: paymentConfig.numberOfInstallments,
+            firstInstallmentDate: paymentConfig.firstInstallmentDate,
+            installmentIntervalDays: paymentConfig.installmentIntervalDays,
+            downPayment: paymentConfig.downPayment || 0,
+            downPaymentDate: paymentConfig.downPaymentDate,
+            downPaymentIsPaid: paymentConfig.downPaymentIsPaid ?? false,
+          }
+    console.log('API Payment Config:', apiPaymentConfig)
+    // Formata a data para string YYYY-MM-DD
+    const dueDateString = formatDateToLocalISO(infoConfig.dueDate)
 
     const payload: CreateTransactionPayload = {
       sourceType: TransactionSourceType.MANUAL,
       sourceId: 'manual-' + Date.now(),
-      amount: parseFloat(formData.amount),
-      description: formData.description,
-      dueDate: formData.dueDate, // Send as YYYY-MM-DD string, backend parses correctly
-      notes: formData.notes || undefined,
-      paymentConfig,
-      // Adiciona o workspace como ator com o tipo selecionado (INCOME/EXPENSE)
+      amount: infoConfig.amount,
+      originalAmount: infoConfig.amount,
+      description: infoConfig.description,
+      dueDate: dueDateString, // Send as YYYY-MM-DD string, backend parses correctly
+      notes: infoConfig.notes || undefined,
+      transactionType, // ← Tipo da transação agora é no nível da transação
+      paymentConfig: apiPaymentConfig as any,
+      interestConfig: interestConfig
+        ? {
+            type: interestConfig.type as any,
+            percentage: interestConfig.percentage,
+            flatAmount: interestConfig.flatAmount,
+            description: interestConfig.description,
+            penaltyPercentage: interestConfig.penaltyPercentage,
+            interestPercentage: interestConfig.interestPercentage,
+            interestPeriod: interestConfig.interestPeriod,
+          }
+        : undefined,
+      recurrenceConfig: recurrenceConfig?.type
+        ? {
+            type: recurrenceConfig.type as any,
+            occurrences: recurrenceConfig.occurrences,
+            endDate: recurrenceConfig.endDate,
+          }
+        : undefined,
       actors: [
         {
           workspaceId,
-          actorType: partyType,
         },
       ],
     }
 
+    console.log('Payload to API:', payload)
     createTransaction(payload, {
       onSuccess: () => {
-        setFormData({
+        setInfoConfig({
           description: '',
-          amount: '',
-          dueDate: getInitialLocalDate(),
+          amount: 0,
+          dueDate: new Date(),
           notes: '',
         })
         setPaymentConfig({ mode: PaymentMode.CASH })
         setRecurrenceConfig(undefined)
         setInterestConfig(undefined)
-        setPartyType(TransactionActorType.INCOME)
+        setTransactionType(TransactionType.INCOME)
         onSuccess?.()
       },
     })
@@ -204,11 +192,41 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
               Cancelar
             </Button>
           )}
+
+          <Button type="button" variant="outline" onClick={() => setIsPreviewOpen(true)}>
+            <Eye className="mr-2 h-4 w-4" />
+            Visualizar
+          </Button>
+
           <Button form="transaction-form" type="submit" disabled={isPending}>
             {isPending ? 'Salvando...' : 'Criar Transação'}
           </Button>
         </div>
       </div>
+
+      {/* Banner de Erro de Validação */}
+      {validationErrors.length > 0 && (
+        <div className="px-4 pb-4">
+          <Alert variant="destructive" className="relative">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erro de Validação</AlertTitle>
+            <AlertDescription className="mt-2 space-y-2">
+              {validationErrors.map((error, index) => (
+                <div key={index} className="text-sm">
+                  • {error}
+                </div>
+              ))}
+            </AlertDescription>
+            <button
+              onClick={() => setValidationErrors([])}
+              className="absolute top-2 right-2 rounded-sm opacity-70 transition-opacity hover:opacity-100"
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Fechar</span>
+            </button>
+          </Alert>
+        </div>
+      )}
 
       {/* Form em Grid 2 Colunas */}
       <form
@@ -222,8 +240,8 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
           <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
             <h3 className="text-gh-text font-semibold">Tipo de Transação</h3>
             <RadioGroup
-              value={partyType}
-              onValueChange={(value) => setPartyType(value as TransactionActorType)}
+              value={transactionType}
+              onValueChange={(value) => setTransactionType(value as TransactionType)}
               className="grid grid-cols-2 gap-4"
             >
               <FieldLabel htmlFor="income-type" className="cursor-pointer">
@@ -237,7 +255,7 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
                       <FieldDescription>Vendas, serviços, investimentos</FieldDescription>
                     </FieldContent>
                     <RadioGroupItem
-                      value={TransactionActorType.INCOME}
+                      value={TransactionType.INCOME}
                       id="income-type"
                       className="mt-1"
                     />
@@ -256,7 +274,7 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
                       <FieldDescription>Despesas, custos, pagamentos</FieldDescription>
                     </FieldContent>
                     <RadioGroupItem
-                      value={TransactionActorType.EXPENSE}
+                      value={TransactionType.EXPENSE}
                       id="expense-type"
                       className="mt-1"
                     />
@@ -269,73 +287,22 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
           {/* Informações */}
           <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
             <h3 className="text-gh-text font-semibold">Informações</h3>
-            <FormInput
-              type="text"
-              label="Descrição"
-              placeholder="Ex: Serviço de consultoria, Venda de produtos..."
-              value={formData.description}
-              error={errors.description}
-              onChange={(e) => {
-                setFormData({ ...formData, description: e.target.value })
-                // Limpar erro quando usuário começar a digitar
-                if (errors.description) {
-                  setErrors((prev) => ({ ...prev, description: '' }))
-                }
-              }}
-            />
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <label className="text-gh-text text-sm font-medium">Valor</label>
-                <InputNumber
-                  value={parseFloat(formData.amount) || 0}
-                  onChange={(val) => {
-                    setFormData({ ...formData, amount: val.toString() })
-                    // Limpar erro quando usuário começar a digitar
-                    if (errors.amount) {
-                      setErrors((prev) => ({ ...prev, amount: '' }))
-                    }
-                  }}
-                  float={true}
-                  min={0}
-                  placeholder="R$ 0,00"
-                  mask="real"
-                  className={errors.amount ? 'border-destructive' : ''}
-                />
-                {errors.amount && <p className="text-destructive text-sm">{errors.amount}</p>}
-              </div>
-              <div className="space-y-2">
-                <label className="text-gh-text text-sm font-medium">Vencimento</label>
-                <DatePicker
-                  value={parseLocalDateString(formData.dueDate)}
-                  onValueChange={(date) => {
-                    if (date) {
-                      const dateString = formatDateToLocalISO(date)
-                      setFormData({
-                        ...formData,
-                        dueDate: dateString,
-                      })
-                    }
-                  }}
-                  placeholder="Selecionar data"
-                />
-              </div>
-            </div>
-            <FormTextarea
-              label="Notas (opcional)"
-              placeholder="Adicione observações sobre essa transação..."
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              rows={2}
+            <InfoBlockComponent
+              ref={(ref) => setRef('TransactionForm', 'InfoBlockComponentRef', ref)}
+              initialValues={infoConfig}
+              onDataChange={(values) => values && setInfoConfig(values)}
+              disableDueDate={paymentConfig.mode === PaymentMode.INSTALLMENT}
+              requireAmount={paymentConfig.mode === PaymentMode.INSTALLMENT}
             />
           </div>
 
           {/* Pagamento */}
           <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
             <h3 className="text-gh-text font-semibold">Pagamento</h3>
-            <PaymentModeConfig
-              config={paymentConfig}
-              onChange={handlePaymentConfigChange}
-              error={errors.installments}
+            <PaymentConfigComponent
+              ref={(ref) => setRef('TransactionForm', 'PaymentConfigComponentRef', ref)}
+              initialValues={paymentConfig}
+              onDataChange={handlePaymentConfigChange}
             />
           </div>
         </div>
@@ -367,10 +334,28 @@ export function TransactionForm({ workspaceId, onSuccess, onCancel }: Transactio
               ref={(ref) => setRef('TransactionForm', 'InterestConfigComponentRef', ref)}
               initialValues={interestConfig}
               onDataChange={setInterestConfig}
+              disabledTypes={
+                paymentConfig?.mode === PaymentMode.INSTALLMENT &&
+                (paymentConfig.planType === 'PRICE_TABLE' || paymentConfig.planType === 'SAC')
+                  ? [InterestType.FLAT]
+                  : []
+              }
             />
           </div>
         </div>
       </form>
+
+      {isPreviewOpen && (
+        <TransactionPreview
+          open={isPreviewOpen}
+          onOpenChange={setIsPreviewOpen}
+          transactionType={transactionType}
+          infoConfig={infoConfig}
+          paymentConfig={paymentConfig}
+          recurrenceConfig={recurrenceConfig}
+          interestConfig={interestConfig}
+        />
+      )}
     </>
   )
 }

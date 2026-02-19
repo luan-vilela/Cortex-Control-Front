@@ -1,0 +1,6 @@
+export { BasicInfoSection } from './BasicInfoSection'
+export { InterestSection } from './InterestSection'
+export { PaymentSection } from './PaymentSection'
+export { PenaltySection } from './PenaltySection'
+export { RecurrenceSection } from './RecurrenceSection'
+export { TotalSection } from './TotalSection'

@@ -5,6 +5,7 @@ import {
   type GetTransactionsFilters,
   type GetTransactionsResponse,
   type TransactionParty,
+  type TransactionSummary,
   type UpdateTransactionPayload,
 } from '../types'
 
@@ -16,7 +17,7 @@ import { useAlerts } from '@/contexts/AlertContext'
 export const financeQueryKeys = {
   all: ['finance'],
   transactions: () => [...financeQueryKeys.all, 'transactions'],
-  transaction: (workspaceId: string, transactionId: number) => [
+  transaction: (workspaceId: string, transactionId: string) => [
     ...financeQueryKeys.transactions(),
     workspaceId,
     transactionId,
@@ -26,7 +27,13 @@ export const financeQueryKeys = {
     workspaceId,
     filters,
   ],
-  actors: (transactionId: number) => [...financeQueryKeys.all, 'actors', transactionId],
+  transactionSummary: (workspaceId: string, filters?: GetTransactionsFilters) => [
+    ...financeQueryKeys.transactions(),
+    'summary',
+    workspaceId,
+    filters,
+  ],
+  actors: (transactionId: string) => [...financeQueryKeys.all, 'actors', transactionId],
 }
 
 /**
@@ -46,9 +53,25 @@ export function useTransactions(
 }
 
 /**
+ * Hook para obter resumo das transações
+ */
+export function useTransactionsSummary(
+  workspaceId: string,
+  filters?: GetTransactionsFilters,
+  enabled = true
+) {
+  return useQuery<TransactionSummary>({
+    queryKey: financeQueryKeys.transactionSummary(workspaceId, filters),
+    queryFn: () => financeService.getTransactionsSummary(workspaceId, filters),
+    enabled: enabled && !!workspaceId,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  })
+}
+
+/**
  * Hook para obter detalhes de uma transação
  */
-export function useTransactionDetail(workspaceId: string, transactionId: number, enabled = true) {
+export function useTransactionDetail(workspaceId: string, transactionId: string, enabled = true) {
   return useQuery<FinanceiroTransaction>({
     queryKey: financeQueryKeys.transaction(workspaceId, transactionId),
     queryFn: () => financeService.getTransactionDetail(workspaceId, transactionId),
@@ -63,7 +86,7 @@ export function useTransactionDetail(workspaceId: string, transactionId: number,
 export function useCreateTransaction(workspaceId: string) {
   const queryClient = useQueryClient()
   const { addAlert } = useAlerts()
-
+  // Log para debug
   return useMutation({
     mutationFn: (payload: CreateTransactionPayload) =>
       financeService.createTransaction(workspaceId, payload),
@@ -98,7 +121,7 @@ export function useUpdateTransactionGeneric(workspaceId: string) {
       transactionId,
       payload,
     }: {
-      transactionId: number
+      transactionId: string
       payload: UpdateTransactionPayload
     }) => financeService.updateTransaction(workspaceId, transactionId, payload),
     onSuccess: () => {
@@ -123,7 +146,7 @@ export function useUpdateTransactionGeneric(workspaceId: string) {
 /**
  * Hook para atualizar transação
  */
-export function useUpdateTransaction(workspaceId: string, transactionId: number) {
+export function useUpdateTransaction(workspaceId: string, transactionId: string) {
   const queryClient = useQueryClient()
   const { addAlert } = useAlerts()
 
@@ -160,7 +183,7 @@ export function useDeleteTransaction(workspaceId: string) {
   const { addAlert } = useAlerts()
 
   return useMutation({
-    mutationFn: (transactionId: number) =>
+    mutationFn: (transactionId: string) =>
       financeService.deleteTransaction(workspaceId, transactionId),
     onSuccess: () => {
       // Invalida o cache de transações
@@ -184,7 +207,7 @@ export function useDeleteTransaction(workspaceId: string) {
 /**
  * Hook para obter atores de uma transação
  */
-export function useTransactionActors(transactionId: number, enabled = true) {
+export function useTransactionActors(transactionId: string, enabled = true) {
   return useQuery<TransactionParty[]>({
     queryKey: financeQueryKeys.actors(transactionId),
     queryFn: () => financeService.getTransactionActors(transactionId),
@@ -195,7 +218,7 @@ export function useTransactionActors(transactionId: number, enabled = true) {
 /**
  * Hook para adicionar ator a transação
  */
-export function useAddActorToTransaction(workspaceId: string, transactionId: number) {
+export function useAddActorToTransaction(workspaceId: string, transactionId: string) {
   const queryClient = useQueryClient()
   const { addAlert } = useAlerts()
 

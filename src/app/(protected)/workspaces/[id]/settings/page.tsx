@@ -170,7 +170,7 @@ export default function WorkspaceSettingsPage() {
     );
   }
 
-  const canEditSettings = workspace.permissions?.settings?.write || false;
+  const canEditSettings = workspace.permissions?.settings?.update === true || workspace.isOwner || false;
   const isOwner = workspace.isOwner || false;
   const canChangeStatus = isOwner || workspace.role === "admin";
 

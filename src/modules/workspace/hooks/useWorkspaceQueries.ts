@@ -66,7 +66,7 @@ export function useWorkspacePendingInvites(workspaceId: string) {
  */
 export function useEnabledModules(workspaceId: string) {
   return useQuery({
-    queryKey: [...workspaceKeys.detail(workspaceId), 'modules333'],
+    queryKey: [...workspaceKeys.detail(workspaceId), 'modules'],
     queryFn: () => workspaceService.getEnabledModules(workspaceId),
     enabled: !!workspaceId && workspaceId !== '',
     staleTime: 5 * 60 * 1000, // 5 minutos - não muda frequentemente

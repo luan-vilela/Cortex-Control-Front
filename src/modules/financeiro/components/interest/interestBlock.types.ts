@@ -5,11 +5,48 @@ export enum InterestType {
   FLAT = 'FLAT',
 }
 
-export const interestBlockSchema = z.object({
-  type: z.nativeEnum(InterestType),
-  percentage: z.number().optional(),
-  flatAmount: z.number().optional(),
-})
+export enum InterestPeriod {
+  MONTHLY = 'MONTHLY',
+  ANNUAL = 'ANNUAL',
+}
+
+export const interestBlockSchema = z
+  .object({
+    // Aba 1: Taxas e Ajustes (altera valor agora)
+    type: z.nativeEnum(InterestType).optional(),
+    percentage: z.number().optional(),
+    flatAmount: z.number().optional(),
+    description: z.string().optional(),
+
+    // Aba 2: Multa e Mora (metadados para atraso)
+    penaltyPercentage: z.number().optional(), // Multa fixa %
+    interestPercentage: z.number().optional(), // Taxa de juros (período definido por interestPeriod)
+    interestPeriod: z.nativeEnum(InterestPeriod).optional(), // MONTHLY | ANNUAL
+  })
+  .superRefine((data, ctx) => {
+    if (!data.type) return
+
+    if (data.type === InterestType.PERCENTAGE) {
+      if (data.percentage === undefined) {
+        ctx.addIssue({
+          path: ['percentage'],
+          message:
+            'Informe a taxa percentual (pode ser zero, positivo para juros ou negativo para desconto)',
+          code: 'custom',
+        })
+      }
+    }
+
+    if (data.type === InterestType.FLAT) {
+      if (data.flatAmount === undefined) {
+        ctx.addIssue({
+          path: ['flatAmount'],
+          message: 'Informe o valor (pode ser zero, positivo para juros ou negativo para desconto)',
+          code: 'custom',
+        })
+      }
+    }
+  })
 
 export type InterestBlockFormValues = z.infer<typeof interestBlockSchema>
 
@@ -21,6 +58,7 @@ export const INTEREST_LABELS: Record<InterestType, string> = {
 export interface InterestConfigProps {
   initialValues?: InterestBlockFormValues
   onDataChange?: (data: InterestBlockFormValues | undefined) => void
+  disabledTypes?: InterestType[]
 }
 
 export interface InterestConfigRef {

@@ -12,6 +12,7 @@ import { formatDocument } from '@/lib/masks'
 import { useDeletePerson } from '@/modules/person/hooks/usePersonMutations'
 import { usePersons } from '@/modules/person/hooks/usePersonQueries'
 import { ModuleGuard } from '@/modules/workspace/components/ModuleGuard'
+import { usePermission } from '@/modules/workspace/hooks/usePermission'
 import { useBreadcrumb } from '@/modules/workspace/hooks'
 import { useWorkspaceStore } from '@/modules/workspace/store/workspace.store'
 
@@ -19,6 +20,7 @@ export default function PersonsPage() {
   const router = useRouter()
   const { activeWorkspace } = useWorkspaceStore()
   const alerts = useAlerts()
+  const { hasPermission } = usePermission()
 
   useBreadcrumb([
     {
@@ -102,13 +104,17 @@ export default function PersonsPage() {
       icon: <Edit className="h-4 w-4" />,
       onClick: (row) => router.push(`/contatos/${row.id}`),
     },
-    {
-      id: 'delete',
-      label: 'Deletar',
-      icon: <Trash2 className="h-4 w-4" />,
-      onClick: (row) => handleDelete(row.id, row.name),
-      variant: 'destructive',
-    },
+    ...(hasPermission('contacts', 'delete')
+      ? [
+          {
+            id: 'delete',
+            label: 'Deletar',
+            icon: <Trash2 className="h-4 w-4" />,
+            onClick: (row: any) => handleDelete(row.id, row.name),
+            variant: 'destructive' as const,
+          },
+        ]
+      : []),
   ]
 
   return (
@@ -117,11 +123,15 @@ export default function PersonsPage() {
         <PageHeader
           title="Contatos"
           description="Gerenciar pessoas, clientes, fornecedores e parceiros"
-          action={{
-            label: 'Novo Contato',
-            onClick: () => router.push(`/contatos/new`),
-            icon: <Plus className="h-4 w-4" />,
-          }}
+          action={
+            hasPermission('contacts', 'create')
+              ? {
+                  label: 'Novo Contato',
+                  onClick: () => router.push(`/contatos/new`),
+                  icon: <Plus className="h-4 w-4" />,
+                }
+              : undefined
+          }
         />
 
         <DataTableToolbar

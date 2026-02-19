@@ -15,6 +15,7 @@ import {
   useDefaultMemberPermissions,
 } from "@/modules/workspace/hooks";
 import { InviteModal } from "@/modules/workspace/components/InviteModal";
+import { MemberPermissionsModal } from "@/modules/workspace/components/MemberPermissionsModal";
 import { DefaultPermissionsConfig } from "@/modules/workspace/components/DefaultPermissionsConfig";
 import {
   Users,
@@ -23,16 +24,19 @@ import {
   Trash2,
   Crown,
   Edit,
-  Check,
-  X,
   UserPlus,
   Clock,
 } from "lucide-react";
 import type {
   WorkspaceMember,
   WorkspacePermissions,
-  ModulePermissions,
 } from "@/modules/workspace/types/workspace.types";
+import { usePermission } from "@/modules/workspace/hooks/usePermission";
+import {
+  MODULE_PERMISSIONS,
+  getPermissionPreset,
+  generateMemberPermissions,
+} from "@/modules/workspace/config/permissions.config";
 import {
   PageHeader,
   DataTableToolbar,
@@ -90,28 +94,17 @@ export default function WorkspaceMembersPage() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("member");
   const [invitePermissions, setInvitePermissions] =
-    useState<WorkspacePermissions>({
-      members: { read: false, write: false, delete: false },
-    } as WorkspacePermissions);
+    useState<WorkspacePermissions>(generateMemberPermissions());
   const [searchTerm, setSearchTerm] = useState("");
 
-  const canManageMembers = workspace?.permissions?.members?.write || false;
-  const canDeleteMembers = workspace?.permissions?.members?.delete || false;
+  const { hasPermission } = usePermission();
+  const canManageMembers = hasPermission('members', 'update_permissions');
+  const canDeleteMembers = hasPermission('members', 'remove');
 
-  const moduleLabels: Record<string, string> = {
-    contacts: "Contatos",
-    conversations: "Conversas",
-    automations: "Automações",
-    settings: "Configurações",
-    members: "Membros",
-    customers: "Clientes",
-  };
-
-  const permissionLabels: Record<string, string> = {
-    read: "Visualizar",
-    write: "Editar",
-    delete: "Deletar",
-  };
+  const moduleLabels: Record<string, string> = {};
+  MODULE_PERMISSIONS.forEach((m) => {
+    moduleLabels[m.moduleId] = m.label;
+  });
 
   // Funções auxiliares
   const getDefaultPermissionsByRole = (role: string): WorkspacePermissions => {
@@ -119,21 +112,7 @@ export default function WorkspaceMembersPage() {
     if (defaultConfig) {
       return defaultConfig.permissions;
     }
-
-    const permissions: any = {};
-    enabledModules.forEach((module) => {
-      if (role === "admin") {
-        permissions[module.id] = { read: true, write: true, delete: true };
-      } else {
-        if (["settings", "members"].includes(module.id)) {
-          permissions[module.id] = { read: true, write: false, delete: false };
-        } else {
-          permissions[module.id] = { read: true, write: true, delete: false };
-        }
-      }
-    });
-
-    return permissions as WorkspacePermissions;
+    return getPermissionPreset(role);
   };
 
   // Handlers - Membros
@@ -152,7 +131,7 @@ export default function WorkspaceMembersPage() {
 
     updatePermissionsMutation.mutate(
       {
-        userId: member.id,
+        userId: member.userId,
         data: {
           role: editing.role,
           permissions: editing.permissions,
@@ -180,8 +159,8 @@ export default function WorkspaceMembersPage() {
   };
 
   const togglePermission = (
-    module: keyof EditingMember["permissions"],
-    permission: "read" | "write" | "delete",
+    module: string,
+    permission: string,
   ) => {
     if (!editing) return;
     setEditing({
@@ -189,11 +168,21 @@ export default function WorkspaceMembersPage() {
       permissions: {
         ...editing.permissions,
         [module]: {
-          ...editing.permissions[module],
-          [permission]: !editing.permissions[module][permission],
+          ...(editing.permissions[module] || {}),
+          [permission]: !(editing.permissions[module]?.[permission]),
         },
       },
     });
+  };
+
+  const setEditingPermissions = (permissions: WorkspacePermissions) => {
+    if (!editing) return;
+    setEditing({ ...editing, permissions });
+  };
+
+  const setEditingRole = (role: string) => {
+    if (!editing) return;
+    setEditing({ ...editing, role });
   };
 
   // Handlers - Convites
@@ -201,13 +190,7 @@ export default function WorkspaceMembersPage() {
     setEditingInvite({
       inviteId: invite.id,
       role: invite.role,
-      permissions: invite.permissions || {
-        contacts: { read: true, write: false, delete: false },
-        conversations: { read: true, write: false, delete: false },
-        automations: { read: false, write: false, delete: false },
-        settings: { read: false, write: false, delete: false },
-        members: { read: false, write: false, delete: false },
-      },
+      permissions: invite.permissions || generateMemberPermissions(),
     });
   };
 
@@ -233,8 +216,8 @@ export default function WorkspaceMembersPage() {
   };
 
   const toggleInvitePermission = (
-    module: keyof EditingInvite["permissions"],
-    permission: "read" | "write" | "delete",
+    module: string,
+    permission: string,
   ) => {
     if (!editingInvite) return;
     setEditingInvite({
@@ -242,11 +225,21 @@ export default function WorkspaceMembersPage() {
       permissions: {
         ...editingInvite.permissions,
         [module]: {
-          ...editingInvite.permissions[module],
-          [permission]: !editingInvite.permissions[module][permission],
+          ...(editingInvite.permissions[module] || {}),
+          [permission]: !(editingInvite.permissions[module]?.[permission]),
         },
       },
     });
+  };
+
+  const setEditingInvitePermissions = (permissions: WorkspacePermissions) => {
+    if (!editingInvite) return;
+    setEditingInvite({ ...editingInvite, permissions });
+  };
+
+  const setEditingInviteRole = (role: string) => {
+    if (!editingInvite) return;
+    setEditingInvite({ ...editingInvite, role });
   };
 
   const handleRoleChange = (role: string) => {
@@ -255,8 +248,8 @@ export default function WorkspaceMembersPage() {
   };
 
   const handlePermissionChange = (
-    module: keyof WorkspacePermissions,
-    permission: keyof ModulePermissions,
+    module: string,
+    permission: string,
     value: boolean,
   ) => {
     setInvitePermissions((prev) => ({
@@ -348,41 +341,11 @@ export default function WorkspaceMembersPage() {
       key: "role",
       label: "Função",
       render: (_, row) => {
-        const isMember = "user" in row;
-        const isEditing = isMember
-          ? editing?.memberId === row.id
-          : editingInvite?.inviteId === row.id;
-
-        if (isEditing) {
-          return (
-            <select
-              value={isMember ? editing?.role : editingInvite?.role}
-              onChange={(e) => {
-                if (isMember) {
-                  setEditing((prev) =>
-                    prev ? { ...prev, role: e.target.value } : null,
-                  );
-                } else {
-                  setEditingInvite((prev) =>
-                    prev ? { ...prev, role: e.target.value } : null,
-                  );
-                }
-              }}
-              className="px-2 py-1 border border-gray-300 rounded text-sm"
-              disabled={isMember && row.isOwner}
-            >
-              <option value="owner">Owner</option>
-              <option value="admin">Admin</option>
-              <option value="member">Member</option>
-            </select>
-          );
-        }
-
         return (
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-gray-400" />
             <span className="capitalize text-sm">
-              {isMember ? row.role : row.role}
+              {row.role}
             </span>
           </div>
         );
@@ -438,7 +401,7 @@ export default function WorkspaceMembersPage() {
         if (isMember) {
           const member = row as WorkspaceMember;
           if (!member.isOwner) {
-            handleRemoveMember(member.id, member.user?.name || "Desconhecido");
+            handleRemoveMember(member.userId, member.user?.name || "Desconhecido");
           }
         } else {
           if (
@@ -505,6 +468,49 @@ export default function WorkspaceMembersPage() {
         moduleLabels={moduleLabels}
         isPending={inviteMutation.isPending}
       />
+
+      {/* Modal de edição de permissões de membro */}
+      {editing && (() => {
+        const member = members.find((m) => m.id === editing.memberId);
+        return (
+          <MemberPermissionsModal
+            isOpen={!!editing}
+            onClose={() => setEditing(null)}
+            memberName={member?.user?.name || 'Desconhecido'}
+            memberEmail={member?.user?.email || ''}
+            role={editing.role}
+            permissions={editing.permissions}
+            onRoleChange={setEditingRole}
+            onTogglePermission={togglePermission}
+            onSetPermissions={setEditingPermissions}
+            onSave={handleSaveEdit}
+            isSaving={updatePermissionsMutation.isPending}
+            isOwner={member?.isOwner}
+            enabledModuleIds={enabledModules.map((m: any) => m.id)}
+          />
+        );
+      })()}
+
+      {/* Modal de edição de permissões de convite */}
+      {editingInvite && (() => {
+        const invite = pendingInvites.find((i: any) => i.id === editingInvite.inviteId);
+        return (
+          <MemberPermissionsModal
+            isOpen={!!editingInvite}
+            onClose={() => setEditingInvite(null)}
+            memberName="Convite Pendente"
+            memberEmail={invite?.invitedBy?.email || ''}
+            role={editingInvite.role}
+            permissions={editingInvite.permissions}
+            onRoleChange={setEditingInviteRole}
+            onTogglePermission={toggleInvitePermission}
+            onSetPermissions={setEditingInvitePermissions}
+            onSave={handleSaveEditInvite}
+            isSaving={updateInviteMutation.isPending}
+            enabledModuleIds={enabledModules.map((m: any) => m.id)}
+          />
+        );
+      })()}
     </div>
   );
 }

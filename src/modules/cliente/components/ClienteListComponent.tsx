@@ -13,6 +13,7 @@ import { FilterWithBadge } from '@/components/patterns/FilterWithBadge'
 import { useAlerts } from '@/contexts/AlertContext'
 import { useClientes, useDeleteCliente } from '@/modules/cliente/hooks/useClienteQueries'
 import { ClienteCategoria, ClienteStatus } from '@/modules/cliente/types/cliente.types'
+import { usePermission } from '@/modules/workspace/hooks/usePermission'
 import { useWorkspaceStore } from '@/modules/workspace/store/workspace.store'
 
 const categoriasLabels: Record<ClienteCategoria, string> = {
@@ -47,6 +48,7 @@ export function ClienteListComponent() {
   const router = useRouter()
   const { activeWorkspace } = useWorkspaceStore()
   const alerts = useAlerts()
+  const { hasPermission } = usePermission()
 
   const [searchTerm, setSearchTerm] = useState('')
   const [categoriaFilter, setCategoriaFilter] = useState<ClienteCategoria | ''>('')
@@ -148,13 +150,17 @@ export function ClienteListComponent() {
       icon: <Edit className="h-4 w-4" />,
       onClick: (row: any) => router.push(`/contatos/${row.personId}`),
     },
-    {
-      id: 'delete',
-      label: 'Deletar',
-      icon: <Trash2 className="h-4 w-4" />,
-      onClick: (row: any) => handleDelete(row.id, row.person?.name),
-      variant: 'destructive',
-    },
+    ...(hasPermission('contacts', 'delete')
+      ? [
+          {
+            id: 'delete',
+            label: 'Deletar',
+            icon: <Trash2 className="h-4 w-4" />,
+            onClick: (row: any) => handleDelete(row.id, row.person?.name),
+            variant: 'destructive' as const,
+          },
+        ]
+      : []),
   ]
 
   return (
@@ -162,11 +168,15 @@ export function ClienteListComponent() {
       <PageHeader
         title="Clientes"
         description="Gerenciar e visualizar clientes"
-        action={{
-          label: 'Novo Contato',
-          onClick: () => router.push(`/contatos/new`),
-          icon: <Plus className="h-4 w-4" />,
-        }}
+        action={
+          hasPermission('contacts', 'create')
+            ? {
+                label: 'Novo Contato',
+                onClick: () => router.push(`/contatos/new`),
+                icon: <Plus className="h-4 w-4" />,
+              }
+            : undefined
+        }
       />
 
       <DataTableToolbar

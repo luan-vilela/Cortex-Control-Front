@@ -1,12 +1,15 @@
-"use client";
+'use client'
 
-import { FinanceiroTransaction } from "../types";
-import { SourceBadge } from "./SourceBadge";
-import { StatusBadge } from "./StatusBadge";
-import { ActorTypeBadge } from "./ActorTypeBadge";
-import { formatCurrency, formatDate } from "@/lib/utils";
-import Link from "next/link";
-import { Eye, Trash2 } from "lucide-react";
+import { type FinanceiroTransaction } from '../types'
+
+import { Eye, Trash2 } from 'lucide-react'
+import Link from 'next/link'
+
+import { formatCurrency, formatDate } from '@/lib/utils'
+
+import { ActorTypeBadge } from './ActorTypeBadge'
+import { SourceBadge } from './SourceBadge'
+import { StatusBadge } from './StatusBadge'
 
 export function TransactionList({
   transactions,
@@ -14,119 +17,102 @@ export function TransactionList({
   isLoading = false,
   onDelete,
 }: {
-  transactions: FinanceiroTransaction[];
-  workspaceId: string;
-  isLoading?: boolean;
-  onDelete?: (id: number) => void;
+  transactions: FinanceiroTransaction[]
+  workspaceId: string
+  isLoading?: boolean
+  onDelete?: (id: string) => void
 }) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gh-hover"></div>
+        <div className="border-gh-hover h-12 w-12 animate-spin rounded-full border-b-2"></div>
       </div>
-    );
+    )
   }
 
   if (transactions.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gh-text-secondary text-sm">
-          Nenhuma transação encontrada
-        </p>
+      <div className="py-12 text-center">
+        <p className="text-gh-text-secondary text-sm">Nenhuma transação encontrada</p>
       </div>
-    );
+    )
   }
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gh-border">
+      <table className="divide-gh-border min-w-full divide-y">
         <thead className="bg-gh-bg">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
               Transação
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
               Descrição
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
               Tipo
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
               Valor
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
               Vencimento
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
               Status
             </th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase">
               Ações
             </th>
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gh-border">
+        <tbody className="divide-gh-border divide-y bg-white">
           {transactions.map((transaction) => (
-            <tr
-              key={transaction.id}
-              className="hover:bg-gh-bg transition-colors"
-            >
+            <tr key={transaction.id} className="hover:bg-gh-bg transition-colors">
               <td className="px-6 py-4 whitespace-nowrap">
                 {transaction.parties && transaction.parties.length > 0 ? (
-                  <ActorTypeBadge
-                    partyType={transaction.parties[0].partyType}
-                    showIcon={true}
-                  />
+                  <ActorTypeBadge partyType={transaction.parties[0].partyType} showIcon={true} />
                 ) : (
-                  <span className="text-xs text-gh-text-secondary">-</span>
+                  <span className="text-gh-text-secondary text-xs">-</span>
                 )}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <p className="text-gh-text font-medium truncate">
-                  {transaction.description}
-                </p>
+              <td className="px-6 py-4 text-sm whitespace-nowrap">
+                <p className="text-gh-text truncate font-medium">{transaction.description}</p>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <SourceBadge
-                  sourceType={transaction.sourceType}
-                  showIcon={true}
-                />
+                <SourceBadge sourceType={transaction.sourceType} showIcon={true} />
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <p className="text-sm font-semibold text-gh-text">
+                <p className="text-gh-text text-sm font-semibold">
                   {formatCurrency(Number(transaction.amount))}
                 </p>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gh-text-secondary">
+              <td className="text-gh-text-secondary px-6 py-4 text-sm whitespace-nowrap">
                 {formatDate(new Date(transaction.dueDate))}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <StatusBadge status={transaction.status} showIcon={true} />
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
                 <div className="flex justify-end gap-2">
                   <Link
-                    href={`/finance/${transaction.id}`}
-                    className="inline-flex items-center gap-1 px-3 py-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                    href={`/financeiro/${transaction.id}`}
+                    className="inline-flex items-center gap-1 rounded px-3 py-1 text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-800"
                   >
-                    <Eye className="w-4 h-4" />
+                    <Eye className="h-4 w-4" />
                     Ver
                   </Link>
-                  {onDelete && (
+                  {onDelete && transaction.sourceType === 'MANUAL' && (
                     <button
                       onClick={(e) => {
-                        e.preventDefault();
-                        if (
-                          confirm(
-                            "Tem certeza que deseja deletar esta transação?",
-                          )
-                        ) {
-                          onDelete(transaction.id);
+                        e.preventDefault()
+                        if (confirm('Tem certeza que deseja deletar esta transação?')) {
+                          onDelete(transaction.id)
                         }
                       }}
-                      className="inline-flex items-center gap-1 px-3 py-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                      className="inline-flex items-center gap-1 rounded px-3 py-1 text-red-600 transition-colors hover:bg-red-50 hover:text-red-800"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="h-4 w-4" />
                       Deletar
                     </button>
                   )}
@@ -137,5 +123,5 @@ export function TransactionList({
         </tbody>
       </table>
     </div>
-  );
+  )
 }
