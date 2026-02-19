@@ -1,6 +1,6 @@
 import type React from 'react'
 
-import { BarChart3, DollarSign, GitBranch, MessageSquare, TrendingUp, Users, Zap } from 'lucide-react'
+import { BarChart3, Calendar, DollarSign, GitBranch, MessageSquare, TrendingUp, Users, Zap } from 'lucide-react'
 
 export interface ModuleConfig {
   moduleRoutes: Record<string, string>
@@ -18,6 +18,7 @@ export function useModuleConfig(workspaceId?: string): ModuleConfig {
     automations: '/automations',
     reports: '/reports',
     auditoria: '/auditoria',
+    agenda: '/agenda',
     settings: `/workspaces/${baseId}/settings`,
     members: `/workspaces/${baseId}/members`,
   }
@@ -30,6 +31,7 @@ export function useModuleConfig(workspaceId?: string): ModuleConfig {
     finance: DollarSign,
     reports: BarChart3,
     processos: GitBranch,
+    agenda: Calendar,
   }
 
   return {
